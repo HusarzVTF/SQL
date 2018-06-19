@@ -1,0 +1,57 @@
+/* Czym jest arbitraż: https://mfiles.pl/pl/index.php/Arbitra%C5%BC
+
+Wersja MS SQL 2014
+Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
+*/
+
+
+IF OBJECT_ID('Arbitraz') IS NOT NULL 
+DROP DATABASE Arbitraz;
+GO
+
+--Sprawdzenie czy istnieje baza danych Arbitraz jeśli tak to liwkiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
+
+CREATE DATABASE Arbitraz;
+GO
+
+--Tworzenie bazy Arbitraż.--
+
+USE Arbitraz;
+  
+GO
+
+ --Wskazanie bazy Arbitraż jako wiodącej do tworzenia obiektów.--
+
+ IF OBJECT_ID('Kursy') IS NOT NULL
+ DROP TABLE Kursy;
+
+ --Sprawdza czy istnieje tabela Kursy jeśli tak to likwiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
+
+ CREATE  TABLE Kursy (IDWaluty int PRIMARY KEY IDENTITY, Waluta char(3) UNIQUE, USD numeric(5,3) NOT NULL, CAD numeric(5,3) NOT NULL, CNY numeric(5,3) NOT NULL, INDEX Waluta_index (Waluta) );
+   
+ --Tworzenie tabeli kursy. Zakładamy wstawianie kursów walutowych i przeliczanie ich z dokładnością do  max dwóch miejsc przed przecinkiem i max trzeciego miejsca po przecinku. W celu zwiększenia wydajności została zindeksowana kolumna Waluta, po której wykonuje się filtrowanie danych poniżej.--
+
+ INSERT INTO Kursy VALUES('USD',1,2.05,2.58), ('CAD',0.565,1,1.506), ('CNY',0.425,0.677,1.01);
+
+--Wstawienie kursów walutowych do tabeli kursy.--
+
+
+ DECLARE @CADUSd numeric(5,3)=(SELECT USD FROM  Arbitraz.dbo.Kursy WHERE Waluta='CAD');
+
+--Deklarowanie zmiennej, którą jest  kurs CAD/USD.--
+
+ DECLARE @div numeric(5,3)= (SELECT USD/CAD  FROM Arbitraz.dbo.Kursy   WHERE  Waluta='CNY' ); 
+
+--Deklarowanie zmiennej, którą jest kurs USD/CAD przeliczony z podzielonych kolumn USD przez CAD dla wierszy równych CNY z kolumny Waluta.-- 
+
+ DECLARE @kursAr numeric(5,3)=(SELECT CAD FROM Arbitraz.dbo.Kursy  WHERE  Waluta='USD');
+
+--Deklarowanie zmiennej, którą jest kurs USD/CAD.--
+
+
+ IF @div*@kursAr>1 BEGIN PRINT  N'Arbitraż z USD jest możliwy zysk na jednostkę wynosi ' + CAST(@div*@kursAr-1 as nvarchar(10))  END 
+ ELSE PRINT N'Arbitraż z USD nie jest możliwy za mały DIF' + CAST(@div*@kursAr-1 as nvarchar(10));
+
+ --Wyświetla komunikat o zysku arbitrażowym jeśli istnieje. Jeśli nie wyświetla komunikat o braku szans na zysk arbitrażowy.--
+
+
