@@ -1,4 +1,5 @@
-/* Czym jest arbitraż: https://mfiles.pl/pl/index.php/Arbitra%C5%BC
+/*
+Czym jest arbitraż: https://mfiles.pl/pl/index.php/Arbitra%C5%BC
 
 Wersja MS SQL 2014
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
@@ -9,7 +10,10 @@ IF OBJECT_ID('Arbitraz') IS NOT NULL
 DROP DATABASE Arbitraz;
 GO
 
---Sprawdzenie czy istnieje baza danych Arbitraz jeśli tak to liwkiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
+/* 
+Sprawdzenie czy istnieje baza danych Arbitraz jeśli tak to liwkiduje ją. 
+Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.
+*/
 
 CREATE DATABASE Arbitraz;
 GO
@@ -27,9 +31,19 @@ GO
 
  --Sprawdza czy istnieje tabela Kursy jeśli tak to likwiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
 
- CREATE  TABLE Kursy (IDWaluty int PRIMARY KEY IDENTITY, Waluta char(3) UNIQUE, USD numeric(5,3) NOT NULL, CAD numeric(5,3) NOT NULL, CNY numeric(5,3) NOT NULL, INDEX Waluta_index (Waluta) );
+ CREATE  TABLE Kursy (IDWaluty int PRIMARY KEY IDENTITY, 
+ Waluta char(3) UNIQUE, 
+ USD numeric(5,3) NOT NULL, 
+ CAD numeric(5,3) NOT NULL, 
+ CNY numeric(5,3) NOT NULL, 
+ INDEX Waluta_index (Waluta) );
    
- --Tworzenie tabeli kursy. Zakładamy wstawianie kursów walutowych i przeliczanie ich z dokładnością do  max dwóch miejsc przed przecinkiem i max trzeciego miejsca po przecinku. W celu zwiększenia wydajności została zindeksowana kolumna Waluta, po której wykonuje się filtrowanie danych poniżej.--
+ /*
+ Tworzenie tabeli kursy. 
+ Zakładamy wstawianie kursów walutowych i przeliczanie ich z dokładnością do  
+ max dwóch miejsc przed przecinkiem i max trzeciego miejsca po przecinku. W celu zwiększenia 
+ wydajności została zindeksowana kolumna Waluta, po której wykonuje się filtrowanie danych poniżej.
+ */
 
  INSERT INTO Kursy VALUES('USD',1,2.05,2.58), ('CAD',0.565,1,1.506), ('CNY',0.425,0.677,1.01);
 
@@ -42,7 +56,10 @@ GO
 
  DECLARE @div numeric(5,3)= (SELECT USD/CAD  FROM Arbitraz.dbo.Kursy   WHERE  Waluta='CNY' ); 
 
---Deklarowanie zmiennej, którą jest kurs USD/CAD przeliczony z podzielonych kolumn USD przez CAD dla wierszy równych CNY z kolumny Waluta.-- 
+/*
+Deklarowanie zmiennej, którą jest kurs USD/CAD przeliczony z podzielonych kolumn USD przez CAD 
+dla wierszy równych CNY z kolumny Waluta.
+*/
 
  DECLARE @kursAr numeric(5,3)=(SELECT CAD FROM Arbitraz.dbo.Kursy  WHERE  Waluta='USD');
 
