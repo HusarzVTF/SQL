@@ -12,6 +12,8 @@ Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie
 
 --Sprawdza czy istnieje baza danych Arbitraż. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że została stworzona przez pomyłkę-- 
 
+CREATE DATABASE Arbitraz;
+
 GO
 
 USE Arbitraz;
@@ -37,6 +39,9 @@ DROP TABLE Kwotowania;
  ('PLN','EUR',0.25000,'1912-10-25'), ('PLN','USD',0.33000,'1912-10-25');
  
  --Wstawienie kursów do tabeli kwotowania. Kursy zostały zmyślone zbieżność z danymi rzeczywistymi jest przypadkowa--
+
+IF OBJECT_ID('uspWykonajArbitraz') IS NOT NULL
+DROP PROC uspWykonajArbitraz;
 
  GO
 
