@@ -1,7 +1,8 @@
 Zadanie polega na stworzeniu raportu z kosztów magazynowania w rozbiciu na klientów firmy X.
 Dane są zrzucane z systemu zewnętrznego(outsourcing usług magazynowych) i przesyłane mailowo w następującym formacie:
 
-Kod towaru	Nazwa towaru	Klient	KAM	Taryfa magazynowa	J.m.	Ilość w mag.	Data ważności	Trwałość produktu (ilość dni)
+Kod towaru	Nazwa towaru	Klient	KAM	Taryfa magazynowa	J.m.	Ilość w mag.	Data ważności	
+Trwałość produktu (ilość dni)
 
 
 Dodatkowo mamy też tabelę ze stawkami magazynowymi taką jak w poniższym formacie:
