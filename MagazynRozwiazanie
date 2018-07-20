@@ -13,9 +13,6 @@ Trzeba też podać wersję excela w odpowiednim formacie np. Excel 2007 to wersj
 Informacje te można znaleźć na stronach dokumentacji technicznej Microsoft.
 Przyjęto, że plik przesłany przez firmę zewnętrzną zapisywany jest na pulpicie.
 
-Zapytania zostały poprzedzone wskazaniem na wykorzystanie bazy Magazynowanie. 
-Tak by mogły być wykonane niezależnie od siebie a niekoniecznie w jednym ciągu następujących po sobie operacji. 
-
 W rozwiązaniu pominięto tworzenie dedykowanego schematu w bazie danych.
 Schemat ułatwia administrowanie dostępem do poszczególnych obiektów w bazie.
 Z racji tego, że rozwiązanie ma charakter demonstracyjny i nie występują żadni stali  użytkownicy w bazie 
@@ -40,16 +37,17 @@ jego loginem do systemu Windows.
 
 --sprawdza czy istnieje baza danych Magazynowanie jeśli tak to likwiduje ją--
 
-CREATE DATABASE Magazynowanie
+CREATE DATABASE Magazynowanie;
 GO
+
+USE Magazynowanie;
+GO
+
+--wskazanie na wykorzystanie bazy magazynowanie do utworzenia obiektow--
 
 IF OBJECT_ID('Taryfa') IS NOT NULL DROP TABLE  Taryfa;
 
 -- sprawdza czy istnieje tabela taryfa jesli tak to liwkduje ją—-
-
-USE Magazynowanie;
-
-GO
 
 CREATE TABLE Taryfa (ID int IDENTITY(1,1) PRIMARY KEY, Stawka decimal(8,7) not null UNIQUE); 
 
@@ -68,9 +66,6 @@ SELECT*FROM Taryfa;
 IF OBJECT_ID('Magazyn') IS NOT NULL DROP TABLE  Magazyn;
 
 -- sprawdza czy istnieje tabela magazyn jeśli tak to likwiduje ją--
-
-USE Magazynowanie; 
-GO
 
 CREATE TABLE  Magazyn (ID int IDENTITY(1,1), 
 kodTowaru char(500), nazwaTowaru varchar(500),
@@ -121,10 +116,6 @@ IF OBJECT_ID('vRapMagazyn') IS NOT NULL DROP VIEW vRapMagazyn;
 
 --sprawdza czy istnieje widok Rapmagazyn jeśli tak likwiduje go--
 
-USE Magazynowanie;
-
-GO
-
 CREATE VIEW vRapMagazyn
 AS
 
@@ -140,10 +131,6 @@ IF OBJECT_ID('uspKosztyMagNaKlienta') IS NOT NULL DROP PROC uspKosztyMagNaKlient
 
 --sprawdza czy taka procedura już nie istnieje jeśli tak to ją likwiduje--
 
-USE Magazynowanie;
-
-GO
-
 CREATE PROC dbo.uspKosztyMagNaKlienta (@nazwaklienta nvarchar (500))
 AS
 
@@ -156,10 +143,6 @@ może być wykorzystane przez aplikację webową do wyświetlania na stronie
 */
 
 IF OBJECT_ID('uspCzyscMagazyn') is not null DROP PROC  uspCzyscMagazyn;
-
-GO
-
-USE Magazynowanie;
 
 GO
 
