@@ -9,14 +9,13 @@ Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie
  
  IF OBJECT_ID('Arbitraz') IS NOT NULL
  DROP DATABASE Arbitraz;
+ GO
 
 --Sprawdza czy istnieje baza danych Arbitraż. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że została stworzona przez pomyłkę-- 
 
 CREATE DATABASE Arbitraz;
-
---Towrzenie bazy arbitraz--
-
 GO
+--Towrzenie bazy arbitraz--
 
 USE Arbitraz;
  
