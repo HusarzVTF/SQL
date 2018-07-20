@@ -14,10 +14,13 @@ Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie
 
 CREATE DATABASE Arbitraz;
 
+--Towrzenie bazy arbitraz--
+
 GO
 
 USE Arbitraz;
  
+GO 
 --Wskazanie na wykorzystanie bazy Arbitraż do utworzenia poniższych obiektów--
 
 IF OBJECT_ID('Kwotowania') IS NOT NULL
