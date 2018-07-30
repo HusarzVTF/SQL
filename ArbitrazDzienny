@@ -95,3 +95,8 @@ DROP PROC uspWykonajArbitraz;
  ELSE PRINT 'Arbitraz nie jest mozliwy strata wynosi'+ ' '+CAST(@Zysk as nvarchar(10));
  
  --Komunikat zwrócony w wyniku procedury, który informuje o możliwym zysku arbitrażowym lub jego braku--
+ 
+ 
+ 
+ 
+ 
