@@ -111,7 +111,7 @@ importuje dane z pliku zrzuconego przez ERP lub program magazynowy do tabeli mag
 
 SELECT*FROM Magazyn;
 
- --sprawdza co zostało wrzucone do tabeli--
+ --sprawdza co zostało wrzucone do tabeli magazyn--
 
 IF OBJECT_ID('vRapMagazyn') IS NOT NULL DROP VIEW vRapMagazyn;
 
