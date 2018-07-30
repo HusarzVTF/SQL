@@ -1,0 +1,344 @@
+/*
+Objaśnienia:
+
+Środowisko: MS SQL wersja 2014
+
+Pominięto utworzenie schematu. System utworzy wszystkie obiekty w domyślnym schemacie dbo.
+
+Opis zagadnienia:
+
+Mamy bile do gry w bilarda połówki i całe umieszczone w trójkącie. Bill jest szesnaście po osiem połówek i całych.
+Zadanie polega na tym, żeby losując dwie przyległe do siebie bile z losowego ułożenia bil dojść do wzorcowego ułożenia. 
+Bile możemy zamienić miejscami między sobą tj. jeżeli wylosowane zostały:
+cała i połówka to takie ułożenie można uznać za równoważne wobec pary połówka i cała, bile zostały zamienione miejscami między sobą,
+pierwsza stała się drugą. Niedopuszczalne jest zamienianie bil między parami ani w losowym ani w wzorowym ustawieniu.
+
+
+Bezwzględnym warunkiem powodzenia takiej operacji jest dopasowanie par losowanych do par wzorowych pod względem jednorodności.
+W wypadku bil całych i połówek w przypadku losowania dwóch przyległych do siebie bil możemy wylosować: 
+całą całą (lub odpowiednio połówkę połówkę) jako jednorodna para,
+połówkę całą (lub odpowiednio całą połówkę) jako para niejednorodna.
+Dopasowanie polega na tym, że ilość par jednorodnych i niejednorodnych z losowego ustawienia 
+musi odpowiadać ilości par jednorodnych i niejednorodnych z wzorowego ustawienia.
+
+Zakładamy, że bile całe oznaczone są jako zero a połowki jako jedynki.
+
+Przykład:
+
+1) Ustawienie losowe: (0,0),(1,1),(0,0),(1,1),(1,0),(1,1),(1,0),(0,0)
+
+2) Ustawienie wzorcowe: (0,1),(1,0),(0,1),(0,0),(1,1),(1,0),(0,0),(1,1)
+
+W losowym ustawieniu mamy sześć par jednorodnych i dwie niejednorodne.
+W wzorcowym ustawieniu mamy po cztery pary jednorodne i  niejednorodne.
+W tym wypadku bez zmiany par w ustawnieniu losowym lub wzorcowym nie uda się ułożyć z losowego ustawienia wzorcowego.
+Pary niepokryte to dwie pary jednorodne z ułożenia losowego gdybyśmy dobierali pary kolejno zaczynając od lewej
+to dla pary szóstej i ósmej z losowego ułożenia nie będzie już par w ułożeniu wzorowym, gdyż brakuje dokładnie dwóch 
+par jednorodnych.
+
+*/
+
+
+
+IF OBJECT_ID('BILARD') IS NOT NULL
+DROP DATABASE BILARD;
+
+--Sprawdza czy istnieje baza Bilard jeśli tak to liwkiduje ją, zakładamy, że jeżeli istnieje to została utworzona przez pomyłkę--
+
+GO
+
+CREATE DATABASE BILARD;
+
+--Tworzy bazę Bilard--
+
+GO
+
+USE BILARD;
+
+--Wskazanie na wykorzystanie bazy Bilard do utworzenia  poniższych obiektów--
+
+GO
+
+IF OBJECT_ID('BillarWzor') IS NOT NULL
+DROP TABLE BillarWzor;
+
+--Sprawdza czy istnieje tabela BillarWzor jeśli tak to liwkiduje ją, zakładamy, że jeżeli istnieje to została utworzona przez pomyłkę--
+
+GO
+
+CREATE TABLE BillarWzor(ID int IDENTITY PRIMARY KEY, 
+FirstBILA int not null CHECK((FirstBILA) IN(0,1)), 
+SEcondBILA int not null CHECK(SEcondBILA IN(0,1)));
+
+--Tworzenie tabeli BillarWzor, która będzie przechowywać wzorowe ułożenie bil--
+
+INSERT INTO BillarWzor(FirstBILA, SEcondBILA) VALUES (0,1), (1,0), (0,1), (0,0), (1,1), (1,0), (0,0), (1,1);
+
+--Wstawienie wzorowego ustawienia bil do tabeli BillarWzor--
+
+IF OBJECT_ID('LosowBilard') IS NOT NULL
+DROP TABLE LosowBilard;
+
+/*
+Sprawdza czy istnieje tabela LosowBilard jeśli tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
+*/
+
+
+CREATE TABLE LosowBilard(ID int IDENTITY PRIMARY KEY, 
+FirstBILA int not null CHECK((FirstBILA) IN(0,1)), 
+SEcondBILA int not null CHECK(SEcondBILA IN(0,1)));
+
+--Tworzenie tabeli LosowBilard, która będzie przechowywać losowe ułożenie bil--
+
+INSERT INTO LosowBilard(FirstBILA, SEcondBILA) VALUES (1,0), (0,1), (0,0), (1,0), (0,0), (1,1), (1,0), (1,1);
+
+--Wstawienie losowego ustawienia bil do tabeli LosowBilard--
+
+IF OBJECT_ID('Wylosowane') IS NOT NULL
+DROP TABLE Wylosowane;
+
+/*
+Sprawdza czy istnieje tabela Wylosowane jeśli tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
+*/
+
+CREATE TABLE Wylosowane(WzorID int not null FOREIGN KEY  REFERENCES BillarWzor(ID),
+LosID int not null FOREIGN KEY REFERENCES LosowBilard(ID),
+FirstBILA int not null CHECK((FirstBILA) IN(0,1)), 
+SEcondBILA int not null CHECK(SEcondBILA IN(0,1)) PRIMARY KEY(WzorID,LosID));
+
+/*
+Tworzenie tabeli Wylosowane, która będzie przechowywać wylosowane bile wraz z informacją,
+ która para z losowego ustawienia została przypisana do której w wzorcowym ustawieniu
+*/
+
+GO
+
+IF OBJECT_ID('uspLosow') IS NOT NULL
+DROP PROC uspLosow;
+
+/*
+Sprawdza czy istnieje procedura uspLosow jeśli tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
+*/
+
+GO
+
+CREATE PROC uspLosow(@Pozycja int)
+AS
+IF @Pozycja NOT IN(1,2,3,4,5,6,7,8)
+BEGIN 
+PRINT'Podano nieprawidlowa pare bili do wylosowania, par jest od 1 do 8'
+END
+/*
+Pierwsza część procedury sprawdza czy wprowadzono poprawną wartość dla pozycji pary bil do losowania.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+ELSE
+DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA<>SEcondBILA)
+
+
+DECLARE @ParJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA<>SEcondBILA)
+
+IF @ParJedLOS>@ParJedWZ OR @ParNOTJedLOS>@ParNOTJedWZ
+BEGIN PRINT'Niedopasowanie par bilowych do losowania żadna wartość nie została wylosowana'  
+END
+
+/*
+Ta część procedury sprawdza czy został zachowany warunek dopasowania bil losowych do wzoru pod względem jednorodności.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+ELSE
+IF EXISTS (SELECT ID FROM LosowBIlard JOIN Wylosowane ON ID=LosID WHERE @Pozycja=LosID) 
+BEGIN PRINT'Para bil zostala juz wykorzystana w poprzednim losowaniu, należy podac inna'
+END
+
+/*
+Ta część procedury sprawdza czy wprowadzona para bil nie została wprowadzona poprzednio.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+ELSE
+IF EXISTS (SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)
+BEGIN
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+END
+
+/*
+Ta część procedury wstawia do tabeli wylosowane wynik losowania dla par bil w których pierwsza bila losowana 
+równa się pierwszej bili wzorowej i analogicznie druga
+*/
+
+ELSE
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.SEcondBILA, B.FirstBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.SEcondBILA AND A.SEcondBILA=B.FirstBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;
+
+--OStatnia część procedury wstawiająca wynik losowania dla par bil, których dopasowanie wymaga zamiany bil w ustawieniu--
+--Procedura symulująca losowanie i wstawiająca jego wyniki do tabeli wylosowane--
+
+IF OBJECT_ID('uspWynikLosowania') IS NOT NULL
+DROP PROC uspWynikLosowania;
+
+/*
+Sprawdza czy istnieje widok vWynikLosowania jeśli tak to liwkiduje go, zakładamy, 
+że jeżeli istnieje to został utworzony przez pomyłkę
+*/
+
+GO
+
+CREATE PROC uspWynikLosowania
+
+AS
+BEGIN
+SELECT*FROM Wylosowane ORDER BY WzorID ASC
+END;
+
+--Procedura wyświetlająca wynik losowania uporządkowany rosnąco wg pola ID z tabeli z wozorowym układem bil--  
+
+GO
+IF OBJECT_ID('uspZmienLosow') IS NOT NULL
+DROP PROC uspZmienLosow;
+
+/*
+Sprawdza czy istnieje procedura uspZmienLosow jeśli tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
+*/
+
+
+GO
+
+CREATE PROC uspZmienLosow
+(@PierBila int , @DruBila int , @TrzecBila int , @CzwarBila int ,@PiaBila int ,
+@SzosBila int , @SiodBila int ,@OsmBila int , @DziewBila int ,
+@DziesBila int ,@JedBila int , @DwuBila int , @TrzyBila int , @CzterBila int , @PietBila int, @SzesBila int) 
+
+AS
+BEGIN
+
+UPDATE LosowBilard SET FirstBILA=@PierBila, SEcondBILA=@DruBila
+WHERE ID=1
+
+UPDATE LosowBilard SET FirstBILA=@TrzecBila, SEcondBILA=@CzwarBila
+WHERE ID=2
+
+UPDATE LosowBilard SET FirstBILA=@PiaBila, SEcondBILA=@SzosBila
+WHERE ID=3
+
+UPDATE LosowBilard SET FirstBILA=@SiodBila, SEcondBILA=@OsmBila
+WHERE ID=4
+
+UPDATE LosowBilard SET FirstBILA=@DziewBila, SEcondBILA=@DziesBila
+WHERE ID=5
+
+UPDATE LosowBilard SET FirstBILA=@JedBila, SEcondBILA=@DwuBila 
+WHERE ID=6
+
+UPDATE LosowBilard SET FirstBILA=@TrzyBila , SEcondBILA=@CzterBila 
+WHERE ID=7
+
+UPDATE LosowBilard SET FirstBILA=@PietBila, SEcondBILA=@SzesBila 
+WHERE ID=8
+
+END;
+
+/*
+Procedura zmieniająca bile w losowym ułożeniu konieczna do uruchomienia jeśli chcemy wykonać losowanie 
+dla nowych bil, mmuismy podać nowe bile.
+*/
+
+GO
+IF OBJECT_ID('uspZmienWylos') IS NOT NULL
+DROP PROC uspZmienWylos;
+
+/*
+Sprawdza czy istnieje procedura uspZmienWylos tak to liwkiduje ją, zakładamy, że jeżeli 
+istnieje to została utworzona przez pomyłkę
+*/
+
+GO
+
+CREATE  PROC uspZmienWylos
+(@PierBila int , @DruBila int , @TrzecBila int , @CzwarBila int ,@PiaBila int ,
+@SzosBila int , @SiodBila int ,@OsmBila int , @DziewBila int ,
+@DziesBila int ,@JedBila int , @DwuBila int , @TrzyBila int , @CzterBila int , @PietBila int, @SzesBila int )
+AS
+BEGIN
+
+UPDATE BillarWzor SET FirstBILA=@PierBila, SEcondBILA=@DruBila
+WHERE ID=1
+
+UPDATE BillarWzor SET FirstBILA=@TrzecBila, SEcondBILA=@CzwarBila
+WHERE ID=2
+
+UPDATE BillarWzor SET FirstBILA=@PiaBila, SEcondBILA=@SzosBila
+WHERE ID=3
+
+UPDATE BillarWzor SET FirstBILA=@SiodBila, SEcondBILA=@OsmBila
+WHERE ID=4
+
+UPDATE BillarWzor SET FirstBILA=@DziewBila, SEcondBILA=@DziesBila
+WHERE ID=5
+
+UPDATE BillarWzor SET FirstBILA=@JedBila, SEcondBILA=@DwuBila 
+WHERE ID=6
+
+UPDATE BillarWzor SET FirstBILA=@TrzyBila , SEcondBILA=@CzterBila 
+WHERE ID=7
+
+UPDATE BillarWzor SET FirstBILA=@PietBila, SEcondBILA=@SzesBila 
+WHERE ID=8
+
+END;
+
+/*
+Procedura zmieniająca bile w wzorowym ułożeniu konieczna do uruchomienia jeśli chcemy wykonać losowanie i dopasować 
+je do innego wzorowego ułożenia.
+*/
+
+GO
+
+IF OBJECT_ID('uspCzyszWylosowane') IS NOT NULL
+DROP PROC uspCzyszWylosowane;
+
+/*
+Sprawdza czy istnieje procedura uspCzyszWylosowane tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
+*/
+
+GO
+
+CREATE PROC uspCzyszWylosowane
+
+AS
+
+BEGIN
+
+DELETE FROM Wylosowane
+
+END;
+
+--Procedura czyszcząca tabelę Wylosowane. Trzeba ją uruchomić przed ponownym wykonaniem losowania--
+ 
+
+ 
+
+
+
+
