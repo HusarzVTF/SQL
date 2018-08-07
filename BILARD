@@ -35,9 +35,7 @@ W tym wypadku bez zmiany par w ustawnieniu losowym lub wzorcowym nie uda się u�
 Pary niepokryte to dwie pary jednorodne z ułożenia losowego gdybyśmy dobierali pary kolejno zaczynając od lewej
 to dla pary szóstej i ósmej z losowego ułożenia nie będzie już par w ułożeniu wzorowym, gdyż brakuje dokładnie dwóch 
 par jednorodnych.
-
 */
-
 
 
 IF OBJECT_ID('BILARD') IS NOT NULL
@@ -133,7 +131,7 @@ PRINT'Podano nieprawidlowa pare bili do wylosowania, par jest od 1 do 8'
 END
 /*
 Pierwsza część procedury sprawdza czy wprowadzono poprawną wartość dla pozycji pary bil do losowania.
-Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
 */
 ELSE
 DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
@@ -149,7 +147,7 @@ END
 
 /*
 Ta część procedury sprawdza czy został zachowany warunek dopasowania bil losowych do wzoru pod względem jednorodności.
-Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
 */
 
 ELSE
@@ -159,7 +157,7 @@ END
 
 /*
 Ta część procedury sprawdza czy wprowadzona para bil nie została wprowadzona poprzednio.
-Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
 */
 
 ELSE
@@ -197,8 +195,8 @@ IF OBJECT_ID('uspWynikLosowania') IS NOT NULL
 DROP PROC uspWynikLosowania;
 
 /*
-Sprawdza czy istnieje widok vWynikLosowania jeśli tak to liwkiduje go, zakładamy, 
-że jeżeli istnieje to został utworzony przez pomyłkę
+Sprawdza czy istnieje procedura uspWynikLosowania jeśli tak to liwkiduje ją, zakładamy, 
+że jeżeli istnieje to została utworzona przez pomyłkę
 */
 
 GO
@@ -213,6 +211,7 @@ END;
 --Procedura wyświetlająca wynik losowania uporządkowany rosnąco wg pola ID z tabeli z wozorowym układem bil--  
 
 GO
+
 IF OBJECT_ID('uspZmienLosow') IS NOT NULL
 DROP PROC uspZmienLosow;
 
@@ -220,7 +219,6 @@ DROP PROC uspZmienLosow;
 Sprawdza czy istnieje procedura uspZmienLosow jeśli tak to liwkiduje ją, zakładamy, 
 że jeżeli istnieje to została utworzona przez pomyłkę
 */
-
 
 GO
 
@@ -336,8 +334,126 @@ END;
 
 --Procedura czyszcząca tabelę Wylosowane. Trzeba ją uruchomić przed ponownym wykonaniem losowania--
  
+                                         --MODYFIKACJA UPDATE--
+/*
+Zmiany dotyczą:
+1.Poprawy literówek w komentarzach.
+2.Zmiany w procedurze uspLosow.
+3.Zmiany w procedurze uspCzyszWylosowane.
 
- 
+Zmiany w punktach 2 i 3 zwiększą wydajność.
+*/
+
+USE BILARD
+
+/*
+Wskazanie na użycie bazy bilard w której są obiekty, które chcemy zmodyfikować. 
+Wskazywanie bazy przed tworzenie/modyfikowaniem procedury nie jest wskazane, w tym wypadku
+jednak jest to konieczne jeśli baza nie została wskazana ręcznie w pasku w polu AVAILABLE DATABASES
+*/
+
+GO
+ALTER PROC uspLosow (@Pozycja int) AS 
+
+DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA<>SEcondBILA)
+
+
+DECLARE @ParJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA<>SEcondBILA)
+
+IF @ParJedLOS>@ParJedWZ OR @ParNOTJedLOS>@ParNOTJedWZ
+BEGIN PRINT'Niedopasowanie par bilowych do losowania żadna wartość nie została wylosowana'  
+END
+
+/*
+Ta część procedury sprawdza czy został zachowany warunek dopasowania bil losowych do wzoru pod względem jednorodności.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
+
+Tu została dokonana zmiana w tej procedurze zamieniono kolejnością operacje.
+Skrypt najpierw sprawdzi czy w ogóle jest możliwe dopasowanie bil tj. czy warunek
+dopasowania pod względem jednakowej ilości par jednorodnych i niejednorodnych został zachowany
+a potem czy wprowadzona para bil mieści się w dostępnych do losowania.
+W wypadku kiedy bile nie są dopasowane pod względem jednakowej ilośći par jednorodnych i niejednorodnych
+błąd zostanie zwrócony od razu i operacja sprawdzenia czy para podana do losowania mieści się w określonym 
+przedziale nie zostanie wykonana przez co procedura w takim wypadku wykona mniej operacji.
+*/
+
+ELSE 
+IF @Pozycja NOT IN(1,2,3,4,5,6,7,8)
+BEGIN 
+PRINT'Podano nieprawidlowa pare bili do wylosowania, par jest od 1 do 8'
+END
+
+/*
+Powyższa część procedury sprawdza czy wprowadzono poprawną wartość dla pozycji pary bil do losowania.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
+*/
+
+ELSE
+IF EXISTS (SELECT ID FROM LosowBIlard JOIN Wylosowane ON ID=LosID WHERE @Pozycja=LosID) 
+BEGIN PRINT'Para bil zostala juz wykorzystana w poprzednim losowaniu, należy podac inna'
+END
+
+/*
+Ta część procedury sprawdza czy wprowadzona para bil nie została wprowadzona uprzednio.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalszych operacji.
+*/
+
+ELSE
+IF EXISTS (SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)
+BEGIN
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+END
+
+/*
+Ta część procedury wstawia do tabeli wylosowane wynik losowania dla par bil w których pierwsza bila losowana równa się 
+pierwszej bili wzorowej i analogicznie druga 
+*/
+
+ELSE
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.SEcondBILA, B.FirstBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.SEcondBILA AND A.SEcondBILA=B.FirstBILA WHERE @Pozycja=B.ID   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;
+
+/*
+Ostatnia część procedury wstawiająca wynik losowania dla par bil, których dopasowanie wymaga zamiany bil w ustawieniu
+Procedura symulująca losowanie i wstawiająca jego wyniki do tabeli wylosowane
+*/
+
+USE BILARD
+
+GO
+
+ALTER  PROC uspCzyszWylosowane
+
+AS
+
+BEGIN
+
+TRUNCATE TABLE Wylosowane
+
+END;
+
+/*
+Tu została wprowadzona druga zmiana. Zamieniono DELETE na TRUNCATE TABLE. 
+W wypadku gdy usuwamy całą zawartość tabeli szybszym i bardziej wydajnym poleceniem jest TRUNCATE
+*/
+
+
+
 
 
 
