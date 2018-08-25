@@ -38,10 +38,15 @@ par jednorodnych.
 */
 
 
-IF OBJECT_ID('BILARD') IS NOT NULL
+IF EXISTS (SELECT * FROM sys.databases WHERE name='BILARD')
 DROP DATABASE BILARD;
 
---Sprawdza czy istnieje baza Bilard jeśli tak to liwkiduje ją, zakładamy, że jeżeli istnieje to została utworzona przez pomyłkę--
+/*
+Sprawdza czy istnieje baza danych BILARD jeśli tak to likwiduje ją, 
+zakładamy, że jeżeli istnieje to została utworzona przez pomyłkę.
+W wypadku sprawdzenia czy istnieje baza danych nie można użyć funkcji OBJECT_ID, 
+ponieważ działa ona tylko na obiektach znajdujących się w schematach.
+*/
 
 GO
 
@@ -69,32 +74,40 @@ FirstBILA int not null CHECK((FirstBILA) IN(0,1)),
 SEcondBILA int not null CHECK(SEcondBILA IN(0,1)));
 
 --Tworzenie tabeli BillarWzor, która będzie przechowywać wzorowe ułożenie bil--
+GO
 
 INSERT INTO BillarWzor(FirstBILA, SEcondBILA) VALUES (0,1), (1,0), (0,1), (0,0), (1,1), (1,0), (0,0), (1,1);
 
 --Wstawienie wzorowego ustawienia bil do tabeli BillarWzor--
+GO
 
 IF OBJECT_ID('LosowBilard') IS NOT NULL
 DROP TABLE LosowBilard;
+
+GO
 
 /*
 Sprawdza czy istnieje tabela LosowBilard jeśli tak to liwkiduje ją, zakładamy, 
 że jeżeli istnieje to została utworzona przez pomyłkę
 */
 
-
 CREATE TABLE LosowBilard(ID int IDENTITY PRIMARY KEY, 
 FirstBILA int not null CHECK((FirstBILA) IN(0,1)), 
 SEcondBILA int not null CHECK(SEcondBILA IN(0,1)));
+
+GO
 
 --Tworzenie tabeli LosowBilard, która będzie przechowywać losowe ułożenie bil--
 
 INSERT INTO LosowBilard(FirstBILA, SEcondBILA) VALUES (1,0), (0,1), (0,0), (1,0), (0,0), (1,1), (1,0), (1,1);
 
 --Wstawienie losowego ustawienia bil do tabeli LosowBilard--
+GO
 
 IF OBJECT_ID('Wylosowane') IS NOT NULL
 DROP TABLE Wylosowane;
+
+GO
 
 /*
 Sprawdza czy istnieje tabela Wylosowane jeśli tak to liwkiduje ją, zakładamy, 
@@ -190,6 +203,7 @@ OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;
 
 --OStatnia część procedury wstawiająca wynik losowania dla par bil, których dopasowanie wymaga zamiany bil w ustawieniu--
 --Procedura symulująca losowanie i wstawiająca jego wyniki do tabeli wylosowane--
+GO
 
 IF OBJECT_ID('uspWynikLosowania') IS NOT NULL
 DROP PROC uspWynikLosowania;
@@ -262,6 +276,7 @@ dla nowych bil, mmuismy podać nowe bile.
 */
 
 GO
+
 IF OBJECT_ID('uspZmienWylos') IS NOT NULL
 DROP PROC uspZmienWylos;
 
@@ -353,6 +368,7 @@ jednak jest to konieczne jeśli baza nie została wskazana ręcznie w pasku w po
 */
 
 GO
+
 ALTER PROC uspLosow (@Pozycja int) AS 
 
 DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
