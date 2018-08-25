@@ -20,10 +20,10 @@ nie utworzono dedykowanego schematu. Wszystkie obiekty zastaną utworzone w domy
 który nawet jeśli nie zostanie podany to SQL Server przypisze go jako schemat domyślny. 
 Zakładamy też, że osoby mogące korzystać z przedstawionych rozwiązań nie należą do grupy w systemie operacyjnym Windows. 
 
-(Działa dla SQL 2016 i 2014) Do sprawdzenia czy istnieje dany obiekt w bazie została wykorzystana konstrukcja If OBJECT_ID.
-Sprawdza ona czy istnieje obiekt o dokładnie takiej samej nazwie jeśli tak to likwiduje go i następnie wykonuje się polecenie
-utworzenia danego obiektu. Wybranie tej konstrukcji wynika z założenia, iż jeżeli istnieje obiekt o tej nazwie to został 
-utworzony w wyniku błędu. Stąd konieczność zniszczenia go i utworzenia prawidłowego.
+(Działa dla SQL 2016 i 2014) Do sprawdzenia czy istnieje dany obiekt w bazie została wykorzystana konstrukcja If OBJECT_ID
+(Wyjątek sprawdzenie czy istnieje baza danych). Sprawdza ona czy istnieje obiekt o dokładnie takiej samej nazwie jeśli tak 
+to likwiduje go i następnie wykonuje się polecenie utworzenia danego obiektu. Wybranie tej konstrukcji wynika z założenia,
+iż jeżeli istnieje obiekt o tej nazwie to został utworzony w wyniku błędu. Stąd konieczność zniszczenia go i utworzenia prawidłowego. 
 
 Zakładamy, że całość działań jest wykonywana z komputera pracownika Jana Kowalskiego, 
 który ma uprawnienia pozwalające na wykonanie poniższego kodu. Jego numer identyfikacyjny w firmie składa się 
@@ -33,10 +33,15 @@ jego loginem do systemu Windows.
 
 
 
- IF DB_ID('Magazynowanie') IS NOT NULL DROP DATABASE Magazynowanie;
- GO
+IF EXISTS (SELECT * FROM sys.databases WHERE name='Magazynowanie')
+DROP DATABASE Magazynowanie;
 
---sprawdza czy istnieje baza danych Magazynowanie jeśli tak to likwiduje ją--
+/*
+Sprawdza czy istnieje baza danych Magazynowanie jeśli tak to likwiduje ją.
+W wypadku sprawdzenia czy istnieje baza danych nie można użyć funkcji OBJECT_ID, 
+ponieważ działa ona tylko na obiektach znajdujących się w schematach.
+*/
+
 
 CREATE DATABASE Magazynowanie;
 GO
@@ -82,8 +87,6 @@ klucz główny został utworzony na prawie wszystkich kolumnach tabeli pełni on
 */
 
 IF OBJECT_ID('uspPobierzDane') IS NOT NULL DROP PROC  uspPobierzDane;
-
-USE Magazynowanie;
 
 GO
 
@@ -135,7 +138,7 @@ IF OBJECT_ID('uspKosztyMagNaKlienta') IS NOT NULL DROP PROC uspKosztyMagNaKlient
 CREATE PROC dbo.uspKosztyMagNaKlienta (@nazwaklienta nvarchar (500))
 AS
 
-SELECT klient, sum(oplataMagazynowa) AS KosztMagazynowania
+SELECT klient, SUM(oplataMagazynowa) AS KosztMagazynowania
  FROM Magazynowanie.dbo.vRapMagazyn WHERE klient=@nazwaklienta GROUP BY klient;
  
 /*
@@ -143,19 +146,28 @@ Tworzy procedurę składową, która dla podanej nazwy klienta zwraca jego całk
 może być wykorzystane przez aplikację webową do wyświetlania na stronie
 */
 
-IF OBJECT_ID('uspCzyscMagazyn') is not null DROP PROC  uspCzyscMagazyn;
+IF OBJECT_ID('uspCzyscMagazyn') IS NOT NULL DROP PROC  uspCzyscMagazyn;
 
 GO
 
 CREATE PROC dbo.uspCzyscMagazyn
 
 AS
+
 BEGIN 
 
-DELETE FROM Magazyn
+TRUNCATE TABLE  dbo.Magazyn
+
 END;
+
 /*
 Czyści tabelę magazyn przed każdym nowy  importem danych trzeba ją uruchomić i usunąć poprzednie wpisy. 
 Zakładamy, że raport zewnętrzny  będący źródłem danych zawsze przedstawia aktualny stan magazynowy będący podstawą do raportowania 
 */
+
+
+
+
+
+
 
