@@ -9,10 +9,15 @@ Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie
 */
 
 
-IF OBJECT_ID('Arbitraz') IS NOT NULL
+IF EXISTS (SELECT * FROM sys.databases WHERE name='Arbitraz')
 DROP DATABASE Arbitraz;
 
---Sprawdza czy istnieje baza danych Arbitraż. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że istnieje przez pomyłkę-- 
+/*
+Sprawdza czy istnieje baza danych Magazynowanie jeśli tak to likwiduje ją 
+jeśli istnieje to zakładamy, że istnieje przez pomyłkę.
+W wypadku sprawdzenia czy istnieje baza danych nie można użyć funkcji OBJECT_ID, 
+ponieważ działa ona tylko na obiektach znajdujących się w schematach.
+*/
 
 GO
 
@@ -120,6 +125,7 @@ i druga w parze walutowej
  FROM FirstWaluta_CTE AS a INNER JOIN NOTWaluta_CTE AS b ON a.DrugaWaluta=b.PierwszaWaluta 
  INNER JOIN SecondWaluta_CTE AS c ON a.PierwszaWaluta=c.DrugaWaluta 
  AND b.DrugaWaluta=c.PierwszaWaluta WHERE a.Data=@Data AND a.Kurs*b.Kurs*c.Kurs-1>0;
+ 
 
 /*
 wynik zwracany przez procedurę pokazuje kolejno pary walutowe wraz z kursami, które trzeba kolejno wymieniać, 
