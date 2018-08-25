@@ -7,25 +7,36 @@ Wersja MS SQL 2014
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
 */
  
- IF OBJECT_ID('Arbitraz') IS NOT NULL
- DROP DATABASE Arbitraz;
- GO
+ 
+IF EXISTS (SELECT * FROM sys.databases WHERE name='Arbitraz')
+DROP DATABASE Arbitraz;
 
---Sprawdza czy istnieje baza danych Arbitraż. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że została stworzona przez pomyłkę-- 
+GO
+
+ /*
+Sprawdza czy istnieje baza danych Arbitraz jeśli tak to likwiduje ją zakładamy, że została stworzona przez pomyłkę.
+W wypadku sprawdzenia czy istnieje baza danych nie można użyć funkcji OBJECT_ID, 
+ponieważ działa ona tylko na obiektach znajdujących się w schematach.
+*/
 
 CREATE DATABASE Arbitraz;
+
 GO
+
 --Towrzenie bazy arbitraz--
 
 USE Arbitraz;
  
 GO 
+
 --Wskazanie na wykorzystanie bazy Arbitraż do utworzenia poniższych obiektów--
 
 IF OBJECT_ID('Kwotowania') IS NOT NULL
 DROP TABLE Kwotowania;
 
 --Sprawdza czy istnieje tabela kwotowania jeśli tak to likwiduje ją. Jeśli istnieje to zakładamy, że została stworzona przez pomyłkę--
+
+GO
 
  CREATE TABLE Kwotowania(ID int  IDENTITY(1,1), PierwszaWaluta char(3) ,DrugaWaluta char(3) , 
  Kurs numeric(10,5) not null, Data date  PRIMARY KEY(PierwszaWaluta,DrugaWaluta ,Data));
@@ -35,12 +46,14 @@ DROP TABLE Kwotowania;
  Klucz główny został tak utworzony, żeby wyeliminować wstawienie duplikatu dla danej pary walutowej w konkretnym dniu. 
  Zgodnie z założeniem jednego kursu danej pary walutowej w danym dniu.
  */
+GO
 
  INSERT INTO Kwotowania (PierwszaWaluta,DrugaWaluta, Kurs, Data) VALUES ('EUR','USD',1.42800,'1912-10-25'), 
  ('EUR','PLN',4.00000,'1912-10-25'), ('USD','EUR',0.70000,'1912-10-25'), ('USD','PLN',3.00000,'1912-10-25'), 
  ('PLN','EUR',0.25000,'1912-10-25'), ('PLN','USD',0.33000,'1912-10-25');
  
  --Wstawienie kursów do tabeli kwotowania. Kursy zostały zmyślone zbieżność z danymi rzeczywistymi jest przypadkowa--
+GO
 
 IF OBJECT_ID('uspWykonajArbitraz') IS NOT NULL
 DROP PROC uspWykonajArbitraz;
