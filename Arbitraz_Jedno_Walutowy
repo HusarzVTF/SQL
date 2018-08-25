@@ -35,7 +35,7 @@ GO
  IF OBJECT_ID('Kursy') IS NOT NULL
  DROP TABLE Kursy;
 
- GO
+ 
  --Sprawdza czy istnieje tabela Kursy jeśli tak to likwiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
 
  CREATE  TABLE Kursy (IDWaluty int PRIMARY KEY IDENTITY, 
@@ -52,7 +52,7 @@ GO
  wydajności została zindeksowana kolumna Waluta, po której wykonuje się filtrowanie danych poniżej.
  */
 
- GO
+ 
  
  INSERT INTO Kursy VALUES('USD',1,2.05,2.58), ('CAD',0.565,1,1.506), ('CNY',0.425,0.677,1.01);
 
