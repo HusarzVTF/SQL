@@ -109,7 +109,7 @@ END;
 
 /*
 importuje dane z pliku zrzuconego przez ERP lub program magazynowy do tabeli magazyn przy założeniu, 
-że zrzut z ERP arkusz z danymi nazywa Magazyn i zrzuca dane na pulpit.
+że zrzut z ERP został wyeksportowany do arkusza kalkulacyjnego Excel o nazwie Magazyn.
 */
 
 SELECT*FROM Magazyn;
@@ -164,6 +164,62 @@ END;
 Czyści tabelę magazyn przed każdym nowy  importem danych trzeba ją uruchomić i usunąć poprzednie wpisy. 
 Zakładamy, że raport zewnętrzny  będący źródłem danych zawsze przedstawia aktualny stan magazynowy będący podstawą do raportowania 
 */
+
+
+
+
+
+----------------------------------------------------UPDATE MODYFIKACJA-------------------------------------------------------------------------
+/*Zamina dotyczy połączenia kodu wykonywanego w dwóch obiektach(uspPobierzDane i uspCzyscMagazyn) 
+w jeden oraz dopisanie  wyłączenia ADHOC Queries*/
+
+/*kod dla procedury uspPobierzDane po modyfikacji wygląda następująco*/
+
+ 
+IF OBJECT_ID('uspPobierzDane') IS NOT NULL DROP PROC  uspPobierzDane;
+
+GO
+
+CREATE PROC dbo.uspPobierzDane
+AS BEGIN
+
+TRUNCATE TABLE  dbo.Magazyn;
+
+/*
+czyści poprzednie już niaktualne dane z tabeli magazyn
+(dane pochodzą z pliku zewnętrznego z systemu magazynowego i pokazują stan w magazynie na dany dzień)
+*/
+
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE WITH OVERRIDE;
+ 
+EXEC sp_configure 'Ad Hoc Distributed Queries', 1;
+RECONFIGURE WITH OVERRIDE;
+
+--uruchamia możliwość skorzystania z OPENROWSET i wyciągnięcia danych z dowolnego pliku--
+
+INSERT INTO Magazyn (kodTowaru, nazwaTowaru, klient, KAM, IDtaryfaMag,
+JM, iloscWMAG, DataWaznosci, Trwaloscproduktu)
+SELECT * FROM OPENROWSET('Microsoft.ACE.OLEDB.12.0',
+'Excel 12.0; Database=C:\Users\JK43\Desktop\Magazyn.xlsx', 'SELECT * FROM [Magazyn$]')
+END;
+
+/*
+importuje dane z pliku zrzuconego przez ERP lub program magazynowy do tabeli magazyn przy założeniu, 
+że zrzut z ERP został wyeksportowany do arkusza kalkulacyjnego Excel o nazwie Magazyn.
+*/
+
+
+
+EXEC sp_configure 'Ad Hoc Distributed Queries', 0;
+RECONFIGURE WITH OVERRIDE;
+
+
+EXEC sp_configure 'show advanced options', 0;
+RECONFIGURE WITH OVERRIDE;
+
+--Wyłączenie AD HOC Queries--
+
 
 
 
