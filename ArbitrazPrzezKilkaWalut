@@ -133,7 +133,7 @@ i druga w parze walutowej
 
 /*
 wynik zwracany przez procedurę pokazuje kolejno pary walutowe wraz z kursami, które trzeba kolejno wymieniać, 
-żeby osiągnąć zysk z arbitrażu wraz z zyskiem na jednostkę waluty początkowej i kwotę zysku z arbitrażu z zainwestowanej kwoty. 
+żeby osiągnąć zysk z arbitrażu wraz z zyskiem na jednostkę waluty początkowej i kwotą zysku z arbitrażu z zainwestowanej kwoty. 
 Jeśli procedura zwróci same nazwy kolumn oznacza to, że arbitraż danego dnia z danej waluty nie jest możliwy
 */
 
