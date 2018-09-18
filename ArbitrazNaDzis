@@ -1,0 +1,169 @@
+
+/*
+
+Czym jest arbitraż: Arbitraż polega na wykorzystaniu rozbieżności pomiędzy ceną jednego dobra względem innego w 
+taki sposób, że możliwa jest wymiana danego dobra na inne i spowrotem na dobro z którego rozpoczęła się wymiana
+notując przy tym zysk. Zjawisko w poniższym przykładzie dotyczy rynku walutowego, ale może zaistnieć na rynku wszelkich innych dóbr.
+
+W tym wypadku zakładamy wstawianie kursów walutowych każdego dnia, którego odbywają się notowania. 
+Zakłada sie też, że możliwość arbitrażu bedzie sprawdzana codziennie.
+Podana w tym przypadku instrukcja insert domyślnie wstawi kursy z datą dzisiejszą analogicznie
+działa trigger, który policzy kursy odwrotne i wstawi je do tabeli z kursami. 
+Dzięki temu nie trzeba wstawiać sześciu kursów walutowych, żeby sprawdzić czy możliwy jest arbitraż, wystarczą trzy.
+Procedura zwracająca możliwe arbitraże z danej waluty nie wymaga w tym wypadku podania daty, którą domyślnie jest dzień dzisiejszy. 
+
+Objaśnienia:
+
+Środowisko: MS SQL 2014
+
+Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
+
+*/
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name='Arbitraz')
+DROP DATABASE Arbitraz;
+
+/*
+Sprawdza czy istnieje baza Arbitraz jeśli tak to likwiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.
+W wypadku sprawdzenia czy istnieje baza danych nie można użyć funkcji OBJECT_ID, 
+ponieważ działa ona tylko na obiektach znajdujących się w schematach.
+*/
+
+GO
+
+CREATE DATABASE Arbitraz;
+
+GO
+
+USE Arbitraz;
+
+GO
+
+IF OBJECT_ID('KwotowaniaVer1') IS NOT NULL
+DROP TABLE KwotowaniaVer1;
+
+/*
+Sprawdza czy istnieje tabela kwotowania. Jeśli tak to likwiduje ją jeśli 
+istnieje to zakładamy, że jeśli istnieje to została utworozna przez pomyłkę
+*/
+
+GO
+
+CREATE TABLE KwotowaniaVer1(ID int  IDENTITY(1,1), PierwszaWaluta char(3)  ,DrugaWaluta char(3) ,Kurs real not null, 
+Data date  PRIMARY KEY(PierwszaWaluta,DrugaWaluta ,Data));
+
+/*
+Tworzenie tabeli kwotowania, która będzie przechowywać dane dotyczące kursów walutowych z danego dnia.
+Na tabeli został utworzony klucz główny tak, żeby uniemożliwić wstawienie dwóch kursów walutowych dla danego dnia 
+(zgodnie z założeniem jednego kursu walutowego na dzień).
+ */
+
+GO
+
+IF OBJECT_ID('trAutoKursy') IS NOT NULL
+DROP TRIGGER trAutoKursy;
+
+/*
+Sprawdza czy istnieje trigger trAutokursy jeśli tak to jest likwidowany, zakładamy,
+że jeśli istnieje to został stworozny przez pomyłkę
+*/
+
+GO
+
+CREATE TRIGGER dbo.trAutoKursy ON KwotowaniaVer1  AFTER INSERT 
+
+AS
+
+INSERT INTO KwotowaniaVer1(PierwszaWaluta,DrugaWaluta,Kurs,Data)
+SELECT DrugaWaluta, PierwszaWaluta, 1/Kurs, Data 
+FROM KwotowaniaVer1 WHERE Data=CONVERT(Date,GETDATE()); 
+
+GO
+/*
+Zakładamy, że do tabeli KwotowanieVer1 wstawiamy tylko trzy niezbędne do arbitrażu pary walutowe dla danej waluty. 
+Powyższy trigger po wstawieniu danych przeliczy kursy odwrotne potrzebne do policzenia arbitrażu i wstawi je 
+do tabeli z kwotowaniami
+*/
+
+INSERT INTO KwotowaniaVer1 (PierwszaWaluta,DrugaWaluta, Kurs, Data)
+VALUES ('USD','CAD',2.007,CONVERT(Date,GETDATE())), ('USD','CNY',2.507,CONVERT(Date,GETDATE())),  
+('CAD','CNY',1.508,CONVERT(Date,GETDATE()));
+
+--Wstawienie kursów walutowych do tabeli KwotowaniaVer1. Kursy walutowe nie są rzeczywistymi kursami walutowymi w danym dniu.--
+
+SELECT*FROM KwotowaniaVer1  WHERE DATA=CONVERT(Date,GETDATE());
+
+/*
+CHECK danych wstawionych do tabeli KwotowaniaVer1 wstawiono trzy rekordy z parami walutowymi: USD/CAD, USD/CNY, CAD/CNY.
+Trigger trAutoKursy wstawi przeliczone kursy odwrotne do tabeli KwotowaniaVer1 czyli: CAD/USD, CNY/USD, CNY/CAD.
+*/
+
+GO
+
+IF OBJECT_ID('uspARBITRAZNADZIS') IS NOT NULL
+DROP PROC uspARBITRAZNADZIS;
+
+/*
+Sprawdza czy istnieje procedura uspARBITRAZNADZIS jeśli tak to jest likwidowana, zakładamy, 
+że jeśli istnieje to została stworzona przez pomyłkę
+*/
+
+GO
+
+CREATE PROC uspARBITRAZNADZIS (@waluta char(3),@Kwota real)
+AS
+
+/*
+Tworzenie procedury składowej, która po podaniu rodzaju waluty i kwoty możliwej do zainwestowania np. EUR i 1000
+sprawdzi czy jest możliwy arbitraż z tej waluty w dniu dzisiejszym
+*/
+
+
+WITH  FirstWaluta_CTE  (PierwszaWaluta ,DrugaWaluta,  Kurs , Data ) AS 
+
+(SELECT PierwszaWaluta,DrugaWaluta,Kurs, Data FROM KwotowaniaVer1 WHERE  Data=CONVERT(Date,GETDATE()) AND PierwszaWaluta=@waluta),
+
+--CTE w którym trzymany jest wynik zapytania do tabeli kwotowania z wybraną datą i walutą  jako pierwszą w parze walutowej--
+
+
+
+
+SecondWaluta_CTE  (PierwszaWaluta ,DrugaWaluta,Kurs , Data ) AS 
+ 
+(SELECT PierwszaWaluta,DrugaWaluta,  Kurs,Data  FROM KwotowaniaVer1 WHERE Data=CONVERT(Date,GETDATE()) AND DrugaWaluta=@waluta),
+
+--CTE w którym trzymany jest wynik zapytania do tabeli kwotowania z wybraną datą i walutą jako drugą w parze walutowej--
+
+ 
+ NOTWaluta_CTE  (PierwszaWaluta ,DrugaWaluta, Kurs , Data ) AS 
+
+ (SELECT PierwszaWaluta,DrugaWaluta,  Kurs,Data  FROM KwotowaniaVer1 WHERE Data=CONVERT(Date,GETDATE())
+ AND DrugaWaluta NOT LIKE @waluta AND PierwszaWaluta NOT LIKE @waluta)
+
+/*
+CTE w którym trzymany jest wynik zapytania do tabeli kwotowania z wybraną datą i walutami innymi 
+niż wybrana zarówno jako pierwsza i druga w parze walutowej
+*/
+
+ SELECT CONCAT( a.PierwszaWaluta,'/', a.DrugaWaluta) AS PierwszaParaWalutowa,  
+ a.Kurs, 
+ CONCAT(b.PierwszaWaluta,'/',b.DrugaWaluta) AS DrugaparaWalutowa, 
+ b.Kurs,
+ a.Kurs*b.Kurs AS KursPrzeliczony,
+ CONCAT(c.PierwszaWaluta,'/',c.DrugaWaluta) AS TrzeciaParaWalutowa,
+ c.Kurs, 
+ a.Kurs*b.Kurs*c.Kurs-1 AS ZyskArbitrazowyNaJedn,
+ (a.Kurs*b.Kurs*c.Kurs-1)*@Kwota AS ZyskArbitazowzKwota,
+ a.Data
+ FROM FirstWaluta_CTE AS a 
+ INNER JOIN NOTWaluta_CTE AS b ON a.DrugaWaluta=b.PierwszaWaluta 
+ INNER JOIN SecondWaluta_CTE AS c ON a.PierwszaWaluta=c.DrugaWaluta 
+ AND b.DrugaWaluta=c.PierwszaWaluta
+ WHERE  a.Kurs*b.Kurs*c.Kurs-1>0;
+
+ /*
+ Wynik zwracany przez procedurę pokazuje kolejno pary walutowe wraz z kursami, które trzeba kolejno wymieniać,
+ żeby osiągnąć zysk z arbitrażu wraz z zyskiem na jednostkę waluty początkowej i kwotę zysku z arbitrażu z zainwestowanej kwoty.
+ Jeśli procedura zwróci same nazwy kolumn oznacza to, że arbitraż danego dnia z danej waluty nie jest możliwy
+ */
+
