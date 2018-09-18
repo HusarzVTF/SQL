@@ -4,7 +4,11 @@ Polega na wykorzystaniu rozbieżności pomiędzy ceną jednego dobra względem i
 jest wymiana danego dobra na inne i s powrotem na dobro z którego rozpoczęła się wymiana notując przy tym zysk. 
 Zjawisko w poniższym przykładzie dotyczy rynku walutowego, ale może zaistnieć na rynku wszelkich innych dóbr.
 Zakładamy, że kurs brany pod uwagę to kurs dzienny. 
+
+Objaśnienia:
+
 Wersja MS SQL 2014
+
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
 */
 
@@ -30,7 +34,7 @@ GO
 IF OBJECT_ID('Kwotowania') IS NOT NULL
 DROP TABLE Kwotowania;
 
--- Sprawdza czy istnieje tabela kwotowania. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że istnieje przez pomyłkę --
+-- Sprawdza czy istnieje tabela kwotowania. Jeśli tak to likwiduje ją jeśli istnieje to zakładamy, że istnieje przez pomyłkę--
 
 GO
 
@@ -124,7 +128,7 @@ i druga w parze walutowej
  a.Data
  FROM FirstWaluta_CTE AS a INNER JOIN NOTWaluta_CTE AS b ON a.DrugaWaluta=b.PierwszaWaluta 
  INNER JOIN SecondWaluta_CTE AS c ON a.PierwszaWaluta=c.DrugaWaluta 
- AND b.DrugaWaluta=c.PierwszaWaluta WHERE a.Data=@Data AND a.Kurs*b.Kurs*c.Kurs-1>0;
+ AND b.DrugaWaluta=c.PierwszaWaluta WHERE a.Kurs*b.Kurs*c.Kurs-1>0;
  
 
 /*
