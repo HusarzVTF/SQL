@@ -1,0 +1,120 @@
+
+--Środowisko SQL Server 2014 Managment Studio--
+
+USE BILARD;
+
+GO
+
+--Wskazanie na wykorzystanie bazy Bilard do utworzenia procedury automatycznego losowania--
+
+IF OBJECT_ID('uspAutoLoso') IS NOT NULL
+DROP PROC uspAutoLoso;
+
+/*
+Isntrukcja sprawdzająca czy istnieje już procedura  o tej samej nazwie. 
+Jeśli tak to jest likwidowana, zakładamy, że jeśli istnieje to została stworzona przez pomyłkę
+*/
+
+GO
+
+CREATE PROC uspAutoLoso AS 
+
+DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA<>SEcondBILA)
+
+
+DECLARE @ParJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA=SEcondBILA)
+DECLARE @ParNOTJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA<>SEcondBILA)
+
+
+IF @ParJedLOS>@ParJedWZ OR @ParNOTJedLOS>@ParNOTJedWZ
+THROW 51000, 'Niedopasowanie par bilowych do losowania  pod względem jednorodności żadna wartość nie zostanie  wylosowana' ,1;
+
+/*
+Ta część procedury sprawdza czy został zachowany warunek dopasowania bil losowych do wzoru pod względem jednorodności.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+ELSE
+
+DECLARE @BilePolWZ int=(SELECT COUNT(FirstBILA) FROM BillarWzor WHERE FirstBILA=1 )
+
+DECLARE @BilePolWZ1 int=(SELECT COUNT(SEcondBILA) FROM BillarWzor WHERE SEcondBILA=1)
+
+DECLARE @BilePolLS int=(SELECT COUNT(FirstBILA) FROM LosowBilard  WHERE  FirstBILA=1)
+
+DECLARE @BilePolLS1 int=(SELECT COUNT(SEcondBILA) FROM LosowBilard  WHERE  SEcondBILA=1)
+
+IF @BilePolLS+@BilePolLS1<>8 
+
+THROW 51001, 'Bil całych i połówek w ułożeniu losowym powinno być po równo (8).' , 1; 
+ 
+IF @BilePolWZ+@BilePolWZ1<>8
+
+THROW 51002, 'Bil całych i połówek  w ułożeniu wzorowym powinno być po równo (8).' , 1; 
+
+/* Ta część procedury sprawdza czy ilość bill jest prawidłowa. Wszystkch bill jest szesnaśćie
+powinno być osiem całych i połówek. Jeśli tak nie jest zwróci błąd i przerwie procedurę. */
+
+DECLARE @Pozycja int=(SELECT MIN(ID) FROM BillarWzor)
+
+WHILE (SELECT COUNT(ID) FROM BillarWzor)>(SELECT COUNT(WzorID) FROM Wylosowane)
+
+BEGIN
+
+IF EXISTS (SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=A.ID   
+AND B.ID NOT IN (SELECT LosID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)
+
+BEGIN
+
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=A.ID   
+AND B.ID NOT IN (SELECT LosID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+
+SET @Pozycja=@Pozycja+1
+
+IF @Pozycja > (SELECT MAX(ID) FROM BillarWzor)
+
+BREAK 
+	  
+END
+
+ELSE
+
+BEGIN
+
+INSERT INTO Wylosowane 
+SELECT  A.ID AS WzID,B.ID AS LosID,B.SEcondBILA, B.FirstBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+A.FirstBILA=B.SEcondBILA AND A.SEcondBILA=B.FirstBILA WHERE @Pozycja=A.ID   
+AND B.ID NOT IN (SELECT LosID FROM Wylosowane)
+ORDER BY A.ID
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+
+SET @Pozycja=@Pozycja+1
+
+IF @Pozycja > (SELECT MAX(ID) FROM BillarWzor)
+
+BREAK 
+
+END
+
+END;
+
+/* Losowanie bil odbywa się w porządku narastającym względem numeru pary bilowej (ID) w pętli, 
+która zakończy pracę po wylosowaniu wszystkich bill. Sposób tworzenia zbiorów dostępnych do 
+wstawienia bill i wstawiania ich do tabeli wylosowane jest taki sam jak w przypadku losowania
+pojedyńczego/manualnego. */
+
+
+
+
+
+
+
+
