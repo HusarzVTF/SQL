@@ -1,0 +1,136 @@
+/*
+
+Poniżej skrypt updateujący procedurę symulującą  "ręczne losowanie" bill.
+Wprowadza on nowy/kolejny warunek, który musi zostać spełniony przed uruchomieniem 
+losowania. Dotyczy on ilości bill całych i połówek.
+
+*/
+
+
+
+
+
+
+USE BILARD
+
+GO
+
+ALTER PROC [dbo].[uspLosow] (@Pozycja int) AS 
+
+DECLARE @ParJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA=SEcondBILA)
+
+DECLARE @ParNOTJedLOS int=(SELECT COUNT(*) FROM LosowBilard WHERE FirstBILA<>SEcondBILA)
+
+
+DECLARE @ParJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA=SEcondBILA)
+
+DECLARE @ParNOTJedWZ int=(SELECT COUNT(*) FROM BillarWzor WHERE FirstBILA<>SEcondBILA)
+
+IF @ParJedLOS>@ParJedWZ OR @ParNOTJedLOS>@ParNOTJedWZ
+
+THROW 51000, 'Niedopasowanie par bilowych do losowania  pod względem jednorodności żadna wartość nie zostanie  wylosowana' ,1;
+
+/*
+Ta część procedury sprawdza czy został zachowany warunek dopasowania bil losowych do wzoru pod względem jednorodności.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+DECLARE @BilePolWZ int=(SELECT COUNT(FirstBILA) FROM BillarWzor WHERE FirstBILA=1 )
+
+DECLARE @BilePolWZ1 int=(SELECT COUNT(SEcondBILA) FROM BillarWzor WHERE SEcondBILA=1)
+
+DECLARE @BilePolLS int=(SELECT COUNT(FirstBILA) FROM LosowBilard  WHERE  FirstBILA=1)
+
+DECLARE @BilePolLS1 int=(SELECT COUNT(SEcondBILA) FROM LosowBilard  WHERE  SEcondBILA=1)
+
+IF @BilePolLS+@BilePolLS1<>8 
+
+THROW 51001, 'Bil całych i połówek w ułożeniu losowym powinno być po równo (8).' , 1; 
+ 
+IF @BilePolWZ+@BilePolWZ1<>8
+
+THROW 51002, 'Bil całych i połówek  w ułożeniu wzorowym powinno być po równo (8).' , 1; 
+ 
+/*
+Ta część procedury sprawdza czy ilość bill jest prawidłowa. Wszystkch bill jest szesnaśćie po osiem całych i połówek.
+Jeśli tak nie jest zwróci błąd i przerwie procedurę.
+*/
+
+ELSE 
+
+IF @Pozycja NOT IN(1,2,3,4,5,6,7,8)
+
+THROW 51003,'Podano nieprawidlowa pare bili do wylosowania, par jest od 1 do 8',1;
+
+/*
+Pierwsza część procedury sprawdza czy wprowadzono poprawną wartość dla pozycji pary bil do losowania.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+ELSE
+
+IF EXISTS (SELECT ID FROM LosowBIlard JOIN Wylosowane ON ID=LosID WHERE @Pozycja=LosID) 
+
+THROW 51004,'Para bil zostala juz wykorzystana w poprzednim losowaniu, należy podac inna',1;
+
+/*
+Ta część procedury sprawdza czy wprowadzona para bil nie została wprowadzona uprzednio.
+Jeśli nie zwraca komunikat o błędzie i nie wykonuje dalaszych operacji.
+*/
+
+ELSE
+
+IF EXISTS (SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+
+ORDER BY A.ID
+
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY)
+
+BEGIN
+
+INSERT INTO Wylosowane 
+
+SELECT  A.ID AS WzID,B.ID AS LosID,B.FirstBILA, B.SEcondBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON 
+
+A.FirstBILA=B.FirstBILA AND A.SEcondBILA=B.SEcondBILA WHERE @Pozycja=B.ID   
+
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+
+ORDER BY A.ID
+
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+
+END
+
+/*Ta część procedury wstawia do tabeli wylosowane wynik losowania dla par bil w których pierwsza bila losowana
+równa się pierwszej bili wzorowej i analogicznie druga
+*/
+
+ELSE
+
+INSERT INTO Wylosowane 
+
+SELECT  A.ID AS WzID,B.ID AS LosID,B.SEcondBILA, B.FirstBILA FROM BillarWzor AS A JOIN LosowBilard AS B ON
+ 
+A.FirstBILA=B.SEcondBILA AND A.SEcondBILA=B.FirstBILA WHERE @Pozycja=B.ID
+   
+AND A.ID NOT IN(SELECT WzorID FROM Wylosowane)
+
+ORDER BY A.ID
+
+OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;
+
+/* Ta część procedury wstawia do tabeli wylosowane wynik losowania dla par bil w których pierwsza bila losowana równa
+się drugiej bili wzorowej a druga bila losowana równa się pierwszej bili wzorowej */
+
+
+
+
+
+
+
+
