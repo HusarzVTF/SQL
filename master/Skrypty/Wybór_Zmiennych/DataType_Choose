@@ -1,0 +1,29 @@
+
+-- Poniższy skrypt można zastosować celem sprawdzenia, jaki typ danych dla danego atrybutu jakiego chcemy użyć w tabeli będzie wydajniejszy --
+
+DECLARE @zmiA bigint=123456789;
+
+-- Zapis bigint=123456789 ma charakter przykładowy zamiast tego należy wstawić pierwszy typ danych do porównania i wartość zmiennej --
+
+DECLARE @zmiB int=123456789;
+
+-- Zapis int=123456789 ma charakter przykładowy zamiast tego należy wstawić drugi typ danych do porównania i wartość zmiennej --
+
+SELECT  @zmiA AS ZmiennaPierwsza, datalength(@zmiA) AS ZajmPamA,@zmiB AS ZmiennaDruga, datalength(@zmiB) AS ZajmPamB
+
+IF  datalength(@zmiA)<datalength(@zmiB)
+
+PRINT'Mniej pamięci zajmuje zmienna A i lepiej wybrać jej typ danych o ile wstawiona wartość zmiennej wyświetla się w prawidłowo'
+
+IF datalength(@zmiA)=datalength(@zmiB)
+
+PRINT'Obie zmienne zajmują tyle samo bajtów'
+
+IF datalength(@zmiA)>datalength(@zmiB)
+
+PRINT'Mniej bajtów zajmuje zmienna B i lepiej wybrać jej typ danych o ile wstawiona wartość zmiennej wyświetla sie prawidłowo'
+
+
+/* Skrypt wyświetli obie zmienne oraz ich rozmiar w bajtach. Dodatkowo w sekscji messages pojawi się komunikat informujący,
+którą zmienną należy wybrać. Pamiętać należy o tym by zwrócić uwagę czy informacje przechowywane w obydwu zmiennych są takie same 
+(sekcja results) */
