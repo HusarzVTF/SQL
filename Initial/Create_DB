@@ -1,0 +1,16 @@
+
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name='Stacja_Paliw')
+DROP DATABASE Stacja_Paliw;
+GO
+
+/*
+Sprawdza czy istnieje baza Stacja_Paliw jesli tak to likwiduje ja. Zakladamy,
+ ze jesli istnieje to zostala utworzona przez pomylke. W wypadku sprawdzenia czy
+  istnieje baza danych nie mozna uzyc funkcji OBJECT_ID, 
+poniewaz dziala ona tylko na obiektach znajdujacych sie w schematach.
+*/
+
+CREATE DATABASE Stacja_Paliw;
+
+--Tworzenie bazy Stacja_Paliw--
