@@ -1,0 +1,45 @@
+USE Test_DB;
+
+GO;
+
+INSERT INTO Lokacje.Wojewodztwa(Wojewodztwo) VALUES 
+('Dolnośląskie'), ('Warmińsko-Mazurskie'), ('Kujawsko-Pomorskie'), ('Mazowieckie'),
+('Pomorskie'), ('Lubelskie'), ('Lubuskie'),('Łódzkie'),
+('Małopolskie'), ('Opolskie'), ('Podkarpackie'),('Podlaskie'),
+('Śląskie'), ('Świętokrzyskie'), ('Wielkopolskie'), ('Zachodniopomorskie');
+
+--wstawienie nazw wojewodztw do tabeli Wojewodztwa--
+
+INSERT INTO Lokacje.Powiat(IdWoj,Powiat) VALUES
+
+(1,'Wrocław'), (2,'Olsztyn'), (3,'Bydgoszcz'), (4,'Warszawa'),
+(5,'Gdańsk'), (6,'Lublin'), (7,'Gorzów Wielkopolski'), (8,'Łódź'),
+(9,'Kraków'), (10,'Opole'), (11,'Rzeszów'), (12,'Białystok'),
+(13,'Katowice'),(14,'Kielce'), (15,'Poznań'), (16,'Szczecin');
+
+--wstawienie powiatów do tabeli Powiat--
+
+INSERT INTO Lokacje.Gmina(IdPowiatu,Gmina) VALUES
+(1,'Wrocław'), (2,'Olsztyn'), (3,'Bydgoszcz'), (4,'Warszawa'),
+(5,'Gdańsk'), (6,'Lublin'), (7,'Gorzów Wielkopolski'), (8,'Łódź'),
+(9,'Kraków'), (10,'Opole'), (11,'Rzeszów'), (12,'Białystok'),
+(13,'Katowice'),(14,'Kielce'), (15,'Poznań'), (16,'Szczecin');
+
+--wstawienie nazw gmin do tabeli Gmina--
+
+INSERT INTO Lokacje.Miejscowosc(IdGminy,Miejscowosc) VALUES
+
+(1,'Wrocałw'), (2,'Olsztyn'), (3,'Bydgoszcz'), (4,'Warszawa'),
+(5,'Gdańsk'), (6,'Lublin'), (7,'Gorzów Wielkopolski'), (8,'Łódź'),
+(9,'Kraków'), (10,'Opole'), (11,'Rzeszów'), (12,'Białystok'),
+(13,'Katowice'),(14,'Kielce'), (15,'Poznań'), (16,'Szczecin');
+
+--wstawienie miast do tabeli Miejscowosc--
+
+SELECT W.Wojewodztwo, P.Powiat, G.Gmina, M.Miejscowosc FROM  Lokacje.Wojewodztwa AS W 
+LEFT JOIN Lokacje.Powiat AS P ON W.IdWoj=P.IdWoj 
+LEFT JOIN Lokacje.Gmina AS G ON P.IdPowiatu=G.IdPowiatu 
+LEFT JOIN Lokacje.Miejscowosc AS M ON G.IdGminy=M.IdGminy;
+
+--Zapytanie pokazujace czy dane w tabelach slownikowych sa kompletne i poprawne--
+
