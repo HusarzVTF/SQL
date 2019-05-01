@@ -1,0 +1,166 @@
+USE Test_DB;
+
+GO
+
+CREATE SCHEMA Lokacje;
+
+--Tworzenie schematu lokacje dla tabeli słownikowych zawierających dane lokacyjne--
+
+GO
+
+IF OBJECT_ID('Lokacje.Wojewodztwa') IS NOT NULL
+DROP TABLE Lokacje.Wojewodztwa;
+GO
+
+--Sprawdza czy istnieje tabela Wojewodztwa, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+CREATE TABLE Lokacje.Wojewodztwa
+(IdWoj int IDENTITY, 
+Wojewodztwo varchar(50) not null UNIQUE CHECK(LEN(Wojewodztwo)>=7), 
+CONSTRAINT PK_Woj PRIMARY KEY(IdWoj));
+
+--Tworzenie tabeli słownikowej Wojewodztwa--
+
+GO
+IF OBJECT_ID('Lokacje.Powiat') IS NOT NULL
+DROP TABLE Lokacje.Powiat;
+GO
+
+--Sprawdza czy istnieje tabela Powiat, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+CREATE TABLE Lokacje.Powiat
+(IdPowiatu int  IDENTITY,
+IdWOJ int CONSTRAINT PK_PowWoj FOREIGN KEY REFERENCES Lokacje.Wojewodztwa(IdWoj),
+Powiat varchar(50) not null CHECK(LEN(Powiat)>=4),
+CONSTRAINT PK_Pow PRIMARY KEY(IdPowiatu) );
+
+--Tworzenie tabeli słownikowej Powiat--
+
+GO
+
+IF OBJECT_ID('Lokacje.trPow') IS NOT NULL
+DROP TRIGGER Lokacje.trPow;
+
+GO
+
+CREATE TRIGGER Lokacje.trPow ON Lokacje.Powiat
+AFTER INSERT, UPDATE 
+AS
+IF EXISTS(
+SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu<(SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+INTERSECT
+SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu=(SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+)
+BEGIN
+PRINT 'Próbowano wstawić duplikat do tabeli Powiat, operacja została cofnięta.'
+ROLLBACK TRANSACTION;  
+RETURN 
+END;
+
+--Trigger blokujacy wstawienie kolejny raz tej samej kombinacji wojewodztwa i powiatu--
+
+
+
+GO
+
+IF OBJECT_ID('Lokacje.Gmina') IS NOT NULL
+
+DROP TABLE Lokacje.Gmina;
+
+GO
+
+--Sprawdza czy istnieje tabela Gmina, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+CREATE TABLE Lokacje.Gmina(
+IdGminy int IDENTITY,
+IdPowiatu int CONSTRAINT PK_GmiPow FOREIGN KEY REFERENCES Lokacje.Powiat(IdPowiatu),
+Gmina varchar(50) not null  CHECK(LEN(Gmina)>=4),
+CONSTRAINT PK_Gmi PRIMARY KEY (IdGminy) );
+
+--Tworzenie tabeli słownikowej Gmina--
+
+
+
+GO
+
+IF OBJECT_ID('Lokacje.trGminaCheck') IS NOT NULL
+
+DROP TRIGGER Lokacje.trGminaCheck;
+
+GO
+
+
+CREATE TRIGGER trGminaCheck ON Lokacje.Gmina
+
+AFTER INSERT, UPDATE 
+
+AS 
+
+IF EXISTS
+(
+SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy=(SELECT MAX(IdGminy) FROM Gmina)
+INTERSECT
+SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Gmina)
+)
+BEGIN
+PRINT 'Próbowano wstawić duplikat do tabeli Gmina, operacja została cofnięta.'
+ROLLBACK TRANSACTION;  
+RETURN 
+END;
+
+
+/* Trigger usuwający duplikaty na poziomie dwie takie same gminy w jednym powiecie. 
+Mogą być dwie takie same gminy w różnych powiatach np. Olsztyn powiat Częstochowski
+i Olsztyn powiat Olsztyn miasto/gmina na prawach powiatu */
+
+
+GO
+
+IF OBJECT_ID('Lokacje.Miejscowosc') IS NOT NULL
+
+DROP TABLE Lokacje.Miejscowosc;
+
+--Sprawdza czy istnieje tabela Miejscowosc, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+GO
+
+CREATE TABLE Lokacje.Miejscowosc(
+IDMiej int  IDENTITY,
+IDGminy int CONSTRAINT PK_GmiMi FOREIGN KEY REFERENCES Lokacje.Gmina(IdGminy), 
+Miejscowosc varchar(50) not null CHECK(LEN(Miejscowosc)>=4), 
+CONSTRAINT PK_Miej PRIMARY KEY (IDMiej) );
+
+
+--Tworzenie tabeli słownikowej Miejscowosc--
+
+GO
+
+IF OBJECT_ID('Lokacje.trMiejCheck') IS NOT NULL
+
+DROP TRIGGER Lokacje.trMiejCheck;
+
+GO
+
+
+CREATE TRIGGER trMiejCheck ON Lokacje.Miejscowosc
+
+AFTER INSERT, UPDATE 
+
+AS 
+
+IF EXISTS
+(
+SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej=(SELECT MAX(IDMiej ) FROM Miejscowosc) 
+INTERSECT
+SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Miejscowosc)
+)
+BEGIN
+PRINT 'Próbowano wstawić duplikat do tabeli Miejscowosc, operacja została cofnięta.'
+ROLLBACK TRANSACTION;  
+RETURN
+END;
+
+
+/* Trigger usuwający duplikaty z tabeli miejscowosc. */
+
+
