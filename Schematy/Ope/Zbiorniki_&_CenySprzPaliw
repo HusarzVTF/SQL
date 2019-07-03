@@ -1,0 +1,128 @@
+USE Stacja_Paliw;
+
+--wskazanie na wykorzystanie bazy Stacja_Paliw--
+
+GO
+
+
+IF OBJECT_ID('Ope.Zbiorniki') IS NOT NULL
+DROP TABLE Ope.Zbiorniki;
+GO
+
+--Sprawdza czy istnieje tabela Zbiorniki jeśli tak tp likwiduje ją. Zakładamy, że jeśli istnieje to została utworzona przez pomyłkę.--
+
+CREATE TABLE Ope.Zbiorniki(
+IDPaliwa tinyint IDENTITY, 
+RodzajPaliwa varchar(7) UNIQUE  NOT NULL CHECK((RodzajPaliwa) IN ('Benzyna','Gaz','Ropa')),
+JM varchar(4) NOT NULL CHECK(JM IN('M3','Litr')), 
+Pojemnosc real NOT NULL, 
+INCOMEtoZbiornik real CHECK((INCOMEtoZbiornik)>0), 
+OUTCOMEfromZbiornik real CHECK((OUTCOMEfromZbiornik)>0),
+StanZbiornika  AS INCOMEtoZbiornik-OUTCOMEfromZbiornik PERSISTED,
+Marza decimal(5,4) not null CHECK(Marza BETWEEN 0 AND 0.99 )
+CONSTRAINT PK_Pali  PRIMARY KEY (IDPaliwa));
+
+GO
+
+--Tworzenie tabeli zbiorniki.--
+
+
+
+
+INSERT INTO Ope.Zbiorniki(RodzajPaliwa,JM,Pojemnosc,Marza)
+VALUES('Benzyna','Litr',1000000,0.05),('Gaz','M3',1000000,0.15),('Ropa','Litr',1000000,0.08);
+
+--Wstawienie  danych do tabeli zbiorniki--
+
+
+
+
+
+
+IF OBJECT_ID('Ope.trCriticalOILLevel') IS NOT NULL
+DROP TRIGGER Ope.trCriticalOILLevel;
+
+
+GO
+
+CREATE TRIGGER  Ope.trCriticalOILLevel ON Ope.Zbiorniki
+AFTER INSERT, UPDATE, DELETE
+AS
+
+
+DECLARE @StanZbioBEN real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Benzyna')
+
+IF @StanZbioBEN<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Benzyna')
+BEGIN
+DECLARE @erromessage varchar(500)=('Niski poziom zbiorników benzyny wynosi obecnie '+CAST(@StanZbioBEN AS varchar(400))+' Litrów');
+THROW 51000, @erromessage, 1; 
+END;
+  
+
+DECLARE @StanZbioROP real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Ropa')
+
+IF @StanZbioROP<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Ropa')
+BEGIN 
+DECLARE @erromessageOne varchar(500)=('Niski poziom zbiorników ropy wynosi obecnie '+CAST(@StanZbioROP AS varchar(400))+' Litrów');
+THROW 51001, @erromessageOne, 1; 
+END;
+
+DECLARE @StanZbioGAZ real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
+
+IF @StanZbioGAZ<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
+BEGIN 
+DECLARE @erromessageTwo varchar(500)=('Niski poziom zbiorników gazu'+CAST(@StanZbioGAZ AS varchar(400))+' M3');
+THROW 51002, @erromessageTwo, 1; 
+END;
+
+
+--Trigger, który wyświetli komunikat o zbyt niskim stanie danego paliwa w postaci błędu.--
+
+
+
+
+GO 
+
+IF OBJECT_ID('Ope.CenyPa') IS NOT NULL
+DROP TABLE Ope.CenyPa;
+
+GO
+
+CREATE TABLE Ope.CenyPa
+(ID tinyint IDENTITY PRIMARY KEY, IDPALIW tinyint CONSTRAINT FK_IDCenP REFERENCES Ope.Zbiorniki(IDPaliwa),CenaJedn real )
+
+--Tworzenie tabeli z cenami paliw--
+
+INSERT INTO Ope.CenyPa(IDPALIW)
+SELECT IDPaliwa FROM Ope.Zbiorniki
+
+
+--Wstawienie Id paliw z tabeli Zbiorniki do tabeli z cenami paliw.Tabela z cenami paliw będzie przechowywać ceny sprzedaży paliw. Do tabeli z cenami paliw nie wstawiana jest żadna cena z tego względu, że jednostkowa cena paliw będzie wyliczana wg mechanizmu bazujacego na ruchomej średniej ważonej liczonej na podstawie ceny zakupu plus marża--
+
+GO
+
+IF OBJECT_ID('Ope.trNEWCenPaliwa') IS NOT NULL
+DROP TRIGGER Ope.trNEWCenPaliwa;
+
+GO
+
+CREATE TRIGGER Ope.trNEWCenPaliwa ON Ope.Zbiorniki
+AFTER INSERT
+AS
+IF EXISTS(SELECT IDPaliwa FROM Ope.Zbiorniki
+EXCEPT SELECT IDPALIW FROM Ope.CenyPa)
+BEGIN
+INSERT INTO Ope.CenyPa(IDPALIW)
+SELECT IDPaliwa FROM Ope.Zbiorniki
+EXCEPT 
+SELECT IDPALIW FROM Ope.CenyPa
+END;
+
+
+--Trigger, który  wstawi nowy rodzaj paliwa do tabeli z cenami paliw zaraz po wstawieniu nowego paliwa do tabeli zbiorniki --
+
+
+
+
+
+
