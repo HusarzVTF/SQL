@@ -96,8 +96,12 @@ CREATE TABLE Ope.CenyPa
 INSERT INTO Ope.CenyPa(IDPALIW)
 SELECT IDPaliwa FROM Ope.Zbiorniki
 
-
---Wstawienie Id paliw z tabeli Zbiorniki do tabeli z cenami paliw.Tabela z cenami paliw będzie przechowywać ceny sprzedaży paliw. Do tabeli z cenami paliw nie wstawiana jest żadna cena z tego względu, że jednostkowa cena paliw będzie wyliczana wg mechanizmu bazujacego na ruchomej średniej ważonej liczonej na podstawie ceny zakupu plus marża--
+/*
+Wstawienie Id paliw z tabeli Zbiorniki do tabeli z cenami paliw.Tabela z cenami paliw będzie przechowywać
+ceny sprzedaży paliw. Do tabeli z cenami paliw nie wstawiana jest żadna cena z tego względu, 
+że jednostkowa cena paliw będzie wyliczana wg mechanizmu bazujacego na ruchomej średniej ważonej liczonej
+na podstawie ceny zakupu plus marża
+*/
 
 GO
 
