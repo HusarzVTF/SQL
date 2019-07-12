@@ -1,0 +1,196 @@
+USE Stacja_Paliw;
+GO
+
+
+IF OBJECT_ID('Ope.Klienci') IS NOT NULL
+DROP TABLE Ope.Klienci;
+GO
+
+--Sprawdza czy istnieje tabela Klienci, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+CREATE TABLE Ope.Klienci(
+IdKlienta int  IDENTITY, 
+NazwaKlienta varchar(100) not null UNIQUE CHECK(LEN(NazwaKlienta)>=4), 
+IDMiejscowosc int  CONSTRAINT PK_KLMie FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
+DnidoZaplaty int not null CHECK ((DniDoZaplaty)>=0), 
+KODPocztowy char(6) CHECK(Len(KODPocztowy)=6),
+Ulica varchar(100) not null, 
+NrDomu int not null,
+NrLokalu int not null,
+AdresSpecj varchar(10),
+NIP bigint UNIQUE CHECK (LEN(NIP)=11), 
+TEL int UNIQUE CHECK(LEN(TEL)=9),
+CONSTRAINT PK_Kl PRIMARY KEY (IdKlienta));
+
+/*
+Zgodnie z polityką firmy (Stacji paliw) żaden kient nie może mieć dłuższego terminu płatności niż 150 dni, 
+dlatego można użyć zmiennej tinyiny zamiast int
+*/
+
+--AdresSpecj dla adresow specjalnych z litera jak 23F/5T--
+
+--Tworzenie tabeli Klienci--
+
+
+
+GO
+
+IF OBJECT_ID('Ope.trCHECKADRklient') IS NOT NULL
+DROP TRIGGER Ope.trCHECKADRklient;
+
+/*
+Sprawdza czy istnieje trigger CHECKklient jeśli tak to likwiduje go. 
+Zakładamy, że jeżeli istnieje to został stworzony prze pomyłkę
+*/
+
+GO
+
+CREATE TRIGGER Ope.trCHECKADRklient ON Ope.Klienci
+AFTER UPDATE,INSERT
+AS
+
+IF EXISTS
+(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Klienci 
+WHERE IdKlienta NOT IN (SELECT MAX(IdKlienta) FROM Klienci)
+INTERSECT 
+SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Klienci 
+WHERE IdKlienta IN (SELECT MAX(IdKlienta) FROM Klienci))
+BEGIN
+PRINT'Próbowano wstawić  klienta z błędnym adresem lub zmienić adres na błędny 
+(pod wprowadzanym adresem jest już wprowadzony inny klient).'
+ROLLBACK TRANSACTION;  
+RETURN
+END;
+
+--Trigger blokujący wstawienie więcej niż jednego klienta pod tym sam adresem--
+
+
+
+GO
+IF OBJECT_ID('Ope.trCheckPar') IS NOT NULL
+DROP TRIGGER Ope.trCheckPar;
+GO
+CREATE TRIGGER Ope.trCheckPar ON Ope.Klienci
+AFTER INSERT,UPDATE
+AS
+DECLARE @Tab table(IdKlienta int)
+INSERT INTO @Tab
+SELECT IdKlienta FROM Klienci WHERE (NIP IS NULL OR NazwaKlienta  LIKE '%Paragon%' OR 
+NazwaKlienta LIKE '%Paragon' OR NazwaKlienta LIKE 'Paragon%' OR NazwaKlienta LIKE 'Paragon')
+IF (SELECT COUNT(IdKlienta) FROM @Tab)>1
+BEGIN 
+PRINT'Próbowano wstawić kolejnego klienta bez NIPU-u lub kupującego na paragon, żadne dane w tabeli klienci nie zostały zmienione.'
+ROLLBACK TRANSACTION;  
+RETURN
+END;
+
+
+--Trigger, który blokuje ponowne wstawienie klienta detalicznego (kupującego na paragon) do tabeli Klienci--
+
+GO
+
+INSERT INTO Ope.Klienci(NazwaKlienta,IDMiejscowosc,DnidoZaplaty,KODPocztowy,Ulica, NrDomu, NrLokalu)
+VALUES
+
+('Paragon',9,0,'00-000','XXXX',0,0);
+
+--Wstawienie klientow do tabeli klienci. Klient incydentalny oznacza kupującego na paragon. --
+GO
+
+INSERT INTO Ope.Klienci(NazwaKlienta,IDMiejscowosc,DnidoZaplaty,KODPocztowy,Ulica, NrDomu, NrLokalu,NIP, TEL)
+VALUES
+
+('Ajmax', 1,30,'10-789','Silnorękich',5,6,11111111112,123456789),
+('Luna',2,15,'11-111','Grzybków',11,1,22222222223,923456789),
+('Zond',3,60,'10-101','Grzechotnika',8,2,33333333334,129456789),
+('Ariel',4,5,'89-101','Gromkich',8,2,44444444445,121451789),
+('Plato',5,3,'12-123','Goclowska',1,7,55555555567,721471787),
+('Erato',5,90,'12-132','Goclowska',1,7,66666666667,721471789),
+('Dart',6,8,'25-456','Nakowska',5,1,77777777778,124491787),
+('Euclid',7,4,'57-623','Namaniacka',8,3,88888888889,741421737),
+('Astral',8,4,'34-123','Skandyanwska',2,3,99999999991,121471781);
+
+--Wstawienie klientow do tabeli klienci--
+
+
+
+GO
+IF OBJECT_ID('Ope.Dostawcy') IS NOT NULL 
+DROP TABLE Ope.Dostawcy;
+GO
+
+--Sprawdza czy istnieje tabela Dostawcy, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+
+CREATE TABLE Ope.Dostawcy(
+IdDostawcy int  IDENTITY, 
+NazwaDostawcy varchar(100) not null UNIQUE CHECK(LEN(NazwaDostawcy)>=4),
+IDMiejscowosc int  CONSTRAINT FK_Miej FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
+DniDoZaplaty int not null CHECK ((DniDoZaplaty)>=0), 
+KODPocztowy char(6) CHECK(Len(KODPocztowy)=6),
+Ulica varchar(100) not null,
+NrDomu int not null, 
+NrLokalu int not null,
+AdresSpecj varchar(10),
+NIP bigint not null UNIQUE, 
+TEL int  not null UNIQUE,
+CONSTRAINT PK_Dos PRIMARY KEY(IdDostawcy)
+);
+
+
+--Tworzenie tabeli Dostawcy--
+
+
+
+IF OBJECT_ID('Ope.trCHECKADrDost') IS NOT NULL
+DROP TRIGGER Ope.trCHECKADrDost;
+
+
+GO
+
+CREATE TRIGGER Ope.trCHECKADrDost ON Ope.Dostawcy
+AFTER UPDATE,INSERT
+
+AS
+
+IF EXISTS
+(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Dostawcy 
+WHERE IdDostawcy NOT IN (SELECT MAX(IdDostawcy) FROM Dostawcy)
+INTERSECT 
+SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Dostawcy 
+WHERE IdDostawcy IN (SELECT MAX(IdDostawcy) FROM Dostawcy))
+BEGIN
+PRINT 'Próbowano wstawić dostawcę z błędnym adresem (pod wprowadzanym adresem jest już wprowadzony inny dostawca). 
+Operacja została cofnięta.'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+/*
+Tworzenie triggera sprawdzającego poprawność adresów.
+Dwóch lub więcej klientów nie może mieć siedziby dokładnie w tym samym lokalu.
+Niepoprawne dane nie zostaną wstawione do tabeli
+ */
+ 
+
+GO
+
+INSERT INTO Ope.Dostawcy(NazwaDostawcy,IDMiejscowosc, DniDoZaplaty,KODPocztowy,Ulica,NrDomu,NrLokalu,NIP,TEL)
+VALUES
+('Orel',1,25,'11-111','Bolońska',3,1,1234567891,987546321),
+('Garel',2,10,'10-011','Jamajska',1,2,1234567888,181541321),
+('Ominbus',9,45,'01-101','Prewalska',3,1,1239567888,181141321),
+('Gamer',9,90,'21-121','Sasalska',1,1,1234567999,785747327),
+('Terban',9,40,'22-121','Barmańska',1,2,9234967889,585546521),
+('Loten',7,5,'01-001','Sosańska',2,1,7237767888,585545325),
+('Banten',6,9,'18-800','Kapitańska',4,5,7117717111,285345222),
+('Gunar',5,12,'12-123','Osańska',2,2,7887787888,181141388),
+('Hankiel',9,15,'17-234','Biteńska',2,2,9999955555,181555555),
+('Barrel',10,18,'67-149','Warmińska',4,5,9999988888,195949329);
+
+--wstawienie dostawców--
+
+
+
+
+
