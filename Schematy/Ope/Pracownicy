@@ -1,0 +1,120 @@
+USE Stacja_Paliw;
+
+GO
+
+--Wskazanie na wykorzystanie bazy Stacja_Paliw do stworzenie poniższych obiektów--
+
+
+IF OBJECT_ID('Ope.Stanowisko') IS NOT NULL
+DROP TABLE Ope.Stanowisko;
+
+/*Sprawdzenie czy istnieje tabela Stanowisko jeśli tak to jest likwidowana zakładamy, że jeśli istniała
+ to została stworzona przez pomyłkę*/
+
+GO
+
+CREATE TABLE Ope.Stanowisko(ID_St tinyint PRIMARY KEY IDENTITY, Stanowisko varchar(100) not null UNIQUE);
+
+--Tworzenie tabeli słownikowej stanowisko--
+
+INSERT INTO Ope.Stanowisko(Stanowisko) VALUES('Ob.Dystrybutorów'),('Kasjer');
+
+--Wstawienie danych do tabeli stanowisko--
+
+GO
+
+
+IF OBJECT_ID('Ope.Wyksztalcenie') IS NOT NULL
+DROP TABLE Ope.Wyksztalcenie;
+
+CREATE TABLE Ope.Wyksztalcenie (ID tinyint PRIMARY KEY IDENTITY, Typ_Wyk varchar(20) not null CHECK (LEN(Typ_Wyk)>=6) UNIQUE);
+
+/*Sprawdzenie czy istnieje tabela Wykształcenie i likwidowanie jej, bo jeśli istnieje zakładamy, 
+że przez pomyłkę nastepnie tworzenie tabeli słownikowej Wykształcenie*/
+
+
+INSERT INTO Ope.Wyksztalcenie(Typ_Wyk) VALUES('Podstawowe'),('Wyższe'),('Gimnazjalne'),('Średnie');
+
+--Wstawienie danych do tabeli Wykształcenie--
+
+GO
+
+IF OBJECT_ID('Ope.Rdz_Zatrudnienia') IS NOT NULL
+DROP TABLE Ope.Rdz_Zatrudnienia; 
+
+CREATE TABLE Ope.Rdz_Zatrudnienia (ID tinyint PRIMARY KEY IDENTITY, Typ_Umowy varchar(35) not null CHECK (LEN(Typ_umowy)>=9) UNIQUE);
+
+/*Sprawdzenie czy istnieje tabela Rdz_Zatrudnienia i likwidowanie jej, bo jeśli istnieje zakładamy, że przez pomyłkę
+nastepnie tworzenie tabeli słownikowej Rdz_Zatrudnienia*/
+
+INSERT INTO Ope.Rdz_Zatrudnienia(Typ_Umowy) VALUES ('Czas.Określony'),('Nieokreślony');
+
+--Wstawienie danych do tabeli Rdz_Zatrudnienia--
+
+GO
+
+IF OBJECT_ID('Ope.Pracownicy') IS NOT NULL
+DROP TABLE Ope.Pracownicy;
+
+GO
+
+--Sprawdza czy istnieje tabela Pracownicy, jeśli tak to likwiduje ją. Zakładamy, że powstała przez pomyłkę jeśli już istnieje.--
+
+CREATE TABLE Ope.Pracownicy(
+IDPracownika tinyint IDENTITY,
+IDMiejscowosc int CONSTRAINT FK_LokMie FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
+Imie varchar(35) not null CHECK(LEN(Imie)>=2), 
+Nazwisko varchar(35) not null CHECK(LEN(Nazwisko)>=2),
+PESEL char(11) UNIQUE CHECK(LEN(PESEL)=11),
+RokUrodzenia int not null CHECK(RokUrodzenia BETWEEN 1900 AND YEAR(GETDATE())-18),
+MiesiacUrodzenia AS CAST(SUBSTRING(PESEL,3,2) AS tinyint),
+DzienUrodzenia AS CAST(SUBSTRING(PESEL,5,2) AS tinyint),
+ID_datyZatr int CONSTRAINT FK_DataZa FOREIGN KEY REFERENCES Czas.Kalendarz(ID),
+ID_Umowy tinyint CONSTRAINT FK_Zatr FOREIGN KEY REFERENCES Ope.Rdz_Zatrudnienia(ID), 
+Wiek AS YEAR(Getdate()) -RokUrodzenia,
+ID_Wyksztalcenie tinyint CONSTRAINT FK_Wyk FOREIGN KEY REFERENCES Ope.Wyksztalcenie(ID),
+KierunekStudiow varchar(50) CHECK(LEN(kierunekStudiow)>=4),
+ID_Stanowisko tinyint CONSTRAINT FK_St FOREIGN KEY REFERENCES Ope.Stanowisko(ID_St),
+Pensja real not null,
+KODPocztowy char(6)  not null,
+Ulica varchar(50) not null,
+NrDomu int not null,
+NrLokalu int not null, 
+AdresSpecj varchar(10),
+TEL char(9) UNIQUE not null, 
+Plec char(1) not null CHECK ((Plec) IN ('M','K')),
+UWAGI varchar(500),
+CONSTRAINT PK_Prac PRIMARY KEY (IDPracownika)
+ );
+ 
+ --Tworzenie tabeli Pracownicy--
+
+--Zakladamy, ze w PESELu na stale po roku jest miesiac a nastepnie dzien w zapisie z dwoma miejscami na kazde pole--
+
+ /*Stacja paliw nie ejst sieciówka i nie zakłada nawet możliwości zatrudnienia trzycyfrowej liczby pracowników stąd 
+ tinyint jako typ danych na IDPracownika*/
+ 
+
+
+GO
+
+INSERT INTO Ope.Pracownicy(IDMiejscowosc,Imie,Nazwisko,PESEL,RokUrodzenia,  
+ID_datyZatr ,ID_Umowy, ID_Wyksztalcenie, KierunekStudiow, ID_Stanowisko, KODPocztowy,
+ Ulica, NrDomu, NrLokalu,TEL,  Plec,Pensja)
+
+ 
+VALUES
+(1,'Jan','Pasek',12040678911,1984,1,2,2,'Politologia',2,'10-897','Bohaterska',7,7,678923111,'M',1700),
+(1,'Marian','Nowak',12020222222,1978,1,2,2,'Dziennikarstwo',1,'10-117','Bonifraterska',5,6,511923111,'M',2000),
+(3,'Janusz','Pask',18080878988,1994,1,2,2,'Dziennikarstwo',1,'71-593','Glowacka',4,6,788888888,'M',1700),
+(4,'Antoni','Pasiak',98080888888,1994,1,1,2,'Dziennikarstwo',1,'79-193','Naklowicka',2,3,977777777,'M',1700),
+(1,'Wergiliusz','Omastek',99090999999,1965,1,2,1,'bez studiow',2,'11-597','Ambroniarska',6,9,172523444,'M',1700),
+(1,'Joanna','Masna',55050555555,1981,1,1,3,'bez studiow',1,'11-456','Wisiarska',3,2,222222222,'K',2000),
+(2,'Janina','Wistok',12040444444,1967,1,2, 4,'bez studiow',2,'10-056','Bobrowska',8,5,133333333,'K',1700),
+(2,'Danuta','Kadub',13060666666,1968,1,1,3,'bez studiow',2,'10-156','Grzegorzewska',3,4,499999999,'K',1700);
+
+
+--Wstawianie danych do tabeli pracownicy--
+
+
+
