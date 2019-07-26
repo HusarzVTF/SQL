@@ -1,0 +1,9 @@
+USE Stacja_Paliw;
+
+GO
+
+UPDATE Ope.Zbiorniki SET INCOMEtoZbiornik=0, OUTCOMEfromZbiornik=0;
+
+--Ustawienie wartości zbiorkników na 0--
+
+
