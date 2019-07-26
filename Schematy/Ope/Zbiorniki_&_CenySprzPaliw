@@ -16,8 +16,8 @@ IDPaliwa tinyint IDENTITY,
 RodzajPaliwa varchar(7) UNIQUE  NOT NULL CHECK((RodzajPaliwa) IN ('Benzyna','Gaz','Ropa')),
 JM varchar(4) NOT NULL CHECK(JM IN('M3','Litr')), 
 Pojemnosc real NOT NULL, 
-INCOMEtoZbiornik real CHECK((INCOMEtoZbiornik)>0), 
-OUTCOMEfromZbiornik real CHECK((OUTCOMEfromZbiornik)>0),
+INCOMEtoZbiornik real CHECK((INCOMEtoZbiornik)>=0), 
+OUTCOMEfromZbiornik real CHECK((OUTCOMEfromZbiornik)>=0),
 StanZbiornika  AS INCOMEtoZbiornik-OUTCOMEfromZbiornik PERSISTED,
 Marza decimal(5,4) not null CHECK(Marza BETWEEN 0 AND 0.99 )
 CONSTRAINT PK_Pali  PRIMARY KEY (IDPaliwa));
