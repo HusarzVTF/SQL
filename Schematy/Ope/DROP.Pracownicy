@@ -1,0 +1,22 @@
+USE Stacja_Paliw;
+GO
+
+ALTER TABLE Ope.Pracownicy
+DROP CONSTRAINT FK_LokMie;
+ALTER TABLE Ope.Pracownicy
+DROP CONSTRAINT FK_DataZa;
+ALTER TABLE Ope.Pracownicy
+DROP CONSTRAINT FK_Zatr;
+ALTER TABLE Ope.Pracownicy
+DROP CONSTRAINT FK_Wyk;
+ALTER TABLE Ope.Pracownicy
+DROP CONSTRAINT FK_St;
+DROP TABLE Ope.Pracownicy;
+
+
+DROP TABLE Ope.Stanowisko;
+DROP TABLE Ope.Wyksztalcenie;
+DROP TABLE Ope.Rdz_Zatrudnienia;
+
+--Kasowanie obiektów zwiazanych z pracownikami--
+
