@@ -1,0 +1,15 @@
+USE Stacja_Paliw;
+GO
+
+ALTER TABLE Ope.Klienci 
+DROP CONSTRAINT PK_KLMie;
+DROP TABLE Ope.Klienci;
+
+
+ALTER TABLE Ope.Dostawcy
+DROP CONSTRAINT FK_Miej;
+DROP TABLE Ope.Dostawcy;
+
+--Kasowanie tabel Klienci i Dostawcy--
+
+
