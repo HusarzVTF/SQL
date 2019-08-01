@@ -1,0 +1,21 @@
+USE Stacja_Paliw;
+GO
+
+ALTER TABLE Lokacje.Powiat
+DROP CONSTRAINT PK_PowWoj;
+DROP TABLE Lokacje.Wojewodztwa;
+
+ALTER TABLE Lokacje.Gmina
+DROP  CONSTRAINT PK_GmiPow;
+DROP TABLE Lokacje.Powiat;
+
+ALTER TABLE Lokacje.Miejscowosc
+DROP CONSTRAINT PK_GmiMi;
+DROP TABLE Lokacje.Gmina;
+DROP TABLE Lokacje.Miejscowosc;
+
+DROP SCHEMA Lokacje;
+
+--Kasowanie obiektów w schemacie lokacje wraz z samym schematem--
+
+
