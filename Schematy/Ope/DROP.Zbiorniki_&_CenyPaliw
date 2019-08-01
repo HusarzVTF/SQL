@@ -1,0 +1,13 @@
+USE Stacja_Paliw;
+GO
+
+ALTER TABLE ope.CenyPa
+DROP CONSTRAINT FK_IDCenP;
+
+DROP TABLE ope.CenyPa;
+DROP TABLE Ope.Zbiorniki;
+
+
+--Kasownia tabeli Zbiorniki i tabeli z cenami paliw--
+
+
