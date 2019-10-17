@@ -1,0 +1,756 @@
+USE Stacja_Paliw;
+
+--Wskazanie bazy Stacja_Paliw jako tej w ktorej beda tworzone ponizsze obiekty--
+
+GO
+
+IF OBJECT_ID('Ope.Pozycja') IS NOT NULL
+DROP TABLE Ope.Pozycja;
+
+--Instrukcja sprawdzajaca czy istnieje tabela Pozycja jesli tak to jest likwidowana zakladamy, ze jesli istnieje to przez pomylke--
+
+GO
+
+CREATE TABLE Ope.Pozycja (ID smallint not null UNIQUE);
+
+INSERT INTO Ope.Pozycja
+SELECT IDPaliwa*-1 FROM Ope.Zbiorniki;
+INSERT INTO Ope.Pozycja
+SELECT IDPaliwa FROM Ope.Zbiorniki;
+
+/*Tworzenie tabeli, ktora przechowuje mozliwe do wystapienia pozycje na fakturze 
+zgodnie z logika, ze tylko to na co sa zbiorniki(rodzaje paliw) moze wystepowac na
+fakturze zakupu od dostawcy plus korekty dla tych paliw. Ilosc pozycji odpowiada ilosci
+paliw zakupionych i dostepnych do sprzedazy plus pozycje korekt dla tych paliw.
+Po utworzeniu tabeli nastepuje wstawienie danych do tabeli Pozycje z tabeli Zbiorniki
+plus korekty do typow paliw z tabeli zbiorniki.
+
+Druga isntrukcja INSERT.. wstawia dane do tabeli Pozycja.  
+*/
+
+GO 
+
+IF OBJECT_ID('Ope.trPoz') IS NOT NULL
+DROP TRIGGER Ope.trPoz;
+
+--Instrukcja sprawdzajaca czy istnieje trigger trPoz jesli tak to jest likwidowany zakladamy, ze jesli istnial to przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trPoz ON Ope.Zbiorniki AFTER INSERT,DELETE 
+
+AS
+
+INSERT INTO Ope.Pozycja
+SELECT IDPaliwa*-1 FROM Ope.Zbiorniki;
+INSERT INTO Ope.Pozycja
+SELECT IDPaliwa FROM Ope.Zbiorniki;
+
+GO
+
+--Trigger, ktory zaktualizuje dostepne paliwa z tabeli zbiorniki w tabeli pozycja--
+
+
+IF OBJECT_ID('Ope.Dostawy') IS NOT NULL
+DROP TABLE Ope.Dostawy;
+
+--Instrukcja sprawdzajaca czy istnieje tabela Dostawy jesli tak to jest likwidowana zakladamy, ze jesli istnieje to przez pomylke--
+
+GO
+
+CREATE TABLE Ope.Dostawy(
+IDFVZak bigint  IDENTITY PRIMARY KEY, 
+NRFV varchar(100) not null, 
+PozycjaNAFV smallint CONSTRAINT FK_Poz FOREIGN KEY REFERENCES Ope.Pozycja(ID), 
+ID_Dat int CONSTRAINT FK_Data FOREIGN KEY REFERENCES Czas.Kalendarz(ID),
+IdDostawcy int  CONSTRAINT FK_Dost FOREIGN KEY REFERENCES Ope.Dostawcy (IdDostawcy),
+IdPracownika tinyint CONSTRAINT FK_DostPr FOREIGN KEY REFERENCES Ope.Pracownicy(IDPracownika),
+IDPaliw tinyint CONSTRAINT PK_Paliw FOREIGN KEY REFERENCES Ope.Zbiorniki(IDPaliwa),
+IloscPaliwa real not null CHECK(IloscPaliwa<>0),
+KwotaNetto real not null CHECK(KwotaNetto<>0), 
+KwotaBrutto real not null CHECK(KwotaBrutto<>0),
+TerminZaplaty date not null,
+Podatek real not null CHECK(Podatek<>0), 
+TypPlatnosci varchar(7) CHECK((TypPLatnosci) IN ('Gotowka','Przelew','Karta')),
+CzasTransakcji datetime  not null,
+DataZaplaty date,
+DataAktuDatZap datetime 
+);
+
+--Tworzenie tabeli Dostawy--
+
+/*
+Korekta dostawy do tabeli Dostawy jest wstawiana z NRFV faktury, ktorej korekta dotyczy w PozycjaNAFV jest wstawiana pozycja,
+ktorej dotyczy korekta ze znakiem minusa z przodu np. korakta dla 1 pozycji to -1
+dla paliwa ilosc, kwotanetto i brutto, podatek rowniez powiny byc z minusem.
+Wszystko z tym samym IdPaliwa co fv, ktora jest korygowana
+ */
+
+GO
+
+IF OBJECT_ID('Ope.trCzTr') IS NOT NULL
+DROP TRIGGER Ope.trCzTr;
+
+--Instrukcja sprawdzajaca istnienie powyzszego trigger-a jesli istnieje to jest likwidowany zakladamy, ze jesli istnial to przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trCzTr ON Ope.Dostawy AFTER INSERT,UPDATE
+
+AS
+
+IF EXISTS(
+SELECT TerminZaplaty,CzasTransakcji,DataZaplaty FROM Ope.Dostawy WHERE DataZaplaty<CAST(CzasTransakcji AS date) 
+OR TerminZaplaty<CAST(CzasTransakcji AS date)
+)
+BEGIN
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. 
+Dane nie zostaly wstawione lub zmienione w tabeli'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--trigger sprawdzajacy poprawnosc danych pod wzgledem termniow platnosci i zaplaty wobec czasu transakcji--
+
+
+
+GO 
+
+IF OBJECT_ID('Ope.trCenDo') IS NOT NULL
+DROP TRIGGER Ope.trCenDo;
+
+--Instrukcja sprawdzajaca istnienie powyzszego trigger-a jesli istnieje to jest likwidowany zakladamy, ze jesli istnial to przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trCenDo ON Ope.Dostawy AFTER INSERT,UPDATE,DELETE
+
+AS
+
+CREATE TABLE #zbio  (Id tinyint, Marza real);
+INSERT INTO #zbio(Id,Marza)
+SELECT IDPaliwa,1+Marza FROM Ope.Zbiorniki;
+
+
+
+CREATE TABLE #tab  (Id tinyint, Cena real);
+INSERT INTO #tab (Id, Cena)
+SELECT IDPaliw,SUM(D.KwotaNetto)/SUM(D.IloscPaliwa) AS Cena
+FROM Ope.Dostawy AS D 
+INNER JOIN Ope.Zbiorniki AS Z ON D.IDPaliw=Z.IDPaliwa
+INNER JOIN #zbio AS Zb ON Zb.Id=D.IDPaliw
+GROUP BY IDPaliw;
+
+
+
+UPDATE #tab SET Cena=(Cena*Zb.Marza)
+FROM #tab
+INNER JOIN #zbio AS Zb ON Zb.Id=#tab.Id;
+
+
+
+UPDATE Ope.CenyPa SET CenaJedn=#tab.Cena
+FROM Ope.CenyPa INNER JOIN #tab ON Ope.CenyPa.IDPALIW=#tab.Id
+DROP TABLE #tab;
+DROP TABLE #zbio;
+
+/*
+Trigger uaktualniajacy jednostkowa cene sprzedazy na paliwo ktorego przyszla dostawa.
+Mechanizm cenowy opiera sie na sredniej wazonej cenie zakupu powiekszonej o 
+marze na danym paliwie. 
+ */
+
+GO
+
+IF OBJECT_ID('Ope.trSprDostawy') IS NOT NULL
+DROP TRIGGER Ope.trSprDostawy;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO 
+CREATE TRIGGER Ope.trSprDostawy ON Ope.Dostawy
+AFTER INSERT,UPDATE
+AS 
+IF EXISTS(
+SELECT*FROM Dostawy
+WHERE EXISTS
+(SELECT*FROM Dostawy WHERE (KwotaNetto>KwotaBrutto AND KwotaNetto>0) 
+OR (KwotaNetto<KwotaBrutto AND KwotaNetto<0)))
+BEGIN 
+PRINT 'Wstawiono rekord z  bledna kwota netto wobec kwoty brutto, rekord zostal  usuniety z tabeli Dostawy'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger, ktory blokuje wstawienie faktury za dostawy z kwota netto wyzsza niz brutto--
+
+GO
+
+IF OBJECT_ID('Ope.trKorPopFVDost') IS NOT NULL
+DROP TRIGGER Ope.trKorPopFVDost;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trKorPopFVDost ON Ope.Dostawy
+AFTER INSERT,UPDATE
+
+AS
+
+IF EXISTS(
+SELECT*FROM Ope.Dostawy WHERE
+EXISTS(SELECT NRFV,PozycjaNAFV,IloscPaliwa,KwotaNetto,KwotaBrutto
+FROM Ope.Dostawy WHERE  (PozycjaNAFV>0 AND (IloscPaliwa<0 OR KwotaNetto<0 OR KwotaBrutto<0))
+OR (PozycjaNAFV<0 AND (IloscPaliwa>0 OR KwotaNetto>0 OR KwotaBrutto>0))))
+BEGIN
+PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger blokujacy wstawienie niepoprawnej faktury wg typu.(prawidlowa albo korekta)--
+
+GO
+
+IF OBJECT_ID('Ope.trFVKORECH') IS NOT NULL
+DROP TRIGGER Ope.trFVKORECH;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trFVKORECH ON Ope.Dostawy AFTER INSERT,UPDATE
+
+AS
+
+IF EXISTS(SELECT NRFV,PozycjaNAFV FROM Ope.Dostawy WHERE PozycjaNAFV<0)
+BEGIN
+SELECT NRFV,PozycjaNAFV,IDPaliw,ID_Dat,IdDostawcy,IloscPaliwa,KwotaNetto,KwotaBrutto,
+TerminZaplaty,Podatek,TypPlatnosci,DataZaplaty,DataAktuDatZap
+INTO #check
+FROM Ope.Dostawy WHERE PozycjaNAFV<0
+
+IF  EXISTS(
+SELECT D.NRFV,D.PozycjaNAFV,D.IDPaliw,D.ID_Dat,D.IdDostawcy,D.IloscPaliwa,D.KwotaNetto,D.KwotaBrutto,
+D.TerminZaplaty,D.Podatek,D.TypPlatnosci,D.DataZaplaty,D.DataAktuDatZap
+FROM Ope.Dostawy AS D,#check AS C WHERE C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV
+EXCEPT 
+SELECT C.NRFV, C.PozycjaNAFV*-1,C.IDPaliw,C.ID_Dat,C.IdDostawcy, C.IloscPaliwa*-1,C.KwotaNetto*-1,
+C.KwotaBrutto*-1,C.TerminZaplaty,C.Podatek*-1,C.TypPlatnosci,C.DataZaplaty,C.DataAktuDatZap 
+FROM #check AS C INNER JOIN Ope.Dostawy AS D ON C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV)
+BEGIN
+PRINT 'Niezgodnosc w danych pomiedzy FV korekta i poprawna. Operacja zostala cofnieta';
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP table #check
+END;
+
+--Trigger sprawdzajacy czy faktura korekta ma prawidlowe dane wzgledem fv poprawnej--
+
+GO
+
+IF OBJECT_ID('Ope.trFVPop') IS NOT NULL
+DROP TRIGGER Ope.trFVPop;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trFVPop ON Ope.Dostawy AFTER INSERT,UPDATE
+
+AS
+
+DECLARE @max bigint=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+
+DECLARE @iddos smallint=(SELECT IdDostawcy FROM Ope.Dostawy WHERE IDFvzak=@max)
+
+DECLARE @czas datetime=(SELECT Czastransakcji FROM Ope.Dostawy WHERE IDFVZak=@max)
+
+
+DECLARE @FV varchar(100)=(SELECT DISTINCT NRFV FROM Ope.Dostawy WHERE NRFV=(SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak=@max)
+AND IdDostawcy=@iddos AND Czastransakcji=@czas)
+
+
+DECLARE @Poz smallint=(SELECT MAX(PozycjaNAFV) FROM Ope.Dostawy WHERE NRFV=(SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak=@max)
+AND IdDostawcy=@iddos AND Czastransakcji=@czas)
+
+
+DECLARE @licz int=(SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV=@FV  AND idDostawcy=@iddos)
+
+IF @licz>1 AND @Poz>0
+BEGIN
+IF  EXISTS(
+SELECT ID_Dat,IdDostawcy,IdPracownika,TerminZaplaty,TypPlatnosci,DataZaplaty,DataAktuDatZap,CzasTransakcji
+FROM Ope.Dostawy WHERE  NRFV=@FV AND PozycjaNAFV>0 AND IDFVZak=(SELECT MAX(IDFVZak) FROM Ope.Dostawy) 
+AND IdDostawcy=@iddos
+EXCEPT
+SELECT ID_Dat,IdDostawcy,IdPracownika,TerminZaplaty,TypPlatnosci,DataZaplaty,DataAktuDatZap,CzasTransakcji
+FROM Ope.Dostawy WHERE  NRFV=@FV AND PozycjaNAFV>0 AND IDFVZak<(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+AND IdDostawcy=@iddos )
+BEGIN
+PRINT 'Probowano wstawic drugi raz te sama pozycje na  FV poprawna na tym samym dostawcy bez wystawienia FV korekty.
+Operacja zostala cofnieta';
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+-- Trigger blokujacy wstawienie po raz kolejny fv z tymi samymi pozycjami na tym samym dostawcy bez wystawienia korekty na nia  --
+
+GO
+
+IF OBJECT_ID('Ope.trOilINZbior') IS NOT NULL
+DROP TRIGGER Ope.trOilINZbior;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER  Ope.trOilINZbior ON Ope.Dostawy
+AFTER INSERT, UPDATE, DELETE
+AS
+
+DECLARE @sumDost table (Id int, SumILosc real)
+
+INSERT INTO @sumDost
+
+SELECT IDPaliw, SUM(IloscPaliwa) AS ILOSC FROM Ope.Dostawy GROUP BY IDPaliw
+
+
+UPDATE Ope.Zbiorniki 
+
+SET  INCOMEtoZbiornik=SumILosc FROM Ope.Zbiorniki AS Z INNER JOIN @sumDost AS SD ON Z.IDPaliwa=SD.Id;
+
+--Trigger, ktory zaktualizuje poziom paliwa w tabeli Zbiorniki po kazdej dostawie. --
+
+
+GO
+
+IF OBJECT_ID('Ope.trKorMOz') IS NOT NULL
+DROP TRIGGER Ope.trKorMOz;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trKorMOz ON Ope.Dostawy
+AFTER INSERT
+
+AS
+
+DECLARE @NRFV varchar(100)=(SELECT NRFV FROM Ope.Dostawy WHERE IDFVZak=(SELECT MAX(IDFVZak) FROM Ope.Dostawy))
+
+DECLARE @FVPoz smallint=(SELECT PozycjaNAFV FROM Ope.Dostawy WHERE IDFVZak=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)) 
+
+DECLARE @idDos int=(SELECT IDDostawcy FROM Ope.Dostawy WHERE IDFVZak=(SELECT MAX(IDFVZak) FROM Ope.Dostawy))
+
+DECLARE @licznik int=(SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV=@NRFV AND PozycjaNAFV=@FVPoz AND IDDostawcy=@idDos)
+
+DECLARE @liczKore int=(SELECT COUNT(*) FROM Ope.Dostawy WHERE NRFV=@NRFV AND  IdDostawcy=@idDos AND PozycjaNAFV=@FVPoz*-1)
+
+DECLARE @liczPo int=(SELECT COUNT(*) FROM Ope.Dostawy WHERE NRFV=@NRFV AND  IdDostawcy=@idDos AND PozycjaNAFV>0 AND PozycjaNAFV=@FVPoz)
+
+IF @licznik>1   
+
+BEGIN
+
+IF @FVPoz<0
+BEGIN
+
+IF @liczKore>@liczPo
+BEGIN
+PRINT 'Istnieje juz Fv korekta do podanej, prosze wprowadzic prawidlowa.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+
+IF @FVPoz>0
+
+BEGIN
+
+IF @liczKore+1<@liczPo
+
+BEGIN
+PRINT 'Nie mozna wstawic po raz kolejny na '+@NRFV+' pozycji '+CAST(@FVPoz AS nvarchar)+
+' ,poniewaz dotychczas wprowadzone nie zostaly wyzerowane.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END
+END;
+
+/* Trigger blokujacy wstawienie drugi raz fv korekty na ta sama fv i pozycje na niej oraz ponowne wstawienie
+fv poprawnej bez jej wyzerowania korekta */
+
+GO
+
+IF OBJECT_ID('Ope.trWaFvPoz') IS NOT NULL
+DROP TRIGGER Ope.trWaFvPoz;
+
+GO
+
+--Sprawdzenie czy istnieje powyzszy trigger jesli tak to jest likwidowany zakladamy, ze jesli istnial to zostal stworzony przez pomylke--
+
+CREATE TRIGGER Ope.trWaFvPoz ON Ope.Dostawy AFTER INSERT,DELETE
+
+AS
+
+DECLARE @max bigint=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+
+DECLARE @iddos smallint=(SELECT IdDostawcy FROM Ope.Dostawy WHERE IDFvzak=@max)
+
+DECLARE @czas datetime=(SELECT Czastransakcji FROM Ope.Dostawy WHERE IDFVZak=@max)
+
+
+DECLARE @FV varchar(100)=(SELECT DISTINCT NRFV FROM Ope.Dostawy WHERE NRFV=(SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak=@max)
+AND IdDostawcy=@iddos AND Czastransakcji=@czas)
+
+
+DECLARE @Poz smallint=(SELECT MAX(PozycjaNAFV) FROM Ope.Dostawy WHERE NRFV=(SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak=@max)
+AND IdDostawcy=@iddos AND Czastransakcji=@czas)
+
+
+DECLARE @licz int=(SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV=@FV  AND idDostawcy=@iddos)
+
+
+IF @licz>1 AND @Poz>0
+BEGIN
+SELECT  NRFV,MAX(PozycjaNAFV) AS PozycjaNaFV,IdDostawcy
+INTO #ta
+FROM Ope.Dostawy WHERE IDFVZak<@max AND NRFV=@FV AND IdDostawcy=@iddos  
+GROUP BY NRFV,IdDostawcy
+
+DECLARE @mxfv smallint=(SELECT MAX(PozycjaNAFV) FROM #ta )
+
+DECLARE @FvPoz smallint=@Poz
+
+IF @mxfv+1<>@FvPoz
+
+BEGIN
+PRINT 'Nieprawidlowa pozycja na fakturze '+@FV
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP TABLE #ta
+END; 
+
+
+/* Trigger blokujacy wstawienie Fv z niepoprawnym numerem pozycji tj. jesli wstawiono wczesniej pierwsza
+pozycje na fv to teraz moze byc tylko druga. */
+
+GO
+
+IF OBJECT_ID('Ope.WarunkiDostaw') IS NOT NULL
+DROP FUNCTION Ope.WarunkiDostaw;
+
+--Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+
+GO
+
+CREATE FUNCTION Ope.WarunkiDostaw(@ID int)
+
+RETURNS varchar (7)
+WITH SCHEMABINDING
+AS
+BEGIN
+DECLARE @War varchar(7)=(SELECT WarunkiPlatnosci FROM Ope.Dostawcy WHERE IdDostawcy=@ID)
+RETURN @War;
+END;
+
+--Funkcja zwracajaca Warunki platnosci do danego dostawcy na podstawie podania jego ID w tabeli Dostawcy--
+
+GO
+
+IF OBJECT_ID('Ope.JMPaliwa') IS NOT NULL
+DROP FUNCTION Ope.JMPaliwa;
+
+--Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+
+
+GO
+
+CREATE FUNCTION Ope.JMPaliwa(@IDPaliwa int )
+RETURNS varchar(4)
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @JM varchar(4)=(SELECT JM FROM Ope.Zbiorniki WHERE IDPaliwa=@IDPaliwa);
+
+RETURN @JM;
+END;
+
+--Funkcja znajdujaca JM dla Paliwa na podstawie Id paliwa z tabeli Zbiorniki--
+
+GO
+
+IF OBJECT_ID('Ope.CenaSprz') IS NOT NULL
+DROP FUNCTION Ope.CenaSprz;
+
+--Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+
+GO
+
+CREATE FUNCTION Ope.CenaSprz(@IDPaliwa tinyint) 
+RETURNS real
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @cena real=(SELECT CenaJedn FROM Ope.CenyPa WHERE IDPALIW=@IDPaliwa);
+
+RETURN @cena;
+
+END;
+
+/* Funkcja potrzebna do wyliczenia ceny sprzedazy za sprzedana ilosc paliwa trzeba pomnozyc jej wynik przez ilosc
+paliwa jaka bedzie sprzedawana */
+
+GO
+
+IF OBJECT_ID('Ope.TerminZap') IS NOT NULL
+DROP FUNCTION Ope.TerminZap;
+
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to 
+zostala stworzona przez pomylke */
+
+
+GO
+
+CREATE FUNCTION Ope.TerminZap(@IDDostawcy int)
+RETURNS int 
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @DnidoZap int=(SELECT DniDoZaplaty FROM Ope.Dostawcy WHERE IdDostawcy=@IDDostawcy)
+
+RETURN @DnidoZap;
+
+END;
+
+GO
+
+--Funkcja zwracajaca ilosc dni do zaplaty jaka ma dany klient z tabeli Klienci--
+
+IF OBJECT_ID('Ope.TypPaliwa') IS NOT NULL
+DROP FUNCTION Ope.TypPaliwa;
+
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala
+to zostala stworzona przez pomylke */
+
+GO
+CREATE FUNCTION Ope.TypPaliwa(@IDPaliwa int)
+RETURNS varchar(7)
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @TypPaliwa varchar(7)=(SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=@IDPaliwa)
+
+RETURN @TypPaliwa;
+
+END;
+
+--Funkcja zwracajaca typ paliwa z tabeli Zbiorniki na podstawie IdPaliwa--
+
+GO
+
+IF OBJECT_ID('Czas.Data') IS NOT NULL
+DROP FUNCTION Czas.Data;
+
+--Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+
+GO
+CREATE FUNCTION Czas.Data(@DatID int)
+RETURNS date
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @data date=(SELECT Data FROM Czas.Kalendarz WHERE ID=@DatID)
+
+RETURN @data;
+
+END;
+
+--Funkcja zwracajaca date dla podanego Id z tabeli kalendarz--
+
+
+GO
+
+IF OBJECT_ID('Czas.DataDost') IS NOT NULL
+DROP FUNCTION Czas.DataDost;
+
+--Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+
+GO
+CREATE FUNCTION Czas.DataDost(@fv varchar(100),@poz smallint,@iddos int)
+RETURNS int
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @dataIDZ int=(SELECT ID_Dat FROM Ope.Dostawy WHERE NRFV=@fv AND PozycjaNAFV=@poz AND IdDostawcy=@iddos)
+
+RETURN @dataIDZ;
+
+END;
+
+--Funkcja zwracajaca Iddaty dla podanej pozycji na danej fakturze u danego dostawcy--
+
+GO
+
+
+INSERT INTO Ope.Dostawy(NRFV,PozycjaNAFV,ID_Dat,IdDostawcy,IdPracownika,IDPaliw,IloscPaliwa,
+KwotaNetto,KwotaBrutto,TerminZaplaty,Podatek,TypPlatnosci,CzasTransakcji)
+
+VALUES('0001A',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),1,1,1,5000,12000,14880,DATEADD(d,Ope.TerminZap(1),CAST(GETDATE() AS Date)),
+2880,Ope.WarunkiDostaw(1),GETDATE()),
+('0X01B',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),2,2,1,100000,250000,310000,DATEADD(d,Ope.TerminZap(2),CAST(GETDATE() AS Date)),
+60000,Ope.WarunkiDostaw(2),GETDATE()),
+('001FV',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),5,4,1,100000,250000,310000,DATEADD(d,Ope.TerminZap(5),CAST(GETDATE() AS Date)),
+60000,Ope.WarunkiDostaw(5),GETDATE()),
+('00101F',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),3,3,2,10000,15000,18600,DATEADD(d,Ope.TerminZap(3),CAST(GETDATE() AS Date)),
+3600,Ope.WarunkiDostaw(3),GETDATE()),
+('011FV',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),7,8,3,100000,200000,248000,DATEADD(d,Ope.TerminZap(7),CAST(GETDATE() AS Date)),
+48000,Ope.WarunkiDostaw(7),GETDATE()),
+('FV010001',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),6,7,3,100000,200000,248000,DATEADD(d,Ope.TerminZap(6),CAST(GETDATE() AS Date)),
+48000,Ope.WarunkiDostaw(6),GETDATE()),
+('00101FAfd',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),7,3,2,10000,15000,18600,DATEADD(d,Ope.TerminZap(7),CAST(GETDATE() AS Date)),
+3600,Ope.WarunkiDostaw(7),GETDATE()),
+('XXXX1234',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),2,1,2,10000,15000,18600,DATEADD(d,Ope.TerminZap(2),CAST(GETDATE() AS Date)),
+3600,Ope.WarunkiDostaw(2),GETDATE()),
+('TRVRVR0005566',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),10,5,3,100000,200000,248000,DATEADD(d,Ope.TerminZap(10),CAST(GETDATE() AS Date)),
+48000,Ope.WarunkiDostaw(10),GETDATE()),
+('0BCFV01',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),7,7,1,500000,1300000,1612000,DATEADD(d,Ope.TerminZap(7),CAST(GETDATE() AS Date)),
+312000,Ope.WarunkiDostaw(7),GETDATE()),
+('101FA',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),6,2,2,500000,700000,868000,DATEADD(d,Ope.TerminZap(6),CAST(GETDATE() AS Date)),
+168000,Ope.WarunkiDostaw(6),GETDATE()),
+('012457',1,Czas.uIdDaty(CAST(GETDATE() AS Date)),10,5,3,500000,1000000,1240000,DATEADD(d,Ope.TerminZap(10),CAST(GETDATE() AS Date)),
+240000,Ope.WarunkiDostaw(10),GETDATE());
+
+--wstawienie danych do tabeli Dostawy--
+
+GO
+
+IF OBJECT_ID('Ope.uspWstkorDost') IS NOT NULL
+DROP PROC Ope.uspWstkorDost;
+
+--Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala utworzony przez pomylke--
+
+GO
+
+CREATE PROC Ope.uspWstkorDost (@fv varchar(100), @poz smallint, @pesel char(11),@iddos int) 
+
+AS
+
+INSERT INTO Ope.Dostawy (NRFV,PozycjaNAFV,ID_Dat,IdDostawcy,IdPracownika,IDPaliw,IloscPaliwa,KwotaNetto,
+KwotaBrutto,TerminZaplaty,Podatek,TypPlatnosci,CzasTransakcji,DataZaplaty)
+
+SELECT  NRFV,PozycjaNAFV*-1,Czas.DataDost(@fv,@poz,@iddos),IdDostawcy,(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+IDPaliw,IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,Podatek*-1,TypPlatnosci,GETDATE(),DataZaplaty
+FROM Ope.Dostawy WHERE NRFV=@fv AND PozycjaNAFV=@poz AND IdDostawcy=@iddos;
+
+
+/*Procedura na wystawienie Fv korekty korygujcej zakupy paliwa.*/
+
+
+GO
+
+IF OBJECT_ID('Ope.uspDataZap') IS NOT NULL
+DROP PROC Ope.uspDataZap;
+
+--Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala utworzony przez pomylke--
+
+GO
+
+CREATE PROC Ope.uspDataZap(@NRFV varchar(100) , @iddos int, @data date)
+
+AS
+
+UPDATE Ope.Dostawy SET DataZaplaty=@data, DataAktuDatZap=GETDATE() WHERE NRFV=@NRFV AND IdDostawcy=@iddos
+
+--procedura do wprowadzania/aktualizowania daty zaplaty na fv--
+
+
+GO
+
+IF OBJECT_ID('dbo.vTermVSustHand') IS NOT NULL
+DROP VIEW dbo.vTermVSustHand;
+
+--Instrukcja sprawdzajaca czy powyzszy widok juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE VIEW dbo.vTermVSustHand
+
+
+AS
+
+SELECT D.NRFV,D.PozycjaNAFV,D.IDDostawcy,Do.NazwaDostawcy,D.KwotaNetto,D.TerminZaplaty,
+DATEDIFF(d,TerminZaplaty,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat))) AS Roznica,
+D.CzasTransakcji FROM Ope.Dostawy AS D
+INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy 
+WHERE DATEDIFF(d,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat)),TerminZaplaty)<0
+
+
+/* Widok pokazujacy rozbieznosci z ustalen handlowych z dostawcami a danymi z fv. Rozbieznosci z terminem zaplaty 
+wczeniejszym niz ustalony z dostawca */
+
+GO
+
+IF OBJECT_ID('dbo.vTermDostRozbi') IS NOT NULL
+DROP VIEW dbo.vTermDostRozbi;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE VIEW dbo.vTermDostRozbi
+
+
+AS
+
+SELECT D.NRFV,D.PozycjaNAFV,D.IDDostawcy,Do.NazwaDostawcy,D.KwotaNetto,D.TerminZaplaty,
+DATEDIFF(d,TerminZaplaty,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat))) AS Roznica,
+D.CzasTransakcji FROM Ope.Dostawy AS D
+INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy 
+WHERE DATEDIFF(d,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat)),TerminZaplaty)<>0
+
+
+--Widok pokazujacy wszystkie rozbieznosci miedzy terminami zaplaty wynikajacymi z ustalen z dostawcami a fakturami od nich---
+
+
+
+GO
+
+IF OBJECT_ID('dbo.vWarPlatn') IS NOT NULL
+DROP VIEW dbo.vWarPlatn;
+
+--Instrukcja sprawdzajaca czy powyzszy widok juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE VIEW dbo.vWarPlatn
+
+AS
+
+SELECT D.NRFV,D.PozycjaNAFV,DO.NazwaDostawcy,D.TypPlatnosci,D.KwotaBrutto,D.KwotaNetto FROM Ope.Dostawy AS D
+INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy 
+WHERE D.TypPlatnosci<>DO.WarunkiPlatnosci 
+
+--Widok pokazujacy rozbieznosci w warunkach platnosci ustalonych z dostawcami a tymi wystawionymi przez nich na FV--
+
+
+
+
+
+
+
+
+
