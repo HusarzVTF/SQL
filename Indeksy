@@ -1,0 +1,14 @@
+USE Stacja_Paliw;
+
+GO
+
+
+CREATE INDEX Pal ON Ope.Dostawy (IDPaliw);
+
+CREATE INDEX FV ON Ope.Dostawy (NRFV,IdDostawcy);
+
+--indeksy nieklastrowe na tabelę Dostawy zwiększajace wydajność zapytań--
+
+
+
+
