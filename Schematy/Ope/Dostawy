@@ -1,5 +1,7 @@
 USE Stacja_Paliw;
 
+GO
+
 --Wskazanie bazy Stacja_Paliw jako tej w ktorej beda tworzone ponizsze obiekty--
 
 GO
@@ -104,8 +106,8 @@ SELECT TerminZaplaty,CzasTransakcji,DataZaplaty FROM Ope.Dostawy WHERE DataZapla
 OR TerminZaplaty<CAST(CzasTransakcji AS date)
 )
 BEGIN
-PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. 
-Dane nie zostaly wstawione lub zmienione w tabeli'
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. Dane nie zostaly wstawione 
+lub zmienione w tabeli'
 ROLLBACK TRANSACTION;
 RETURN
 END;
@@ -119,7 +121,8 @@ GO
 IF OBJECT_ID('Ope.trCenDo') IS NOT NULL
 DROP TRIGGER Ope.trCenDo;
 
---Instrukcja sprawdzajaca istnienie powyzszego trigger-a jesli istnieje to jest likwidowany zakladamy, ze jesli istnial to przez pomylke--
+/*Instrukcja sprawdzajaca istnienie powyzszego trigger-a jesli istnieje to jest likwidowany zakladamy, ze jesli 
+istnial to przez pomylke */
 
 GO
 
@@ -224,44 +227,6 @@ CREATE TRIGGER Ope.trFVKORECH ON Ope.Dostawy AFTER INSERT,UPDATE
 
 AS
 
-IF EXISTS(SELECT NRFV,PozycjaNAFV FROM Ope.Dostawy WHERE PozycjaNAFV<0)
-BEGIN
-SELECT NRFV,PozycjaNAFV,IDPaliw,ID_Dat,IdDostawcy,IloscPaliwa,KwotaNetto,KwotaBrutto,
-TerminZaplaty,Podatek,TypPlatnosci,DataZaplaty,DataAktuDatZap
-INTO #check
-FROM Ope.Dostawy WHERE PozycjaNAFV<0
-
-IF  EXISTS(
-SELECT D.NRFV,D.PozycjaNAFV,D.IDPaliw,D.ID_Dat,D.IdDostawcy,D.IloscPaliwa,D.KwotaNetto,D.KwotaBrutto,
-D.TerminZaplaty,D.Podatek,D.TypPlatnosci,D.DataZaplaty,D.DataAktuDatZap
-FROM Ope.Dostawy AS D,#check AS C WHERE C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV
-EXCEPT 
-SELECT C.NRFV, C.PozycjaNAFV*-1,C.IDPaliw,C.ID_Dat,C.IdDostawcy, C.IloscPaliwa*-1,C.KwotaNetto*-1,
-C.KwotaBrutto*-1,C.TerminZaplaty,C.Podatek*-1,C.TypPlatnosci,C.DataZaplaty,C.DataAktuDatZap 
-FROM #check AS C INNER JOIN Ope.Dostawy AS D ON C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV)
-BEGIN
-PRINT 'Niezgodnosc w danych pomiedzy FV korekta i poprawna. Operacja zostala cofnieta';
-ROLLBACK TRANSACTION;
-RETURN
-END
-DROP table #check
-END;
-
---Trigger sprawdzajacy czy faktura korekta ma prawidlowe dane wzgledem fv poprawnej--
-
-GO
-
-IF OBJECT_ID('Ope.trFVPop') IS NOT NULL
-DROP TRIGGER Ope.trFVPop;
-
---Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
-
-GO
-
-CREATE TRIGGER Ope.trFVPop ON Ope.Dostawy AFTER INSERT,UPDATE
-
-AS
-
 DECLARE @max bigint=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
 
 DECLARE @iddos smallint=(SELECT IdDostawcy FROM Ope.Dostawy WHERE IDFvzak=@max)
@@ -279,25 +244,38 @@ AND IdDostawcy=@iddos AND Czastransakcji=@czas)
 
 DECLARE @licz int=(SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV=@FV  AND idDostawcy=@iddos)
 
-IF @licz>1 AND @Poz>0
+DECLARE @liczKore int=(SELECT COUNT(*) FROM Ope.Dostawy WHERE NRFV=@FV AND  IdDostawcy=@idDos AND PozycjaNAFV=@Poz*-1)
+
+IF @licz>1 AND @licz=@liczKore
+
 BEGIN
+
+IF EXISTS(SELECT NRFV,PozycjaNAFV FROM Ope.Dostawy WHERE PozycjaNAFV<0 AND NRFV=@FV)
+BEGIN
+SELECT NRFV,PozycjaNAFV,IDPaliw,ID_Dat,IdDostawcy,IloscPaliwa,KwotaNetto,KwotaBrutto,
+TerminZaplaty,Podatek,TypPlatnosci,DataZaplaty,DataAktuDatZap
+INTO #check
+FROM Ope.Dostawy WHERE PozycjaNAFV<0 AND NRFV=@FV 
+
 IF  EXISTS(
-SELECT ID_Dat,IdDostawcy,IdPracownika,TerminZaplaty,TypPlatnosci,DataZaplaty,DataAktuDatZap,CzasTransakcji
-FROM Ope.Dostawy WHERE  NRFV=@FV AND PozycjaNAFV>0 AND IDFVZak=(SELECT MAX(IDFVZak) FROM Ope.Dostawy) 
-AND IdDostawcy=@iddos
-EXCEPT
-SELECT ID_Dat,IdDostawcy,IdPracownika,TerminZaplaty,TypPlatnosci,DataZaplaty,DataAktuDatZap,CzasTransakcji
-FROM Ope.Dostawy WHERE  NRFV=@FV AND PozycjaNAFV>0 AND IDFVZak<(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
-AND IdDostawcy=@iddos )
+SELECT D.NRFV,D.PozycjaNAFV,D.IDPaliw,D.ID_Dat,D.IdDostawcy,D.IloscPaliwa,D.KwotaNetto,D.KwotaBrutto,
+D.TerminZaplaty,D.Podatek,D.TypPlatnosci,D.DataZaplaty,D.DataAktuDatZap
+FROM Ope.Dostawy AS D,#check AS C WHERE C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV 
+EXCEPT 
+SELECT C.NRFV, C.PozycjaNAFV*-1,C.IDPaliw,C.ID_Dat,C.IdDostawcy, C.IloscPaliwa*-1,C.KwotaNetto*-1,
+C.KwotaBrutto*-1,C.TerminZaplaty,C.Podatek*-1,C.TypPlatnosci,C.DataZaplaty,C.DataAktuDatZap 
+FROM #check AS C INNER JOIN Ope.Dostawy AS D ON C.NRFV=D.NRFV AND C.PozycjaNAFV*-1=D.PozycjaNAFV)
 BEGIN
-PRINT 'Probowano wstawic drugi raz te sama pozycje na  FV poprawna na tym samym dostawcy bez wystawienia FV korekty.
-Operacja zostala cofnieta';
+PRINT 'Niezgodnosc w danych pomiedzy FV korekta i poprawna. Operacja zostala cofnieta';
 ROLLBACK TRANSACTION;
 RETURN
 END
+DROP table #check
+END
 END;
 
--- Trigger blokujacy wstawienie po raz kolejny fv z tymi samymi pozycjami na tym samym dostawcy bez wystawienia korekty na nia  --
+
+--Trigger sprawdzajacy czy faktura korekta ma prawidlowe dane wzgledem fv poprawnej--
 
 GO
 
@@ -375,16 +353,15 @@ BEGIN
 IF @liczKore+1<@liczPo
 
 BEGIN
-PRINT 'Nie mozna wstawic po raz kolejny na '+@NRFV+' pozycji '+CAST(@FVPoz AS nvarchar)+
-' ,poniewaz dotychczas wprowadzone nie zostaly wyzerowane.'
+PRINT 'Nie mozna wstawic po raz kolejny na '+@NRFV+' pozycji '+CAST(@FVPoz AS nvarchar)+' 
+,poniewaz dotychczas wprowadzone nie zostaly wyzerowane.'
 ROLLBACK TRANSACTION;
 RETURN
 END
 END
 END;
 
-/* Trigger blokujacy wstawienie drugi raz fv korekty na ta sama fv i pozycje na niej oraz ponowne wstawienie
-fv poprawnej bez jej wyzerowania korekta */
+--Trigger blokujacy wstawienie drugi raz fv korekty na ta sama fv i pozycje na niej--
 
 GO
 
@@ -417,7 +394,8 @@ AND IdDostawcy=@iddos AND Czastransakcji=@czas)
 DECLARE @licz int=(SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV=@FV  AND idDostawcy=@iddos)
 
 
-IF @licz>1 AND @Poz>0
+
+IF @licz>1 AND @Poz>1
 BEGIN
 SELECT  NRFV,MAX(PozycjaNAFV) AS PozycjaNaFV,IdDostawcy
 INTO #ta
@@ -439,16 +417,16 @@ DROP TABLE #ta
 END; 
 
 
-/* Trigger blokujacy wstawienie Fv z niepoprawnym numerem pozycji tj. jesli wstawiono wczesniej pierwsza
-pozycje na fv to teraz moze byc tylko druga. */
+/* Trigger blokujacy wstawienie Fv z niepoprawnym numerem pozycji tj. jesli 
+wstawiono wczesniej pierwsza pozycje na fv to teraz moze byc tylko druga. */
 
 GO
 
 IF OBJECT_ID('Ope.WarunkiDostaw') IS NOT NULL
 DROP FUNCTION Ope.WarunkiDostaw;
 
---Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
-
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli 
+istniala to zostala stworzona przez pomylke */
 GO
 
 CREATE FUNCTION Ope.WarunkiDostaw(@ID int)
@@ -468,7 +446,8 @@ GO
 IF OBJECT_ID('Ope.JMPaliwa') IS NOT NULL
 DROP FUNCTION Ope.JMPaliwa;
 
---Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli
+istniala to zostala stworzona przez pomylke */
 
 
 GO
@@ -491,7 +470,8 @@ GO
 IF OBJECT_ID('Ope.CenaSprz') IS NOT NULL
 DROP FUNCTION Ope.CenaSprz;
 
---Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+/*Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala 
+to zostala stworzona przez pomylke */
 
 GO
 
@@ -507,16 +487,16 @@ RETURN @cena;
 
 END;
 
-/* Funkcja potrzebna do wyliczenia ceny sprzedazy za sprzedana ilosc paliwa trzeba pomnozyc jej wynik przez ilosc
-paliwa jaka bedzie sprzedawana */
+/* Funkcja potrzebna do wyliczenia ceny sprzedazy za sprzedana ilosc paliwa trzeba pomnozyc jej wynik przez
+ilosc paliwa jaka bedzie sprzedawana */
 
 GO
 
 IF OBJECT_ID('Ope.TerminZap') IS NOT NULL
 DROP FUNCTION Ope.TerminZap;
 
-/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to 
-zostala stworzona przez pomylke */
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala 
+to zostala stworzona przez pomylke */
 
 
 GO
@@ -540,8 +520,8 @@ GO
 IF OBJECT_ID('Ope.TypPaliwa') IS NOT NULL
 DROP FUNCTION Ope.TypPaliwa;
 
-/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala
-to zostala stworzona przez pomylke */
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to 
+zostala stworzona przez pomylke */
 
 GO
 CREATE FUNCTION Ope.TypPaliwa(@IDPaliwa int)
@@ -563,7 +543,8 @@ GO
 IF OBJECT_ID('Czas.Data') IS NOT NULL
 DROP FUNCTION Czas.Data;
 
---Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to 
+zostala stworzona przez pomylke */
 
 GO
 CREATE FUNCTION Czas.Data(@DatID int)
@@ -586,7 +567,8 @@ GO
 IF OBJECT_ID('Czas.DataDost') IS NOT NULL
 DROP FUNCTION Czas.DataDost;
 
---Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala to zostala stworzona przez pomylke--
+/* Sprawdzenie czy istnieje powyzsza funkcja jesli tak to jest likwidowana zakladamy, ze jesli istniala
+to zostala stworzona przez pomylke */
 
 GO
 CREATE FUNCTION Czas.DataDost(@fv varchar(100),@poz smallint,@iddos int)
@@ -641,7 +623,8 @@ GO
 IF OBJECT_ID('Ope.uspWstkorDost') IS NOT NULL
 DROP PROC Ope.uspWstkorDost;
 
---Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala utworzony przez pomylke--
+/* Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala
+utworzona przez pomylke */
 
 GO
 
@@ -657,7 +640,9 @@ IDPaliw,IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,Podatek*-1,Typ
 FROM Ope.Dostawy WHERE NRFV=@fv AND PozycjaNAFV=@poz AND IdDostawcy=@iddos;
 
 
+
 /*Procedura na wystawienie Fv korekty korygujcej zakupy paliwa.*/
+
 
 
 GO
@@ -665,7 +650,8 @@ GO
 IF OBJECT_ID('Ope.uspDataZap') IS NOT NULL
 DROP PROC Ope.uspDataZap;
 
---Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala utworzony przez pomylke--
+/* Instrukcja sprawdzajaca czy powyzsza procedura juz istnieje jesli tak to jest likwidowana zakladamy, ze zostala
+utworzony przez pomylke */
 
 GO
 
@@ -699,7 +685,7 @@ INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy
 WHERE DATEDIFF(d,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat)),TerminZaplaty)<0
 
 
-/* Widok pokazujacy rozbieznosci z ustalen handlowych z dostawcami a danymi z fv. Rozbieznosci z terminem zaplaty 
+/* Widok pokazujacy rozbieznosci z ustalen handlowych z dostawcami a danymi z fv. Rozbieznosci z terminem zaplaty
 wczeniejszym niz ustalony z dostawca */
 
 GO
@@ -723,7 +709,7 @@ INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy
 WHERE DATEDIFF(d,DATEADD(d,Ope.TerminZap(DO.IdDostawcy),Czas.Data(D.ID_Dat)),TerminZaplaty)<>0
 
 
---Widok pokazujacy wszystkie rozbieznosci miedzy terminami zaplaty wynikajacymi z ustalen z dostawcami a fakturami od nich---
+--Widok pokazujacy wszystkie rozbieznosci miedzy terminami zaplaty wynikajacymi z ustalen z dostawcami a fakturami od nich--
 
 
 
@@ -745,6 +731,7 @@ INNER JOIN Ope.Dostawcy AS DO ON D.IdDostawcy=DO.IdDostawcy
 WHERE D.TypPlatnosci<>DO.WarunkiPlatnosci 
 
 --Widok pokazujacy rozbieznosci w warunkach platnosci ustalonych z dostawcami a tymi wystawionymi przez nich na FV--
+
 
 
 
