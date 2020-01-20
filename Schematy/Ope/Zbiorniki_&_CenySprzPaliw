@@ -71,7 +71,7 @@ DECLARE @StanZbioGAZ real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliw
 
 IF @StanZbioGAZ<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
 BEGIN 
-DECLARE @erromessageTwo varchar(500)=('Niski poziom zbiorników gazu'+CAST(@StanZbioGAZ AS varchar(400))+' M3');
+DECLARE @erromessageTwo varchar(500)=('Niski poziom zbiorników gazu '+CAST(@StanZbioGAZ AS varchar(400))+' M3');
 THROW 51002, @erromessageTwo, 1; 
 END;
 
