@@ -1,4 +1,4 @@
-USE Test_DB;
+USE Stacja_Paliw;
 
 GO
 
