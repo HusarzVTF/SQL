@@ -55,7 +55,7 @@ DECLARE @StanZbioBEN real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliw
 IF @StanZbioBEN<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Benzyna')
 BEGIN
 DECLARE @erromessage varchar(500)=('Niski poziom zbiorników benzyny wynosi obecnie '+CAST(@StanZbioBEN AS varchar(400))+' Litrów');
-THROW 51000, @erromessage, 1; 
+PRINT @erromessage; 
 END;
   
 
@@ -64,7 +64,7 @@ DECLARE @StanZbioROP real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliw
 IF @StanZbioROP<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Ropa')
 BEGIN 
 DECLARE @erromessageOne varchar(500)=('Niski poziom zbiorników ropy wynosi obecnie '+CAST(@StanZbioROP AS varchar(400))+' Litrów');
-THROW 51001, @erromessageOne, 1; 
+PRINT @erromessageOne; 
 END;
 
 DECLARE @StanZbioGAZ real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
@@ -72,7 +72,7 @@ DECLARE @StanZbioGAZ real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliw
 IF @StanZbioGAZ<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
 BEGIN 
 DECLARE @erromessageTwo varchar(500)=('Niski poziom zbiorników gazu '+CAST(@StanZbioGAZ AS varchar(400))+' M3');
-THROW 51002, @erromessageTwo, 1; 
+PRINT @erromessageTwo; 
 END;
 
 
