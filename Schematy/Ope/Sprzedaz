@@ -1,0 +1,666 @@
+
+
+
+USE Stacja_Paliw;
+
+--Wskazanie bazy Stacja_Paliw do utworzenia ponizszych obiektow--
+
+GO
+
+IF OBJECT_ID('Ope.StPodat') IS NOT NULL
+DROP TABLE Ope.StPodat;
+
+--Instrukcja sprawdzająca czy istnieje tabela StPodat jeśli tak to jest likwidowana zakładamy, że została stworzona pomyłkowo--
+
+
+GO
+
+CREATE TABLE Ope.StPodat
+(ID tinyint IDENTITY PRIMARY KEY CONSTRAINT Stawka FOREIGN KEY REFERENCES Ope.Zbiorniki(IDPaliwa), 
+stawka real not null)
+
+INSERT INTO Ope.StPodat(stawka)
+VALUES (1.54),(0.67),(1.54)
+
+
+--Tworzenie tabeli ze stawkami akcyzy na poszczegolne rodzaje paliw. Stawki sa na  1000 litrow --
+
+
+
+GO
+
+
+IF OBJECT_ID('Ope.Sprzedaz') IS NOT NULL
+DROP TABLE Ope.Sprzedaz;
+
+--Instrukcja sprawdzająca czy istnieje tabela sprzedaż jeśli tak to jest likwidowana zakładamy, że została stworzona pomyłkowo--
+
+GO
+CREATE TABLE Ope.Sprzedaz (
+ID bigint IDENTITY PRIMARY KEY,
+NRFV bigint not null CHECK (NRFV>0), 
+PozycjaNaFV smallint CONSTRAINT FK_Pozycja FOREIGN KEY REFERENCES Ope.Pozycja(ID),
+ID_Dat int CONSTRAINT FK_DatSprz FOREIGN KEY REFERENCES Czas.Kalendarz(ID), 
+IdKlienta int CONSTRAINT FK_Kli FOREIGN KEY REFERENCES Ope.Klienci (IdKlienta),
+IdPracownika tinyint  CONSTRAINT FK_Prac FOREIGN KEY REFERENCES Ope.Pracownicy(IDPracownika),
+IDPaliwa tinyint CONSTRAINT FK_Zbio FOREIGN KEY REFERENCES Ope.Zbiorniki(IDPaliwa),
+IloscPaliwa real not null CHECK(IloscPaliwa<>0),
+KwotaNetto real not null CHECK(KwotaNetto<>0),
+KwotaBrutto real not null CHECK(KwotaBrutto<>0),
+CzasTransakcji datetime not null,
+TerminZaplaty date not null, 
+DataZaplaty date,
+DataAktuZaplaty date,
+TypPlatnosci varchar(7) CHECK((TypPLatnosci) in ('gotowka','karta','barter','przelew')),
+);
+
+
+
+--Tworzenie tabeli sprzedaz.--
+
+
+GO
+
+IF OBJECT_ID('Ope.trCzSprz') IS NOT NULL
+DROP TRIGGER Ope.trCzSprz;
+
+/* Instrukcja sprawdzajaca istnienie powyzszego trigger-a jesli istnieje to jest likwidowany zakladamy, 
+ze jesli istnial to przez pomylke */
+
+GO
+
+CREATE TRIGGER Ope.trCzSprz ON Ope.Sprzedaz AFTER INSERT,UPDATE
+
+AS
+
+IF EXISTS(
+SELECT TerminZaplaty,CzasTransakcji,DataZaplaty FROM Ope.Sprzedaz 
+WHERE DataZaplaty<CAST(CzasTransakcji AS date) 
+OR TerminZaplaty<CAST(CzasTransakcji AS date)
+)
+BEGIN
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji.
+Dane nie zostaly wstawione lub zmienione w tabeli'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--trigger sprawdzajacy poprawnosc danych pod wzgledem termniow platnosci i zaplaty wobec czasu transakcji--
+
+GO
+
+IF OBJECT_ID('Ope.trKorPopFVSprz') IS NOT NULL
+DROP TRIGGER Ope.trKorPopFVSprz;
+
+GO
+
+CREATE TRIGGER Ope.trKorPopFVSprz ON Ope.Sprzedaz
+AFTER INSERT,UPDATE
+AS
+
+IF EXISTS(
+SELECT*FROM Ope.Sprzedaz WHERE
+EXISTS( SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
+FROM Ope.Sprzedaz 
+WHERE  ( PozycjaNAFV>0 AND IloscPaliwa<0 )
+OR (PozycjaNAFV<0 AND IloscPaliwa>0 )))
+BEGIN
+PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--instrukcja blokujaca wstawienie niepoprawnej faktury wg typu.(prawidlowa albo korekta) do tabeli Sprzedaz--
+
+DECLARE @maxSp bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @idkl int = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxSp)
+
+DECLARE @czasSp datetime = (SELECT Czastransakcji FROM Ope.Sprzedaz WHERE ID = @maxSp)
+
+DECLARE @FVSp bigint = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSp)
+AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
+
+
+DECLARE @liczSp int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @FVSp  AND IdKlienta = @idkl)
+
+
+DECLARE @PozSp smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSp)
+AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
+
+DECLARE @sumaSp real = (SELECT SUM(IloscPaliwa) FROM Ope.Sprzedaz WHERE NRFV = @FVSp AND IdKlienta = @idkl)
+
+
+IF @liczSp>1 AND @PozSp>0
+BEGIN
+IF EXISTS (SELECT NRFV, ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty, CzasTransakcji FROM Ope.Sprzedaz 
+WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV>0
+EXCEPT
+SELECT NRFV,ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty,CzasTransakcji FROM Ope.Sprzedaz WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV>0)
+BEGIN
+PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+-- Walidacja danych na pozycjach tej samej fv nie korekty--
+
+
+
+
+IF @liczSp>1 AND @PozSp<0
+BEGIN
+IF EXISTS (SELECT NRFV, ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty FROM Ope.Sprzedaz 
+WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl  AND NRFV = @FVSp AND PozycjaNAFV<0
+EXCEPT
+SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty FROM Ope.Sprzedaz 
+WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV<0)
+BEGIN
+PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+/* Walidacja danych na pozycjach tej samej fv  korekty. Przy warunku, ze korekte moze wystawic tylko ten sam pracownik,
+ktory wystawil prawidlowa fv */
+
+
+
+ 
+IF @liczSp>1 AND @sumaSp<>0  AND @PozSp>0 
+
+BEGIN
+
+SELECT DISTINCT CzasTransakcji
+INTO #CzasChkSp
+FROM Ope.Sprzedaz WHERE ID<(SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND NRFV = (SELECT NRFV FROM Ope.Sprzedaz
+WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)) 
+AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz
+WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
+
+
+
+
+IF NOT EXISTS (
+SELECT*FROM #CzasChkSp 
+INTERSECT
+SELECT CzasTransakcji FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+)
+BEGIN
+PRINT 'Kolejne pozycje tej samej faktury na tym samym dostawcy musza byc wstawione za jednym razem'
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP TABLE #CzasChkSp
+END;
+
+
+/* Ta instrukcja blokuje  wtawienie kolejnej pozycji po czasie tj. oddzielnie.
+Faktura od danego dostawcy powinna byc wstawiona naraz czyli wszystkie jej pozycje w tym samym czasie */
+
+/* Trigger blokujacy wstawienie Fv z niepoprawnym numerem pozycji tj. jesli wstawiono wczesniej pierwsza pozycje na fv
+to teraz moze byc tylko druga. */
+
+
+
+GO
+
+IF OBJECT_ID('Ope.trPodSprz') IS NOT NULL
+DROP TRIGGER Ope.trPodSprz;
+
+GO
+
+CREATE TRIGGER Ope.trPodSprz ON Ope.Sprzedaz
+AFTER INSERT
+AS
+
+DECLARE @maxID bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @maxIDPa tinyint = (SELECT IDPaliwa FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @akcyza real = (SELECT ROUND(Stawka,2) FROM Ope.StPodat WHERE ID=@maxIDPa) 
+
+DECLARE @Ilo real = (SELECT ROUND(IloscPaliwa,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @kwN real = (SELECT ROUND(KwotaNetto,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @kwB real = ROUND((@Ilo*@akcyza)+@kwN,2) 
+
+DECLARE @MaxKWB real = ROUND((SELECT ROUND(KwotaBrutto,2) FROM Ope.Sprzedaz WHERE ID=@maxID),2)
+
+DECLARE @roznica real = ROUND(@kwB-@MaxKWB,2)
+
+IF ROUND(@kwB,2)<>ROUND(@MaxKWB,2)
+
+
+BEGIN
+PRINT 'Nieprawidlowa kwota brutto. Operacja zostala cofnieta '+ CAST(@roznica as varchar)+' kwota z funkcji wynosi ' 
++ CAST(@MaxKWB as varchar)+' kwota z triggera wynosi '+CAST(@kwB as varchar)
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+
+
+--Trigger sprawdzajcy czy kwota brutto jest poprawna--
+
+
+GO
+
+IF OBJECT_ID('Ope.trKrMozSp') IS NOT NULL
+DROP TRIGGER Ope.trKrMozSp;
+
+--Instrukcja sprawdzajaca czy powyzszy trigger juz istnieje jesli tak to jest likwidowany zakladamy, ze zostal utworzony przez pomylke--
+
+GO
+
+CREATE TRIGGER Ope.trKrMozSp ON Ope.Sprzedaz
+AFTER INSERT
+
+AS
+
+DECLARE @NRFV varchar(100) = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
+
+DECLARE @FVPoz smallint = (SELECT PozycjaNaFV FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)) 
+
+DECLARE @idKl int = (SELECT IDKlienta FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
+
+DECLARE @licznik int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND PozycjaNAFV = @FVPoz AND IdKlienta = @idKl)
+
+DECLARE @liczKore int = (SELECT COUNT(*) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND  IdKlienta = @idKl AND PozycjaNAFV = @FVPoz*-1)
+
+DECLARE @liczPo int = (SELECT COUNT(*) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND  IdKlienta = @idKl 
+AND PozycjaNAFV>0 AND PozycjaNAFV = @FVPoz)
+
+IF @licznik>1   
+
+BEGIN
+
+IF @FVPoz<0
+BEGIN
+
+IF @liczKore>@liczPo
+BEGIN
+PRINT 'Istnieje juz Fv korekta do podanej, prosze wprowadzic prawidlowa.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+
+IF @FVPoz>0
+
+BEGIN
+
+IF @liczKore+1<@liczPo
+
+BEGIN
+PRINT 'Nie mozna wstawic po raz kolejny na '+@NRFV+' pozycji '+CAST(@FVPoz AS nvarchar) +
+' ,poniewaz dotychczas wprowadzone nie zostaly wyzerowane.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END
+END;
+
+--Trigger blokujacy wstawienie drugi raz fv korekty na ta sama fv i pozycje na niej--
+
+
+GO
+
+IF OBJECT_ID('Ope.trKorMNaSp') IS NOT NULL
+DROP TRIGGER Ope.trKorMNaSp;
+
+GO
+
+--Sprawdzenie czy istnieje powyzszy trigger jesli tak to jest likwidowany zakladamy, ze jesli istnial to zostal stworzony przez pomylke--
+
+CREATE TRIGGER Ope.trKorMNaSp ON Ope.Sprzedaz AFTER INSERT
+
+AS
+
+
+DECLARE @maxSprz bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @idklSprz smallint = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxSprz)
+
+DECLARE @FVSprz varchar(100) = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSprz)
+AND IdKlienta = @idklSprz )
+
+DECLARE @PozSprz smallint = (SELECT PozycjaNAFV FROM Ope.Sprzedaz WHERE  ID = @maxSprz
+AND IdKlienta = @idklSprz  )
+
+DECLARE @liczSprz int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @FVSprz  AND IdKlienta = @idklSprz)
+
+
+IF  @PozSprz<0  
+
+BEGIN
+
+IF NOT EXISTS (SELECT NRFV FROM Ope.Sprzedaz WHERE NRFV = @FVSprz AND PozycjaNAFV = @PozSprz*-1   AND IdKlienta = @idklSprz)
+
+BEGIN
+
+PRINT 'Proba wstawienia fv korekty na pozycje, ktorej nie ma na fv korygowanej.'
+ROLLBACK TRANSACTION;
+RETURN
+
+END
+
+
+END;
+
+--blokuje wstawienie fv korety na fakturę, której nie ma w tabeli Sprzedaz--
+
+
+GO
+
+IF OBJECT_ID('Ope.trChIDPaKorSprz') IS NOT NULL
+
+DROP TRIGGER Ope.trChIDPaKorSprz;
+
+GO
+
+CREATE TRIGGER Ope.trChIDPaKorSprz ON Ope.Sprzedaz
+AFTER INSERT,UPDATE
+AS
+
+
+DECLARE @maxId bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @maxFvKl bigint = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxId)
+
+DECLARE @maxIdkl int = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxId)
+
+DECLARE @licznik int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @maxFvKl AND IdKlienta = @maxIdkl)
+
+DECLARE @PozSp smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxId)
+AND IdKlienta = @maxIdkl)
+
+IF @licznik>1
+
+BEGIN
+
+IF EXISTS (SELECT NRFV FROM Ope.Sprzedaz WHERE PozycjaNAFV<0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl)
+
+BEGIN
+
+DECLARE @check table(NRFV bigint not null,IdPal tinyint not null, PozycjaNAFV smallint not null,   
+IdKlienta int not null,IdPrac tinyint not null,IloPal real not null, KWNe real not null, KWBr real not null, 
+TermZap date not null, TypPl varchar(7) not null, DataZap date, DataAktDatZap date)
+
+INSERT INTO @check
+SELECT NRFV,IDPaliwa,PozycjaNAFV,IdKlienta,IdPracownika,IloscPaliwa,KwotaNetto,KwotaBrutto,TerminZaplaty,
+TypPlatnosci,DataZaplaty,DataAktuZaplaty
+FROM Ope.Sprzedaz WHERE PozycjaNAFV<0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl
+
+END
+
+IF @licznik = 1 AND @PozSp>0 AND @PozSp<>1
+BEGIN
+PRINT'Pierwsza pozycja na FV musi byc zawsze jeden jesli nie jest to fv korekta.'
+ROLLBACK TRANSACTION;
+RETURN
+
+IF @licznik>1 AND @PozSp>1
+BEGIN
+SELECT  NRFV,MAX(PozycjaNAFV) AS PozycjaNaFV,IdKlienta
+INTO #taP
+FROM Ope.Sprzedaz WHERE ID<@maxId AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl  
+GROUP BY NRFV,IdKlienta
+
+DECLARE @mxfvSp smallint = (SELECT MAX(PozycjaNAFV) FROM #taP)
+
+
+
+
+IF @mxfvSp+1<>@PozSp 
+
+BEGIN
+PRINT 'Nieprawidlowa pozycja na fakturze '+@maxFvKl
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP TABLE #taP
+END; 
+
+
+END;
+
+
+
+
+
+END
+
+
+
+--Trigger sprawdzajcy prawidlowosc pozycji na fakturze--
+
+
+GO
+
+IF OBJECT_ID('Ope.SpKWBrutto') IS NOT NULL
+DROP FUNCTION Ope.SpKWBrutto;
+
+--Sprawdzenie czy istnieje powyższa funkcja jeśli tak to jest likwidowana zakładamy, że jeśli istniała to została stworzona przez pomyłkę--
+
+
+GO
+
+CREATE FUNCTION Ope.SpKWBrutto(@IdPaliwa tinyint, @Ilosc real)
+RETURNS real
+WITH SCHEMABINDING
+
+
+AS
+
+
+
+BEGIN
+
+DECLARE @akc real = (SELECT ROUND(stawka,2) FROM Ope.StPodat WHERE ID = @IdPaliwa)
+
+DECLARE @cena real = (SELECT ROUND(CenaJedn,2) FROM Ope.CenyPa WHERE IDPALIW = @idpaliwa)
+
+DECLARE @KWB real = ROUND((@akc+@cena)*@Ilosc,2)
+
+
+RETURN @KWB
+END;
+
+--funkcja obliczajaca kwote brutto dla danego idpaliwa i ilosci--
+GO
+
+
+
+
+IF OBJECT_ID('Ope.WSprz') IS NOT NULL
+DROP FUNCTION Ope.WSprz;
+
+GO
+CREATE FUNCTION Ope.WSprz (@idpaliwa int, @ilo real)
+RETURNS real
+WITH SCHEMABINDING
+AS
+BEGIN
+DECLARE @cena real = (SELECT ROUND(CenaJedn,2) FROM Ope.CenyPa WHERE IDPALIW = @idpaliwa)*@ilo
+RETURN @cena
+END;
+GO
+
+--Funkcja zwracajaca cene paliwa netto dla danego paliwa i ilosci--
+
+
+GO
+
+IF OBJECT_ID('Ope.trOilOUTZbior') IS NOT NULL
+DROP TRIGGER Ope.trOilOUTZbior;
+
+--Sprawdzenie czy istnieje powyższy trigger jeśli tak to jest likwidowany zakładamy, że jeśli istniał to został stworzony przez pomyłkę--
+
+
+GO
+
+CREATE TRIGGER  Ope.trOilOUTZbior ON Ope.Sprzedaz
+AFTER INSERT, UPDATE, DELETE
+AS
+
+DECLARE @sumSprz table (Id int, SumILosc real)
+
+INSERT INTO @sumSprz
+
+SELECT IDPaliwa, SUM(IloscPaliwa) AS ILOSC FROM Ope.Sprzedaz GROUP BY IDPaliwa
+
+
+UPDATE Ope.Zbiorniki 
+
+SET  OUTCOMEfromZbiornik = SumILosc FROM Ope.Zbiorniki AS Z INNER JOIN @sumSprz AS S ON Z.IDPaliwa = S.Id;
+
+
+--Trigger, który zaktualizuje w tabeli Sprzedaz  ilości paliwa, które zeszło z zbiornika--
+
+
+
+
+
+GO
+
+IF OBJECT_ID('Ope.uspWstkorSprz') IS NOT NULL
+DROP PROC Ope.uspWstkorSprz;
+
+GO
+
+CREATE PROC Ope.uspWstkorSprz (@fv bigint, @poz smallint, @pesel bigint ) 
+
+AS
+
+
+INSERT INTO Ope.Sprzedaz(NRFV,PozycjaNAFV,ID_Dat,IdKlienta,IdPracownika,IDPaliwa,IloscPaliwa,KwotaNetto,
+KwotaBrutto,TerminZaplaty,TypPlatnosci,CzasTransakcji,DataZaplaty,DataAktuZaplaty)
+
+SELECT  NRFV,PozycjaNAFV*-1,Czas.uIdDaty(CAST(GETDATE() AS Date)),IdKlienta,
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+IDPaliwa, IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,TypPlatnosci,GETDATE(),DataZaplaty,DataAktuZaplaty
+FROM Ope.Sprzedaz WHERE NRFV=@fv AND PozycjaNAFV=@poz;
+
+
+/*Procedura na wystawienie Fv korekty korygujcej sprzedaz.*/
+
+
+IF OBJECT_ID('Ope.TerZaKL') IS NOT NULL
+DROP FUNCTION Ope.TerZaKL;
+
+GO
+CREATE FUNCTION Ope.TerZaKL (@idkl int, @czas datetime)
+RETURNS date
+WITH SCHEMABINDING
+AS
+BEGIN
+DECLARE @data date=DATEADD(d,(SELECT DnidoZaplaty FROM Ope.Klienci WHERE IdKlienta = @idkl),CAST(@czas AS date))
+RETURN @data
+END;
+GO
+
+--Funkcja zwracajaca termin zaplaty  dla danego klienta liczac od dnia w ktorym dokonal zakupu--
+
+IF OBJECT_ID('Ope.PozFV') IS NOT NULL
+DROP FUNCTION Ope.PozFV;
+
+GO
+CREATE FUNCTION Ope.PozFV(@Fv bigint, @idkl int, @czasTran datetime)
+RETURNS smallint
+WITH SCHEMABINDING
+
+AS
+BEGIN
+
+
+
+DECLARE @countLowMax smallint = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE   NRFV = @FV   AND IdKlienta = @idkl AND
+CzasTransakcji = @czasTran)
+
+IF @countLowMax IS NULL OR @countLowMax = 0
+
+BEGIN
+DECLARE @count smallint = 1
+RETURN @count
+END
+ELSE
+DECLARE  @Pozycja smallint = (SELECT ID FROM Ope.Pozycja WHERE ID = @countLowMax)
+RETURN @Pozycja+1
+END;
+
+
+--Funkcja zwracajaca nastepna pozcyje dla danej faktury i klienta oraz czasu transkacji --
+
+GO
+IF OBJECT_ID('Ope.NRFV') IS NOT NULL
+DROP FUNCTION Ope.NRFV;
+
+GO
+
+CREATE FUNCTION Ope.NRFV( @idkl int, @czasTran datetime)
+RETURNS bigint
+WITH SCHEMABINDING
+
+AS
+
+
+BEGIN
+
+DECLARE @maxidnrfv bigint = (SELECT MAX(NRFV) FROM Ope.Sprzedaz)
+
+DECLARE @nrfkolej bigint = (SELECT NRFV FROM Ope.Sprzedaz WHERE IdKlienta = @idkl AND CzasTransakcji = @czasTran)
+
+
+SELECT @maxidnrfv = CASE
+WHEN @maxidnrfv IS NULL  THEN 0 
+WHEN @maxidnrfv>=1 THEN  @maxidnrfv
+END
+
+SELECT @nrfkolej = CASE
+WHEN @nrfkolej IS NULL OR @nrfkolej = 0  THEN @maxidnrfv+1
+WHEN @nrfkolej IS NOT NULL OR @nrfkolej>0 THEN @nrfkolej
+END
+RETURN  @nrfkolej
+END
+
+
+--Funkcja zwracajaca  kolejny NRFV dla danego klienta i czasu zawarcia transakcji--
+
+GO
+
+INSERT INTO Ope.Sprzedaz(NRFV,PozycjaNaFV,ID_Dat,IdKlienta,IdPracownika,IDPaliwa,IloscPaliwa,KwotaNetto,
+KwotaBrutto,CzasTransakcji,TypPlatnosci,TerminZaplaty)
+
+VALUES 
+
+(Ope.NRFV(1,GETDATE()),	Ope.PozFV(Ope.NRFV(1,GETDATE()),1,GETDATE()), Czas.uIdDaty(CAST(GETDATE() AS	Date)),	1,1,1,1000,Ope.WSprz(1,1000),Ope.SpKWBrutto(1,1000),GETDATE(),'przelew',Ope.TerZaKL(1,GETDATE())),
+(Ope.NRFV(2,GETDATE()),	Ope.PozFV(Ope.NRFV(2,GETDATE()),2,GETDATE()), Czas.uIdDaty(CAST(GETDATE()AS	Date)),	2,2,1,10000,Ope.WSprz(1,10000),Ope.SpKWBrutto(1,10000),GETDATE(),'przelew',Ope.TerZaKL(2,GETDATE())),
+(Ope.NRFV(2,GETDATE()), Ope.PozFV(Ope.NRFV(2,GETDATE()),2,GETDATE()),Czas.uIdDaty(CAST(GETDATE()	AS	Date)), 2,2,2,7680,Ope.WSprz(2,7680),Ope.SpKWBrutto(2,7680),GETDATE(),'przelew',Ope.TerZaKL(2,GETDATE())),
+(Ope.NRFV(4,GETDATE()), Ope.PozFV(Ope.NRFV(4,GETDATE()),4,GETDATE()),Czas.uIdDaty(CAST(GETDATE()	AS	Date)),	4,4,2,100000,Ope.WSprz(2,100000),Ope.SpKWBrutto(2,100000),GETDATE(),'przelew',Ope.TerZaKL(4,GETDATE())),
+(Ope.NRFV(5,GETDATE()), Ope.PozFV(Ope.NRFV(5,GETDATE()),5,GETDATE()),Czas.uIdDaty(CAST(GETDATE()	AS	Date)), 5,5,3,100000,Ope.WSprz(3,100000),Ope.SpKWBrutto(3,100000),GETDATE(),'przelew',Ope.TerZaKL(5,GETDATE())),
+(Ope.NRFV(7,GETDATE()),	Ope.PozFV(Ope.NRFV(7,GETDATE()),7,GETDATE()),Czas.uIdDaty(CAST(GETDATE()	AS	Date)),	7,7,2,300000,Ope.WSprz(2,300000),Ope.SpKWBrutto(2,300000),GETDATE(),'przelew',Ope.TerZaKL(7,GETDATE())),
+(Ope.NRFV(8,GETDATE()), Ope.PozFV(Ope.NRFV(8,GETDATE()),8,GETDATE()),Czas.uIdDaty(CAST(GETDATE()	AS	Date)), 8,8,3,400000,Ope.WSprz(3,400000),Ope.SpKWBrutto(3,400000),GETDATE(),'przelew',Ope.TerZaKL(8,GETDATE()))
+
+
+--wstawienie transkacji sprzedazy paliwa do tabeli Sprzedaz --
+
+
+
+
+
+
+
