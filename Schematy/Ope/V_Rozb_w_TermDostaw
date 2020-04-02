@@ -1,0 +1,28 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.vChTermDost') IS NOT NULL
+DROP VIEW Ope.vChTermDost;
+
+--Sprawdzenie czy istnieje powyższy widok jeśli tak to jest likwidowany zakładamy, że jeśli istniał to został stworzony przez pomyłkę--
+
+GO
+
+CREATE VIEW Ope.vChTermDost AS
+
+SELECT NRFV,NazwaDostawcy AS Dostawca, RodzajPaliwa AS Paliwo,Data,TerminZaplaty,Dateadd(D,DniDoZaplaty,Data) AS TerZapWgWar, 
+DateDiff(D,Dateadd(D,DniDoZaplaty,Data),TerminZaplaty )  AS RozWTerZapl,KwotaBrutto, Podatek
+FROM Ope.Dostawy AS Dst INNER JOIN Ope.Dostawcy AS Dos ON Dst.IdDostawcy=Dos.IdDostawcy
+INNER JOIN Ope.Zbiorniki AS Z ON Dst.IDPaliw=Z.IDPaliwa INNER JOIN Czas.Kalendarz AS K ON K.ID=Dst.ID_Dat 
+WHERE DateDiff(D,Dateadd(D,DniDoZaplaty,Data),TerminZaplaty)<>0;
+  
+
+/* Tworzenie widoku sprawdzającego czy uzgodnione z dostawcami terminy płatności mają pokrycie w fakturach.
+ Widok pokazuje tylko pozycje na których są rozbieżności w terminach. Jesli zwraca tylko naglowki kolumn 
+ to znaczy, ze rozbieznosci nie ma.*/
+ 
+ 
+ 
+ 
