@@ -1,0 +1,40 @@
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.vListaDOSTAW') IS NOT NULL
+DROP VIEW Ope.vListaDOSTAW;
+
+--Sprawdzenie czy istnieje widok vListaDOSTAW jeśli tak to likwiduje go. Zakładamy, że jeśli istniał to został utworzony przez pomyłkę--
+
+GO
+
+CREATE VIEW Ope.vListaDOSTAW AS
+
+SELECT
+NRFV, 
+PozycjaNaFV, 
+NazwaDostawcy,
+Imie AS ImiePrac,
+Nazwisko AS NazwPrac,
+RodzajPaliwa, 
+JM,
+IloscPaliwa,
+KwotaNetto, 
+KwotaBrutto,
+Data,
+TerminZaplaty, 
+DataZaplaty,
+TypPlatnosci 
+
+FROM Ope.Dostawy AS  D INNER JOIN Ope.Dostawcy  AS DS ON DS.IdDostawcy=D.IdDostawcy
+
+INNER JOIN Ope.Pracownicy  AS P ON P.IDPracownika=D.IdPracownika
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
+INNER JOIN Czas.Kalendarz AS K ON K.ID=D.ID_Dat;
+
+-- Widok pokazujący raport zakupów paliwa prezentuje wszystkie transkacje zakupu paliwa--
+
+
