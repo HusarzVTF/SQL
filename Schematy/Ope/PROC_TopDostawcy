@@ -1,0 +1,29 @@
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.uspTOPDostawcy') IS NOT NULL
+DROP PROC Ope.uspTOPDostawcy;
+
+--Sprawdzenie czy istnieje procedura uspTopDostawcy. Jeśli tak to likwiduje ją, zakładamy że jeśli już istniała to została stworzona przez pomyłkę.--
+
+GO
+
+CREATE PROC Ope.uspTOPDostawcy AS
+BEGIN
+SELECT NazwaDostawcy,
+SUM(IloscPaliwa) AS IloscPaliwa,
+Z.JM,SUM(KwotaNetto) AS WartoscPaliwa,
+SUM(KwotaBrutto) AS WartoscBruttoPaliwa, 
+SUM(KwotaBrutto)-SUM(KwotaNetto) AS  Podatek, 
+SUM(KwotaNetto)/SUM(IloscPaliwa) AS SRCenaZAKUPUNetto,
+SUM(KwotaBrutto)/SUM(IloscPaliwa) AS SRCenaZAKUPUBrutto,
+Z.RodzajPaliwa
+FROM Ope.Dostawy  AS D
+INNER JOIN Ope.Dostawcy  AS Dst ON DST.IDDostawcy=D.IdDostawcy INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+GROUP BY  NazwaDostawcy,Z.RodzajPaliwa,Z.JM ORDER BY IloscPaliwa DESC;
+END;
+
+--Procedura pokazująca zestawienie prezentujące dostawców posortowanych od największego do najmniejszego wg ilości zakupionego od nich paliwa.--
+
+
