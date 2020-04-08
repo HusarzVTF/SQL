@@ -1,0 +1,30 @@
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.uspTOPKlienci') IS NOT NULL
+DROP PROC Ope.uspTOPKlienci;
+
+--Sprawdzenie czy istnieje procedura uspTOPKlienci. Jeśli tak to jest likwidowana, zakładamy że jeśli  istniała to została utworzona przez pomyłkę--
+
+GO
+
+CREATE PROC Ope.uspTOPKlienci AS
+
+BEGIN
+SELECT NazwaKlienta, 
+SUM(IloscPaliwa) AS IloscPaliwa,
+Z.JM,SUM(KwotaNetto) AS WartoscPaliwa,
+SUM(KwotaBrutto) AS WartoscBruttoPaliwa,  
+SUM(KwotaBrutto)-SUM(KwotaNetto) AS  Podatek, 
+SUM(KwotaNetto)/SUM(IloscPaliwa) AS SRCenaSPRZEDAZYNetto,
+SUM(KwotaBrutto)/SUM(IloscPaliwa) AS SRCenaSPRZEDAZYBrutto, 
+Z.RodzajPaliwa
+FROM Ope.Sprzedaz AS S INNER JOIN Ope.Klienci AS K ON K.IdKlienta=S.IdKlienta  
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+GROUP BY Z.JM, NazwaKlienta,Z.RodzajPaliwa ORDER BY IloscPaliwa DESC
+END;
+
+--Procedura pokazująca zestawienie prezentujące klientów posortowanych od największego do najmniejszego wg ilości sprzedanego paliwa.--
+
+
