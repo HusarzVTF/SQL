@@ -1,0 +1,46 @@
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.vListaSPRZEDAZY') IS NOT NULL
+DROP VIEW Ope.vListaSPRZEDAZY;
+
+--Sprawdzenie czy istnieje widok vListaSPRZEDAZY jeśli tak to likwiduje go. Zakładamy, że jeśli istnieje to został utworzony przez pomyłkę--
+
+GO
+
+CREATE VIEW Ope.vListaSPRZEDAZY AS 
+
+SELECT
+NRFV, 
+PozycjaNaFV, 
+NazwaKlienta,
+Imie AS IMIEPrac,
+Nazwisko AS NazwPrac,
+RodzajPaliwa, 
+JM,
+IloscPaliwa,
+KwotaNetto, 
+KwotaBrutto,
+Data,
+TerminZaplaty, 
+DataZaplaty,
+TypPlatnosci 
+
+FROM Ope.Sprzedaz AS  S INNER JOIN Ope.Klienci  AS K ON K.IdKlienta=S.IdKlienta
+
+INNER JOIN Ope.Pracownicy  AS P ON P.IDPracownika=S.IdPracownika
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
+INNER JOIN Czas.Kalendarz AS Kd ON Kd.ID=S.ID_Dat;
+
+
+GO
+
+--Widok pokazujący raport "kasowy" zestawienie prezentujące wszystkie transakcje sprzedaży.--
+
+
+
+
+ 
