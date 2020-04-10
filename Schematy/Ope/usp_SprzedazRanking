@@ -1,0 +1,33 @@
+
+
+USE Stacja_Paliw;
+
+GO;
+
+
+
+IF OBJECT_ID('Ope.uspPaliwa_SprzRanking') IS NOT NULL
+DROP PROC Ope.uspPaliwa_SprzRanking;
+
+--Sprawdzenie czy istnieje powyzsza procedura. Jeśli tak to jest likwidowana, zakładamy że jeśli  istniała to została utworzona przez pomyłkę--
+
+GO
+
+CREATE PROC Ope.uspPaliwa_SprzRanking AS
+
+BEGIN
+SELECT RodzajPaliwa,
+SUM(IloscPaliwa) AS IloscPaliwa,
+Z.JM,SUM(KwotaNetto) AS WartoscPaliwa,
+SUM(KwotaBrutto) AS WartoscBruttoPaliwa,  
+SUM(KwotaBrutto)-SUM(KwotaNetto) AS  Podatek,
+SUM(KwotaNetto)/SUM(IloscPaliwa) AS SRCenaSPRZEDAZYNetto, 
+SUM(KwotaBrutto)/SUM(IloscPaliwa) AS SRCenaSPRZEDAZYBrutto
+FROM Ope.Sprzedaz AS S  
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+GROUP BY Z.JM, RodzajPaliwa,Z.RodzajPaliwa ORDER BY IloscPaliwa DESC
+END;
+
+--Procedura pokazująca zestawienie prezentujące sprzedaz paliwa posortowana od największej do najmniejszejs wg ilości sprzedanego paliwa.--
+
+
