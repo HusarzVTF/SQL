@@ -1,0 +1,152 @@
+
+
+
+GO
+
+
+ IF OBJECT_ID('Ope.uspNaleWiekoNaDzisPrzet') IS NOT NULL
+ DROP PROC Ope.uspNaleWiekoNaDzisPrzet;
+
+ --Instukcja sprawdzająca czy istnieje już procedura Ope.uspNaleWiekoNaDzisPrzet jeśli tak to jest likwidowana. Zakładamy, że jeśli istnieje to przez pomyłkę--
+
+
+ GO
+
+CREATE PROC Ope.uspNaleWiekoNaDzisPrzet
+ 
+ AS
+
+BEGIN
+ 
+SELECT
+K.IdKlienta,
+K.Nazwaklienta,
+RodzajPaliwa,
+SUM(KwotaNetto) AS NalNetto_0_30, 
+SUM(KwotaBrutto) AS NalBrutto_0_30,
+DataZaplaty 
+
+INTO #Trzyd
+FROM Ope.Sprzedaz AS S 
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+RIGHT JOIN Ope.Klienci  AS K ON K.IdKlienta= S.IdKlienta 
+
+GROUP BY K.IdKlienta,K.Nazwaklienta,RodzajPaliwa,DataZaplaty, TerminZaplaty
+HAVING DataZaplaty IS NULL AND SUM(KwotaNetto)>0 
+AND DATEDIFF(d,TerminZaplaty,GETDATE())<=30
+
+
+
+SELECT
+K.IdKlienta,
+K.Nazwaklienta,
+RodzajPaliwa,
+SUM(KwotaNetto) AS NalNetto_60, 
+SUM(KwotaBrutto) AS NalBrutto_60, 
+DataZaplaty 
+
+INTO #SzeszDZ
+FROM Ope.Sprzedaz AS S 
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+RIGHT  JOIN Ope.Klienci  AS K ON K.IdKlienta= S.IdKlienta
+
+GROUP BY K.IdKlienta,K.Nazwaklienta,RodzajPaliwa,DataZaplaty, TerminZaplaty
+HAVING DataZaplaty IS NULL AND SUM(KwotaNetto)>0
+AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 31 AND 60 
+
+
+SELECT
+K.IdKlienta,
+K.Nazwaklienta,
+SUM(KwotaNetto) AS NalNetto_90, 
+SUM(KwotaBrutto) AS NalBrutto_90,
+DataZaplaty 
+
+INTO #DziewDz
+FROM Ope.Sprzedaz AS S
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+RIGHT  JOIN Ope.Klienci  AS K ON K.IdKlienta= S.IdKlienta
+
+GROUP BY K.IdKlienta,K.Nazwaklienta,RodzajPaliwa,DataZaplaty, TerminZaplaty
+HAVING DataZaplaty IS NULL AND SUM(KwotaNetto)>0
+AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 61 AND 90 
+
+
+
+SELECT 
+K.IdKlienta,
+K.Nazwaklienta,
+SUM(KwotaNetto) AS NalNetto_120, 
+SUM(KwotaBrutto) AS NalBrutto_120, 
+DataZaplaty 
+
+INTO #STODwadz
+FROM Ope.Sprzedaz AS S 
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+RIGHT  JOIN Ope.Klienci  AS K ON K.IdKlienta= S.IdKlienta
+
+GROUP BY K.IdKlienta,K.Nazwaklienta,RodzajPaliwa,DataZaplaty, TerminZaplaty
+HAVING DataZaplaty IS NULL AND SUM(KwotaNetto)>0
+AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 91 AND 120 
+
+
+SELECT 
+K.IdKlienta,
+K.Nazwaklienta,
+SUM(KwotaNetto) AS NalNetto_POW_120, 
+SUM(KwotaBrutto) AS NalBrutto_POW_120, 
+DataZaplaty 
+
+INTO #POSTODwadz
+FROM Ope.Sprzedaz AS S 
+
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+RIGHT  JOIN Ope.Klienci  AS K ON K.IdKlienta= S.IdKlienta
+
+GROUP BY K.IdKlienta,K.Nazwaklienta,RodzajPaliwa,DataZaplaty, TerminZaplaty
+HAVING DataZaplaty IS NULL AND SUM(KwotaNetto)>0
+AND DATEDIFF(d,TerminZaplaty,GETDATE()) > 120 
+
+
+SELECT
+K.IdKlienta,
+K.Nazwaklienta,
+T.RodzajPaliwa,
+SUM(T.NalNetto_0_30) AS NalNetto_0_30, 
+SUM(T.NalBrutto_0_30) AS NalBrutto_0_30,
+SUM(Sz.NalNetto_60) AS NalNetto_60, 
+SUM(Sz.NalBrutto_60) AS NalBrutto_60,
+SUM(Dz.NalNetto_90) AS NalNetto_90,
+SUM(Dz.NalBrutto_90) AS NalBrutto_90, 
+SUM(St.NalNetto_120) AS NalNetto_120,
+SUM(St.NalBrutto_120) AS NalBrutto_120 ,
+SUM(Ps.NalNetto_POW_120) AS NalNetto_POW_120, 
+SUM(Ps.NalBrutto_POW_120) AS NalBrutto_POW_120
+
+FROM Ope.Klienci AS K
+LEFT  JOIN #Trzyd AS T ON K.IdKlienta = T.IdKlienta
+LEFT  JOIN #SzeszDZ AS Sz ON K.IdKlienta = Sz.IdKlienta
+LEFT JOIN #DziewDz AS Dz ON K.IdKlienta = Dz.IdKlienta
+LEFT JOIN #STODwadz AS St ON K.IdKlienta = St.IdKlienta
+LEFT JOIN #POSTODwadz AS Ps ON K.IdKlienta = Ps.IdKlienta
+GROUP BY K.IdKlienta,K.Nazwaklienta,T.RodzajPaliwa
+
+
+DROP TABLE #Trzyd
+DROP TABLE #SzeszDZ
+DROP TABLE #DziewDz 
+DROP TABLE #STODwadz
+DROP TABLE #POSTODwadz 
+
+
+END;
+
+
+ --Procedura zwracajaca wiekowanie należności przeterminowanych na dzien dzisiejszy (kazdy dzien w ktorym zostanie wykonana)--
+ 
+ 
+ 
