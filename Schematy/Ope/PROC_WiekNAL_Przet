@@ -145,7 +145,7 @@ DROP TABLE #POSTODwadz
 END
 
 
- --Procedura pokazująca wiekowania należności przeterminowanych--
+ --Procedura pokazująca wiekowania należności przeterminowanych na dzis (dzis oznacza kazdy dzien w ktorym jest wykonana procedura)--
  
  
  
