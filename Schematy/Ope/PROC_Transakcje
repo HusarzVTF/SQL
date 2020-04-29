@@ -1,0 +1,69 @@
+
+
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.uspTrans') IS NOT NULL
+DROP PROC Ope.uspTrans;
+
+GO
+CREATE PROC Ope.uspTrans
+
+ AS
+  WITH Tra_CTE (CzasTransakcji,NrTyg,DzienTyg,Nrdok,PozycWdok, Kontrahent,KwNett, KwBrutto,Ilosc,
+  JM,TypPaliwa,TermZapl, DataZaplaty,RdzPlatnosci,ImiePraco, NazwiPrac, RdzTrans)
+  AS(
+ SELECT 
+ CzasTransakcji,
+ DATENAME(ISO_WEEK,CzasTransakcji),
+ DATENAME(w,CzasTransakcji),
+ CAST(NRFV AS varchar )AS Nrdok,
+ PozycjaNaFV AS PozycWdok,
+ NazwaKlienta AS Kontrahent,
+ KwotaNetto,
+ KwotaBrutto,
+ IloscPaliwa*-1 AS ILosc, 
+ JM, 
+ RodzajPaliwa AS TypPaliwa, 
+ TerminZaplaty AS TermZapl,
+ DataZaplaty, TypPlatnosci,
+ Imie AS ImiePrac,
+ Nazwisko AS NazwiPrac  ,
+ 'Sprzedaz'   
+ 
+ FROM Ope.Zbiorniki AS Z
+ INNER JOIN Ope.Sprzedaz AS S ON Z.IDPaliwa=S.IDPaliwa  INNER JOIN Ope.Pracownicy AS P ON S.IdPracownika=P.IDPracownika
+ INNER JOIN Ope.Klienci AS K ON S.IdKlienta=K.IdKlienta
+ 
+ UNION
+ 
+ SELECT 
+ CzasTransakcji,
+ DATENAME(ISO_WEEK,CzasTransakcji),
+ DATENAME(w,CzasTransakcji),
+ NRFV  AS Nrdok,
+ PozycjaNAFV AS PozycWdok,
+ NazwaDostawcy AS Kontrahent,
+ KwotaNetto*-1, 
+ KwotaBrutto*-1,
+ IloscPaliwa AS ILosc, 
+ JM,
+ RodzajPaliwa AS TypPaliwa,
+ TerminZaplaty AS TermZapl,
+ DataZaplaty,
+ TypPlatnosci,
+ Imie AS ImiePrac,
+ Nazwisko AS NazwiPrac ,
+ 'Kupno'
+ 
+ FROM Ope.Zbiorniki AS Z
+ INNER JOIN Ope.Dostawy AS D ON Z.IDPaliwa=D.IDPaliw INNER JOIN Ope.Pracownicy AS P ON D.IdPracownika=P.IDPracownika
+ INNER JOIN Ope.Dostawcy AS Dst ON D.IdDostawcy=Dst.IdDostawcy)
+
+ SELECT*FROM Tra_CTE ORDER BY CzasTransakcji;
+
+
+
+
+ --Procedura pokazująca posortowane wg daty transkacje Sprzedaży i Zakupu--
