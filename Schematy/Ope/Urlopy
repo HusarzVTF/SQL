@@ -1,0 +1,122 @@
+USE Stacja_Paliw;
+
+GO;
+
+
+IF OBJECT_ID('Ope.Urlopy') IS NOT NULL
+DROP TABLE Ope.Urlopy;
+
+--Instrukcja sprawdzająca czy tabela Urlopy już istnieje jeśli tak to jest likwidowana zakładamy, że jeśli istniała to przez pomyłkę--
+
+
+GO
+
+CREATE TABLE Ope.Urlopy(
+IDUrlopu int IDENTITY,
+IDPrac tinyint not null CONSTRAINT PK_Pracownik FOREIGN KEY REFERENCES Ope.Pracownicy(IdPracownika),
+OD  date not null, 
+DzienOD AS DATENAME(dw,OD),
+DO date not null,
+INDEX DOOD_Url (OD,DO),
+DzienDO AS DATENAME(dw,DO), CONSTRAINT PK_Urp PRIMARY KEY(IDUrlopu));
+GO
+
+--Tworzenie tabeli urlopy--
+
+GO
+
+IF OBJECT_ID('Ope.trCHECKUrlopyONE') IS NOT NULL
+DROP TRIGGER Ope.trCHECKUrlopyONE;
+
+--Instrukcja sprawdzająca czy trigger Ope.trCHECKUrlopyONE już istnieje jeśli tak to jest likwidowany zakładamy, że jeśli istniał to przez pomyłkę--
+
+GO
+
+CREATE TRIGGER Ope.trCHECKUrlopyONE ON Ope.Urlopy
+AFTER INSERT,UPDATE,DELETE
+
+AS
+
+IF EXISTS (SELECT OD, DO FROM Urlopy WHERE OD>DO) 
+BEGIN
+PRINT 'Urlop nie został wstawiony gdyż data urlopu została wprowadzona niepoprawnie'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger blokujący wstawienie urlopu z datą początkową większą od końcowej--
+
+
+GO
+IF OBJECT_ID('Ope.trCHECKUrlopyTWO') IS NOT NULL
+DROP TRIGGER Ope.trCHECKUrlopyTWO;
+
+--Instrukcja sprawdzająca czy trigger Ope.trCHECKUrlopyTWO już istnieje jeśli tak to jest likwidowany zakładamy, że jeśli istniał to przez pomyłkę--
+
+GO
+
+CREATE TRIGGER Ope.trCHECKUrlopyTWO ON Ope.Urlopy
+AFTER INSERT,UPDATE,DELETE
+
+AS
+
+IF EXISTS (SELECT DzienOD,DzienDO FROM Urlopy WHERE DzienOD IN('Saturday','Sunday') OR   DzienDO IN('Saturday','Sunday'))
+BEGIN
+PRINT 'Na dzień rozpoczęcia urlopu bądż zakończenia wybrano dzień z weekendu (Sobota bądż Niedziela), urlop nie został wstawiony'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger sprawdzajacy czy dniu urlopu zostały prawidłowo wybrane--
+
+GO
+IF OBJECT_ID('Ope.ZajeteDni') IS NOT NULL
+DROP TABLE Ope.ZajeteDni;
+
+--Instrukcja sprawdzająca czy tabela Ope.ZajeteDni już istnieje jeśli tak to jest likwidowana zakładamy, że jeśli istniała to przez pomyłkę--
+
+GO
+
+CREATE TABLE Ope.ZajeteDni(
+ID int IDENTITY,
+IDUrlopu int CONSTRAINT PK_Url FOREIGN KEY REFERENCES Ope.Urlopy(IDUrlopu),
+Dzien date UNIQUE,
+PRIMARY KEY(ID));
+
+GO
+
+--Tabela pomocnicza z zajątymi dniami urlopowymi--
+
+IF OBJECT_ID('Ope.trCHECKUrlopyTHREE') IS NOT NULL
+DROP TRIGGER Ope.trCHECKUrlopyTHREE;
+
+GO
+
+CREATE TRIGGER Ope.trCHECKUrlopyTHREE ON Ope.Urlopy
+AFTER INSERT,UPDATE,DELETE
+
+AS
+
+DECLARE @IDMAX int=(SELECT MAX(IDUrlopu) FROM Urlopy) 
+DECLARE @OD date=(SELECT OD FROM Urlopy WHERE IDUrlopu=@IDMAX)
+DECLARE @DO date=(SELECT DO FROM Urlopy WHERE IDUrlopu=@IDMAX) 
+DECLARE @IdUrlop int=(SELECT IDUrlopu FROM Urlopy WHERE IDUrlopu=@IDMAX)
+
+
+IF EXISTS(
+SELECT data FROM Czas.Kalendarz WHERE data BETWEEN @OD AND @DO
+INTERSECT SELECT Dzien FROM ZajeteDni)
+
+
+BEGIN
+PRINT'Urlop nie został wstawiony gdyż data urlopu pokrywa się z urlopem innego pracownika'
+ROLLBACK TRANSACTION;
+END;
+ELSE
+INSERT INTO ZajeteDni (IDUrlopu,Dzien)
+SELECT @IDMAX,data FROM Czas.Kalendarz WHERE data BETWEEN @OD AND @DO;
+
+--Trigger blokujący wybranie urlopu zajętego przez innego pracownika--
+
+
+
