@@ -1,0 +1,308 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.WynikOpe') IS NOT NULL
+DROP TABLE Ope.WynikOpe;
+
+--Instrukcja sprawdzająca czy tabela Ope.WynikOpeN już istnieje jeśli tak to jest likwidowana zakładamy, że jeśli istniała to przez pomyłkę--
+
+
+GO
+
+CREATE TABLE Ope.WynikOpe(
+ID int IDENTITY CONSTRAINT PK_WynO PRIMARY KEY, 
+Kategoria varchar(100) UNIQUE not null, 
+Kwota real)
+
+--Tworzenie tabeli WynikOpe--
+
+GO
+
+
+INSERT INTO Ope.WynikOpe(Kategoria)
+VALUES('Przychody'),('WydPaliwa'), ('WydWyn'),('Wynik')
+
+
+--Wstawienie kategorii do tabeli WynikOpe--
+
+IF OBJECT_ID('Ope.trWynikOp') IS NOT NULL
+DROP TRIGGER Ope.trWynikOp;
+
+GO
+
+CREATE TRIGGER Ope.trWynikOp ON Ope.WynikOpe AFTER INSERT,UPDATE,DELETE
+
+AS
+
+UPDATE Ope.WynikOpe SET Kwota =
+((SELECT ISNULL(Kwota,0) FROM Ope.WynikOpe WHERE Kategoria ='Przychody')-(SELECT SUM(ISNULL(Kwota,0)) FROM Ope.WynikOpe 
+WHERE Kategoria IN ('WydPaliwa','WydWyn')))
+WHERE Kategoria='Wynik'
+
+--trigger, ktory aktualizuje wynik w tabeli WynikOpe po modyfikacji, wstawieniu  lub usnieciu z niej danych--
+
+
+
+GO
+
+IF OBJECT_ID('Ope.uspZrobWynik') IS NOT NULL
+DROP PROC Ope.uspZrobWynik;
+
+--Instrukcja sprawdzająca czy procedura Ope.uspZrobWynik już istnieje jeśli tak to jest likwidowana zakładamy, że jeśli istniała to przez pomyłkę--
+
+GO
+
+CREATE PROC Ope.uspZrobWynik (@czasOD date , @czasDO date  , @typ varchar(8) ) AS
+
+IF @typ NOT IN ('prognoza','realny')
+
+BEGIN
+PRINT 'Wpisano nieprawidlowy typ, nalezy wpisac prognoza lub realny '
+END;
+
+
+DECLARE @dni int=(DATEDIFF(d,@czasOD, @czasDO))
+
+DECLARE @wyn real=(SELECT SUM(Pensja) FROM Ope.Pracownicy); 
+
+DECLARE @wynDzN real=@wyn/22; 
+
+--Na potrzeby wyliczenia dziennej stawki wynagrodzenia przyjmuje się, 22 dni robocze w miesiącu--
+
+
+IF @typ = 'prognoza'
+
+BEGIN
+
+UPDATE Ope.WynikOpe SET Kwota = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Sprzedaz AS S 
+INNER JOIN Czas.Kalendarz AS K ON S.ID_Dat=K.ID 
+WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO),0)
+WHERE Kategoria = 'Przychody';
+
+UPDATE Ope.WynikOpe SET Kwota = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Dostawy  AS D 
+INNER JOIN Czas.Kalendarz AS K ON D.ID_Dat=K.ID
+WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO),0)
+WHERE Kategoria = 'WydPaliwa';
+
+
+UPDATE Ope.WynikOpe SET Kwota=ISNULL((@wynDzN*@dni),0)
+WHERE Kategoria='WydWyn';
+
+END;
+
+IF  @typ='realny'
+
+BEGIN
+
+UPDATE Ope.WynikOpe SET Kwota = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Sprzedaz AS S 
+INNER JOIN Czas.Kalendarz AS K ON S.ID_Dat=K.ID 
+WHERE DataZaplaty BETWEEN @czasOD AND @czasDO),0)
+WHERE Kategoria = 'Przychody';
+
+UPDATE Ope.WynikOpe SET Kwota=ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Dostawy  AS D 
+INNER JOIN Czas.Kalendarz AS K ON D.ID_Dat=K.ID
+WHERE DataZaplaty BETWEEN @czasOD AND @czasDO),0)
+WHERE Kategoria='WydPaliwa';
+
+
+UPDATE Ope.WynikOpe SET Kwota=ISNULL((@wynDzN*@dni),0)
+WHERE Kategoria='WydWyn';
+
+
+END;
+
+
+--Procedura wypełniająca tabelę z uproszczonym wynikiem operacyjnym danymi za wskazany okres czasu--
+
+
+
+
+GO
+
+IF OBJECT_ID('Ope.uspCashflow') IS NOT NULL
+DROP PROC Ope.uspCashflow;
+
+--Instrukcja sprawdzająca czy procedura Ope.uspCashflowProg już istnieje jeśli tak to jest likwidowana zakładamy, że jeśli istniała to przez pomyłkę--
+
+
+GO
+
+CREATE PROC Ope.uspCashflow (@dni int , @typ varchar(8) )
+
+AS 
+
+IF @typ NOT IN('prognoza','realny')
+
+BEGIN
+PRINT 'Wpisano nieprawidlowy typ, nalezy wpisac prognoza lub realny '
+END;
+
+
+
+DECLARE @wyn real=(SELECT SUM(Pensja) FROM Ope.Pracownicy);
+
+DECLARE @wynDzN real=@wyn/22;
+
+
+IF @typ='prognoza'
+BEGIN
+
+DECLARE @CashFlow table (Cash varchar(7) PRIMARY KEY, OkresI real, OkresII real, OkresIII real);
+
+INSERT INTO @CashFlow (Cash) VALUES('INCOME'), ('OUTCOME'),('FLOW');
+
+UPDATE @CashFlow SET OkresI= ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN CAST(GETDATE() AS Date) 
+AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0)
+WHERE Cash='INCOME';
+
+UPDATE @CashFlow SET OkresII= ISNULL ((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS Date))),0) 
+WHERE Cash='INCOME';
+
+
+UPDATE @CashFlow SET OkresIII= ISNULL( (SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date))
+AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0)
+WHERE Cash='INCOME';
+
+
+
+
+UPDATE @CashFlow SET OkresI= (ISNULL(  (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN CAST(GETDATE() AS Date) 
+AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) +ISNULL(@dni*@wynDzN ,0)) *-1 
+WHERE Cash='OUTCOME';
+
+UPDATE @CashFlow SET OkresII=(ISNULL( (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS DATE))),0) + ISNULL(@dni*@wynDzN,0))*-1 
+WHERE Cash='OUTCOME';
+
+
+UPDATE @CashFlow SET OkresIII=(ISNULL( (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0) + ISNULL(@dni * @wynDzN,0))*-1 
+WHERE Cash='OUTCOME';
+
+
+DECLARE @FlowOkrIInc real=(SELECT OkresI FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkrIOut real=(SELECT OkresI FROM @CashFlow WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr2IInc real=(SELECT OkresII FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkr2IOut real=(SELECT OkresII FROM @CashFlow WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr3IInc real=(SELECT OkresIII FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkr3IOut real=(SELECT OkresIII FROM @CashFlow WHERE Cash='OUTCOME')
+
+
+
+UPDATE @CashFlow SET OkresI=@FlowOkrIInc + @FlowokrIOut
+WHERE Cash='FLOW';
+
+UPDATE @CashFlow SET OkresII=@FlowOkr2IInc + @Flowokr2IOut
+WHERE Cash='FLOW'; 
+
+UPDATE @CashFlow SET OkresIII=@FlowOkr3IInc + @Flowokr3IOut
+WHERE Cash='FLOW';
+
+
+
+SELECT*FROM @CashFlow
+
+
+END;
+
+
+IF @typ='realny'
+
+BEGIN
+
+DECLARE @CashFlowR table(Cash varchar(7) PRIMARY KEY, OkresI real, OkresII real, OkresIII real);
+
+INSERT INTO @CashFlowR (Cash) VALUES('INCOME'), ('OUTCOME'),('FLOW');
+
+UPDATE @CashFlowR SET OkresI= ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN CAST(GETDATE() AS Date) 
+AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) 
+WHERE Cash='INCOME';
+
+UPDATE @CashFlowR SET OkresII=ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date))
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS Date))),0) 
+WHERE Cash='INCOME';
+
+
+UPDATE @CashFlowR SET OkresIII=ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0)
+WHERE Cash='INCOME';
+
+
+
+UPDATE @CashFlowR SET OkresI=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN CAST(GETDATE() AS Date) 
+AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) + ISNULL(@dni*@wynDzN,0))*-1 
+WHERE Cash='OUTCOME';
+
+UPDATE @CashFlowR SET OkresII=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS DATE))),0) + ISNULL(@dni*@wynDzN,0)) *-1
+WHERE Cash='OUTCOME';
+
+
+UPDATE @CashFlowR SET OkresIII=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date))
+AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0) + ISNULL(@dni*@wynDzN,0))*-1
+WHERE Cash='OUTCOME';
+
+
+DECLARE @FlowOkrIIncR real=(SELECT OkresI FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkrIOutR real=(SELECT OkresI FROM @CashFlowR WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr2IIncR real=(SELECT OkresII FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkr2IOutR real=(SELECT OkresII FROM @CashFlowR WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr3IIncR real=(SELECT OkresIII FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkr3IOutR real=(SELECT OkresIII FROM @CashFlowR WHERE Cash='OUTCOME')
+
+
+
+UPDATE @CashFlowR SET OkresI=@FlowOkrIIncR + @FlowokrIOutR
+WHERE Cash='FLOW';
+
+UPDATE @CashFlowR SET OkresII=@FlowOkr2IIncR + @Flowokr2IOutR
+WHERE Cash='FLOW'; 
+
+UPDATE @CashFlowR SET OkresIII=@FlowOkr3IIncR + @Flowokr3IOutR
+WHERE Cash='FLOW';
+
+
+
+SELECT*FROM @CashFlowR
+
+
+
+
+
+END;
+
+
+
+--Procedura zwracająca Cash flow liczony od dziś zawsze na 3 okresy będące wielokrotnością okresu co jaki chcemy liczyć Cash Flow--
+
+
+
+
+
+
+
