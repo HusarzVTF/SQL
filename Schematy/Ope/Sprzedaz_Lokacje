@@ -1,0 +1,49 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+
+IF OBJECT_ID('Ope.uspSprzedaz_Lokacja') IS NOT NULL
+DROP PROC Ope.uspSprzedaz_Lokacja
+
+
+GO
+
+CREATE PROC Ope.uspSprzedaz_Lokacja
+ 
+AS
+
+
+SELECT K.IdKlienta, NazwaKlienta,RodzajPaliwa,SUM(S.IloscPaliwa) AS Ilosc,SUM(S.KwotaNetto) AS NetWar,
+W.Wojewodztwo,P.Powiat,G.Gmina,M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Klienci AS K
+INNER JOIN Stacja_Paliw.Ope.Sprzedaz AS S
+ON S.IdKlienta=K.IdKlienta
+
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa=S.IDPaliwa
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej=K.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy=M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu=G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj=P.IdWOJ
+
+GROUP BY K.IdKlienta, NazwaKlienta,RodzajPaliwa,Wojewodztwo,Powiat,Gmina,Miejscowosc
+ORDER BY SUM(S.KwotaNetto) DESC
+
+/*Procedura cahrakteryzujaca sprzedaz paliwa pod wzgledem ilosci i typu paliwa oraz lokacji w jakiej jest zarejestrowany klient*/
+
+
+
+
+
