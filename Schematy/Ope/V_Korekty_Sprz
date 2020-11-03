@@ -1,0 +1,55 @@
+
+
+
+USE Stacja_Paliw;
+
+
+GO
+
+
+ IF OBJECT_ID('Ope.vKorekty_Sprz') IS NOT NULL
+ DROP VIEW Ope.vKorekty_Sprz;
+
+ --Instukcja sprawdzająca czy istnieje już widok Ope.vKorekty_Sprz jeśli tak to jest likwidowany. Zakładamy, że jeśli istnieje to przez pomyłkę--
+
+
+ GO
+
+CREATE VIEW Ope.vKorekty_Sprz
+ 
+ AS
+
+SELECT
+
+NRFV,
+PozycjaNaFV,
+Data,
+S.IdKlienta,
+NazwaKlienta,
+S.IdPracownika,
+Imie,
+Nazwisko,
+RodzajPaliwa,
+IloscPaliwa,
+KwotaNetto,
+KwotaBrutto,
+CzasTransakcji,
+TerminZaplaty,
+DataZaplaty,
+TypPlatnosci FROM Ope.Sprzedaz AS S
+	  
+	  INNER JOIN Czas.Kalendarz ON S.ID_Dat=Czas.Kalendarz.ID
+
+	  INNER JOIN Ope.Klienci ON S.IdKlienta=Ope.Klienci.IdKlienta 
+
+	  INNER JOIN Ope.Zbiorniki ON S.IDPaliwa=Ope.Zbiorniki.IDPaliwa
+
+	  INNER JOIN Ope.Pracownicy ON S.IdPracownika=Ope.Pracownicy.IDPracownika
+
+	  WHERE PozycjaNaFV<0
+    
+ /*widok pokazujacy korekty sprzedazy*/
+ 
+ 
+ 
+    
