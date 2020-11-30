@@ -1,0 +1,135 @@
+USE Stacja_Paliw
+
+GO
+
+ IF OBJECT_ID('Ope.uspSez_Sprzedazy') IS NOT NULL
+ DROP PROC Ope.uspSez_Sprzedazy;
+
+ --Instukcja sprawdzająca czy istnieje już procedura Ope.uspSez_Sprzedazy jeśli tak to jest likwidowana. Zakładamy, że jeśli istnieje to przez pomyłkę--
+
+
+ GO
+
+CREATE PROC Ope.uspSez_Sprzedazy (@zm decimal)
+ 
+ AS
+
+SELECT 
+M.Miesiac_Naz,
+Z.RodzajPaliwa,
+ROUND(SUM(IloscPaliwa),2) AS Ilosc
+INTO #data
+FROM Stacja_Paliw.Ope.Sprzedaz AS S
+LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+LEFT JOIN Czas.Kalendarz AS K ON K.ID=S.ID_Dat 
+LEFT JOIN Czas.Miesiac AS M ON M.ID=K.IDM
+GROUP BY M.Miesiac_Naz,Z.RodzajPaliwa
+
+/*Ilościowa sprzedaz w ujęciu miesięcznym dla każdego rodzaju paliwa*/
+
+
+
+SELECT 
+RodzajPaliwa,MIN(Ilosc) AS MINIMUM
+INTO #MIN
+FROM #data 
+GROUP BY RodzajPaliwa
+
+/*minimalna miesieczna ilosc paliwa, kazdego rodzaju*/
+
+
+
+
+SELECT 
+RodzajPaliwa,
+MAX(Ilosc) AS MAXIMUM
+INTO #MAX
+FROM #data
+GROUP BY RodzajPaliwa
+
+/*maksymalna miesieczna ilosc paliwa, kazdego rodzaju*/
+
+
+SELECT 
+RodzajPaliwa,
+ROUND(AVG(Ilosc),2) AS SREDNIA
+INTO #SRD
+FROM #data 
+GROUP BY RodzajPaliwa
+
+/*srednia miesieczna ilosc paliwa, kazdgo rodzaju*/
+
+
+
+
+IF NOT EXISTS (
+SELECT M.RodzajPaliwa   
+FROM #MIN AS M
+LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa=M.RodzajPaliwa
+WHERE MAXIMUM<>MINIMUM)  
+
+/*Jeżeli nie istnieje rodzaj paliwa dla którego max jest różny od min to mamy min=max i nie ma sezonowości*/
+
+BEGIN
+
+PRINT'Jednakowe wyniki w każdym miesiącu. Nie ma sezonowosci' 
+
+END
+
+IF  EXISTS (
+SELECT 
+M.RodzajPaliwa 
+FROM #MIN AS M
+LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa=M.RodzajPaliwa
+WHERE MAXIMUM<>MINIMUM) 
+
+/*Jeżeli istnieje rodzaj paliwa dla którego min jest rozny od max */
+
+AND  EXISTS  /*I*/
+
+(SELECT 
+M.RodzajPaliwa 
+FROM #SRD AS S
+RIGHT JOIN #MAX AS M ON S.RodzajPaliwa=M.RodzajPaliwa
+WHERE SREDNIA*(1+@zm)<=MAXIMUM)
+
+/*I istnieje rodzaj paliwa dla którego srednia powiekszona o współczynnik granicznego odchylenia jest większa lub równa maximum*/
+
+
+BEGIN
+
+
+SELECT 
+Miesiac_Naz,
+D.RodzajPaliwa,
+Ilosc,
+Srednia, 
+ROUND(Ilosc/Srednia,2) AS Odchylenie
+FROM #data AS D LEFT JOIN 
+#srd  AS S ON D.RodzajPaliwa=S.RodzajPaliwa 
+WHERE ROUND(Ilosc/Srednia,2) <> 1
+
+
+/*Jeżeli warunki z instrukcji z piętra wyżej zostaną spełnione to zwroc wynik takiego zapytania*/
+
+
+END
+
+ELSE
+BEGIN
+PRINT'Odchylenia w poszczególnych miesiącach względem średniej nieistotne' 
+END
+
+
+DROP TABLE #data
+
+DROP TABLE #min
+
+DROP TABLE #max
+
+DROP TABLE #srd
+
+
+/*Procedura sprawdzająca czy jest sezonowość w sprzedaży. Jeśli jest to zwracane jest odpowiednie zapytanie*/
+
+
