@@ -1,0 +1,28 @@
+
+
+USE Stacja_Paliw
+GO
+CREATE FUNCTION Czas.uDni_rok (@rok int)
+RETURNS int
+WITH SCHEMABINDING
+AS
+BEGIN
+
+
+IF (@rok % 4=0 AND @rok % 100<>0) OR @rok % 400=0
+
+DECLARE @dni int=366
+ 
+
+ELSE 
+
+SET @dni =365
+
+return  @dni
+
+END;
+
+--Funkcja zwracająca liczbę dniw roku--
+
+
+
