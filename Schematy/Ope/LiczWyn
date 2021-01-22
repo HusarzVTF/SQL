@@ -5,7 +5,7 @@ USE Stacja_Paliw
 
 GO
 
-CREATE FUNCTION Ope.LiczWyn (@od date, @do date) 
+CREATE FUNCTION Ope.u_LiczWyn (@od date, @do date) 
 
 RETURNS real
 
