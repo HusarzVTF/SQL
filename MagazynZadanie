@@ -24,7 +24,7 @@ który zwracałby koszt na danego klienta po podaniu jego nazwy.
 
 ROZWIĄZANIE 
 
-Problem został rozwiązany w MS SQL. Został stworzony widok, który bazuje na kolumnach z zrzutu z ERP oraz 
+Problem został rozwiązany w Microsoft SQL Server. Został stworzony widok, który bazuje na kolumnach z zrzutu z ERP oraz 
 posiada wszystkie kolumny obliczeniowe a,b,c,d. 
 W celu zwracania wyniku kosztów magazynowania na konkretnego klienta podpunkt D z Zad1 została stworzona procedura składowa, 
 która dla podanej nazwy klienta zwraca całkowite koszty magazynowania. 
