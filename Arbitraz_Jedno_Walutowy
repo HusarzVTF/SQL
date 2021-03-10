@@ -2,7 +2,7 @@
 Czym jest arbitraż: Polega na wykorzystaniu rozbieżności pomiędzy ceną jednego dobra względem innego w taki sposób, że możliwa
 jest wymiana danego dobra na inne i spowrotem na dobro z którego rozpoczęła się wymiana notując przy tym zysk.
 Zjawisko w poniższym przykładzie dotyczy rynku walutowego.
-Wersja MS SQL 2014
+Wersja Microsoft SQL Server 2014
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
 */
 
