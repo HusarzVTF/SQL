@@ -14,7 +14,7 @@ Procedura zwracająca możliwe arbitraże z danej waluty nie wymaga w tym wypadk
 
 Objaśnienia:
 
-Środowisko: MS SQL 2014
+Środowisko: Microsoft SQL Server 2014
 
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
 
