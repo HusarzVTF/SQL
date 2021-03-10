@@ -7,7 +7,7 @@ Zakładamy, że kurs brany pod uwagę to kurs dzienny.
 
 Objaśnienia:
 
-Wersja MS SQL 2014
+Wersja Microsoft SQL  Server 2014
 
 Pominięto tworzenie schematu. System sam utworzy obiekty w domyślnym schemacie dbo. 
 */
