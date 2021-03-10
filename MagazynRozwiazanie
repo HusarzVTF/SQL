@@ -3,7 +3,7 @@
 
 Objaśnienia:
 
-Przedstawione rozwiązania dotyczą wersji MS SQL 2014. Możliwość skorzystania z 
+Przedstawione rozwiązania dotyczą wersji Microsoft SQL Server 2014. Możliwość skorzystania z 
 OPENROWSET wymaga zainstalowania sterowników ODBC lub posiadania odpowiednich bibliotek OLE DB.
 W podanym rozwiązaniu dostawcą OLE DB jest Microsoft.Jet.OLEDB.12.0. 
 Wybranie odpowiedniego dostawcy wymaga sprawdzenia w bazie jacy dostawcy są zainstalowani na serwerze. 
