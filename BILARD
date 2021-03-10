@@ -1,7 +1,7 @@
 /*
 Objaśnienia:
 
-Środowisko: MS SQL wersja 2014
+Środowisko: Microsoft SQL Server wersja 2014
 
 Pominięto utworzenie schematu. System utworzy wszystkie obiekty w domyślnym schemacie dbo.
 
