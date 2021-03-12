@@ -1,0 +1,83 @@
+
+
+USE Stacja_Paliw
+GO
+ 
+
+
+ IF OBJECT_ID('Ope.uspKalk_BEP') IS NOT NULL
+ DROP PROC Ope.uspKalk_BEP;
+
+ --Instukcja sprawdzająca czy istnieje już procedura Ope.uspKalk_BEP jeśli tak to jest likwidowana. Zakładamy, że jeśli istnieje to przez pomyłkę--
+
+
+ GO
+
+CREATE PROC Ope.uspKalk_BEP (@od date, @do date)
+
+AS
+
+BEGIN
+
+
+
+DECLARE @ks real=ROUND(Ope.LiczWyn(@od,@do),2)
+
+
+
+
+
+SELECT
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM ,
+CenaJedn,
+@ks as Licznik,
+ROUND(CenaJedn-ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2),2) as Mianownik,
+ROUND(@ks/(CenaJedn-ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2)),2) AS BEP_Ilosciowy,
+Z.StanZbiornika,
+ROUND(Z.StanZbiornika - ROUND(@ks/(CenaJedn-ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2)),2),2) as Zapas,
+ROUND((@ks/(CenaJedn-ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2))*CenaJedn),2) AS BEP_Wartosciowy
+
+INTO #kalk
+FROM [Stacja_1].[Ope].[CenyPa] AS C
+
+INNER JOIN Stacja_1.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_1.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE D.TerminZaplaty between @od and @do
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika
+ORDER BY IDPALIW
+
+SELECT*FROM #kalk ORDER BY IDPALIW
+
+IF EXISTS (SELECT Zapas FROM #kalk WHERE Zapas<0 )
+
+BEGIN
+
+SELECT RodzajPaliwa,JM,Zapas*-1 AS Dokupic FROM #kalk WHERE Zapas<0 
+
+PRINT 'Ilosc paliwa dostepnego w sprzedazy jest zbyt mala do przekroczenia break even point. 
+Trzeba zamowic dodatkowa ilosc paliwa w wysokosci wskazanej w tabelce albo zamknac dzialanosc 
+jesli nie masz wiecej srodkow finansowych, bo dzialanosc przy dostepnych zasobach jest nieoplacalna.'
+
+END
+
+IF EXISTS (SELECT Zapas FROM #kalk WHERE Zapas=0 )
+
+BEGIN
+
+SELECT RodzajPaliwa,JM,Zapas FROM #kalk WHERE Zapas=0 
+PRINT 'Ilosc paliwa dostepnego w sprzedazy jest na styk break even point.'
+
+END
+
+DROP TABLE #kalk
+END
+
+
+--BEP liczony dla podanego okresu--
+
+
