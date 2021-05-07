@@ -1,0 +1,10 @@
+ 
+ 
+ USE Stacja_Paliw
+
+  GO
+
+  ALTER TABLE Ope.CenyPa ADD  Koszt_Zakupu real NULL
+  
+  
+  
