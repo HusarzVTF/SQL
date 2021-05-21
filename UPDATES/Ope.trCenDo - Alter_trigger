@@ -1,0 +1,75 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trCenDo ON Ope.Dostawy AFTER INSERT, UPDATE, DELETE
+
+AS
+
+CREATE TABLE #zbio  (Id tinyint, Marza real);
+
+INSERT INTO #zbio(Id,Marza)
+
+SELECT
+
+IDPaliwa,
+1+Marza 
+
+FROM Ope.Zbiorniki;
+
+
+
+CREATE TABLE #tab  (Id tinyint, Koszt_zmienny real, cena real);
+
+INSERT INTO #tab (Id, Koszt_zmienny)
+
+SELECT
+
+IDPaliw,
+ROUND(SUM(D.KwotaNetto)/SUM(D.IloscPaliwa),2) AS Koszt_zmienny
+
+FROM Ope.Dostawy AS D 
+
+INNER JOIN Ope.Zbiorniki 
+
+AS Z ON D.IDPaliw=Z.IDPaliwa
+
+INNER JOIN #zbio AS Zb 
+
+ON Zb.Id=D.IDPaliw
+
+GROUP BY IDPaliw;
+
+
+
+UPDATE #tab SET Cena=ROUND((Koszt_zmienny*Zb.Marza),2)
+
+FROM #tab
+
+INNER JOIN #zbio AS Zb 
+
+ON Zb.Id=#tab.Id;
+
+
+
+UPDATE Ope.CenyPa SET CenaJedn=#tab.Cena, Koszt_Zakupu=#tab.Koszt_zmienny
+
+FROM Ope.CenyPa
+
+INNER JOIN #tab 
+
+ON Ope.CenyPa.IDPALIW=#tab.Id
+
+DROP TABLE #tab;
+DROP TABLE #zbio;
+
+/*
+
+Trigger uaktualniajacy jednostkowa cene sprzedazy na paliwo ktorego przyszla dostawa.
+Mechanizm cenowy opiera sie na sredniej wazonej cenie zakupu powiekszonej o 
+marze na danym paliwie. Zostal dodany mechanizm aktualizujacy cene zakupu w tabeli CenyPa.
+Cena zakupu jest srednia cena zakupu obliczona ze wszystkich dostaw.
+Po kazdej dostawie aktualizowana jest zarowno cena zakupu i cena sprzedazy.
+
+ */
+
