@@ -1,0 +1,27 @@
+USE Stacja_Paliw
+GO
+
+
+ IF OBJECT_ID('Ope.ufZduzej') IS NOT NULL
+ DROP FUNCTION Ope.ufZduzej;
+
+ GO
+
+ CREATE FUNCTION Ope.ufZduzej (@wyr nvarchar(1000))
+
+
+RETURNS nvarchar(1000)
+
+WITH SCHEMABINDING
+AS
+BEGIN
+
+DECLARE @wyn nvarchar(1000)=(SELECT CONCAT (UPPER (LEFT(@wyr,1)),SUBSTRING(@wyr,2,LEN(@wyr)-1) ) )
+
+RETURN @wyn;
+
+END;
+
+--Funkcja zwracajaca wyraz podany jako argument jako napisany z dużej litery, czyli: argument - podany, wynik - Podany. --
+
+
