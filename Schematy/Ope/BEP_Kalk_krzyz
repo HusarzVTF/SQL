@@ -1,0 +1,489 @@
+
+
+
+USE Stacja_Paliw
+
+GO
+
+
+ IF OBJECT_ID('BEP_Kalkulator') IS NOT NULL
+ DROP PROC BEP_Kalkulator;
+ 
+ GO
+ 
+
+CREATE PROC BEP_Kalkulator( @od date , @do date ,@typ varchar(7) ,@il real , @typ_1 varchar(7),@ks_pro float, @typ_2 varchar(7),@il_2 real ,@typ_3 varchar(7),
+@ks_pro_1 float)
+
+AS
+
+
+
+DECLARE @Lcz_Pal int=(SELECT COUNT(RodzajPaliwa) FROM Ope.Zbiorniki)
+
+IF @Lcz_Pal>3 
+
+THROW 701001, 'Kalkulator przelicza krzyzowo dla trzech rodzajow paliwa. Z czego dwa sa podawane a trzeci jest dopelnieniem 
+do stu procent kosztow stalych. Jesli kolejne rodzaje paliwa sa na stale to trzeba rozwazyc modyfikacje procedury.',1;
+
+
+
+IF @typ=Ope.ufZmalej(@typ) AND 
+Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
+OR Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
+OR Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
+
+
+SET @typ=Ope.ufZduzej(@typ)
+
+
+IF @typ_1=Ope.ufZmalej(@typ_1) AND 
+Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
+OR Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
+OR Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
+
+
+SET @typ_1=Ope.ufZduzej(@typ_1)
+
+
+IF @typ_2=Ope.ufZmalej(@typ_2) AND 
+Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
+OR Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
+OR Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
+
+
+SET @typ_2=Ope.ufZduzej(@typ_2)
+
+
+IF @typ_3=Ope.ufZmalej(@typ_3) AND 
+Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE  IDPaliwa=1 ) 
+OR Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
+OR Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
+
+
+SET @typ_3=Ope.ufZduzej(@typ_3)
+
+
+
+DECLARE @ks real=ROUND(Ope.LiczWyn(@od,@do),2)
+
+DECLARE @wartosc real=ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ)*@il),0)
+
+DECLARE @wart_ks real=ISNULL(((
+SELECT CenaJedn-Koszt_Zakupu 
+FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa
+WHERE Z.RodzajPaliwa=@typ 
+)*@il),0)
+
+DECLARE @wartosc_2 real=ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ_2)*@il_2),0)
+
+DECLARE @wart_ks_2 real=ISNULL(((
+SELECT CenaJedn-Koszt_Zakupu 
+FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa
+WHERE Z.RodzajPaliwa=@typ_2 
+)*@il_2),0)
+
+
+DECLARE @war_ks real= ISNULL(@ks*@ks_pro,0)
+
+DECLARE @war_ks_1 real=ISNULL(@ks*@ks_pro_1,0) 
+
+DECLARE @poz_war real=ISNULL((@ks-(@war_ks+@war_ks_1+@wart_ks+@wart_ks_2)),0)
+
+
+
+DECLARE @typy table  (id int IDENTITY,typ nvarchar(7))
+
+INSERT INTO @typy (typ)
+
+SELECT @typ
+
+INSERT INTO @typy (typ)
+
+SELECT @typ_1
+
+INSERT INTO @typy (typ)
+
+SELECT @typ_2
+
+INSERT INTO @typy (typ)
+
+SELECT @typ_3
+
+
+DECLARE @licz_zmie int=(SELECT COUNT(typ) FROM @typy WHERE typ IS NOT NULL)
+
+IF @licz_zmie<>2
+
+THROW 701002,'Ilosc wybranych typow paliwa musi rownac sie dwa.',1;
+
+
+IF @il<=0 OR @il_2<=0 OR @ks_pro<=0  OR @ks_pro_1<=0
+
+THROW 701003,'Podana ilosc paliwa i procent musza byc wieksze od zera.',1;
+
+
+IF @typ=@typ_1   OR  @typ=@typ_2 OR @typ=@typ_3 OR @typ_1=@typ_2 OR @typ_1=@typ_3 OR @typ_2=@typ_3 
+
+THROW 701004,'Paliwo dla którego została wskazana ilosc nie moze byc jednoczesnie paliwem stanowiacym 
+wskazany procent ks i/lub paliwem dla ktorego zostala wskazana druga ilosc lub/i drugi procent ks',1;
+
+
+
+DECLARE @blad_typ table  (id int IDENTITY,typ varchar(100))
+
+INSERT INTO @blad_typ (typ)
+
+SELECT @typ
+EXCEPT
+SELECT RodzajPaliwa FROM Ope.Zbiorniki  
+
+UNION
+
+SELECT @typ_1
+EXCEPT
+SELECT RodzajPaliwa FROM Ope.Zbiorniki  
+
+UNION
+
+SELECT @typ_2
+EXCEPT
+SELECT RodzajPaliwa FROM Ope.Zbiorniki  
+
+UNION
+
+SELECT @typ_3
+EXCEPT
+SELECT RodzajPaliwa FROM Ope.Zbiorniki 
+
+
+DELETE FROM @blad_typ WHERE typ IS NULL
+
+
+
+DECLARE @bl varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ)
+
+DECLARE @bl_1 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_1)
+
+DECLARE @bl_2 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_2)
+
+DECLARE @bl_3 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_3)
+
+
+
+DECLARE @NOT_0_typ int=(SELECT COUNT(typ) FROM @blad_typ )
+
+DECLARE @komunikat varchar(1000)='Blednie podano typ/y paliwa: '
+
+
+IF @NOT_0_typ=1 AND @bl IS NOT NULL  AND @bl_1 IS  NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl +  '.'
+
+IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 +  '.'
+
+IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS  NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_2 +  '.'
+
+IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS  NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_3 +  '.'
+
+
+
+IF @NOT_0_typ=2 AND @bl IS NOT NULL  AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_1 + '.'
+
+IF @NOT_0_typ=2 AND @bl IS NOT NULL AND @bl_1 IS NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_2 + '.'
+
+IF @NOT_0_typ=2 AND @bl IS NOT NULL AND @bl_1 IS NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_3 + '.'
+
+IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NOT NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_2 + '.'
+
+IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_3 + '.'
+
+IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NOT NULL 
+
+SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_2 + ', ' + @bl_3 + '.'
+
+
+IF @od is  null OR @do is null OR @od>@do 
+
+THROW 701005, 'Nie podano zakresu dat dla, których ma byc policzony koszt staly lub jedna z dat wprowadzono niepoprawnie tudziez data od jest wieksza niz do', 1;
+
+
+IF @od is not null and @do is not null and (  @typ is null and @typ_1 is null and @typ_2 is null and @typ_3 is null and @ks_pro is null and
+@ks_pro_1 is null and @il_2 is null and @il is null )
+
+THROW 701006,'Podano daty, ale nie wybrano typow paliw ani danych przeliczeniowych dla nich',1;
+
+
+IF  @NOT_0_typ>0 
+
+THROW 701007, @komunikat , 1; 
+
+IF @typ is not null AND @il is null
+
+THROW 701008, 'Wprowadzono typ paliwa, ale nie podano dla niego ilosci', 1;
+
+IF @typ_2 is not null AND @il_2 is null
+
+THROW 701009, 'Wprowadzono drugi typ paliwa, ale nie podano dla niego ilosci', 1;
+
+IF @typ_1 is not null AND @ks_pro is null
+
+THROW 701010, 'Wprowadzono typ paliwa, ale nie podano dla niego procentu kosztow stalych do pokrycia', 1;
+
+IF @typ_3 is not null AND @ks_pro_1 is null
+
+THROW 701011,'Wprowadzono drugi typ paliwa, ale nie podano dla niego procentu kosztow stalych do pokrycia',1;
+
+IF (@ks_pro+@ks_pro_1>1)  OR (@war_ks+@war_ks_1+@wart_ks+@wart_ks_2)>@ks
+
+THROW 701012,'Podano nieprawidłowe ilosci i procenty kosztow stalych. Za duze.',1;
+
+
+
+
+ELSE
+
+WITH final_CTE ( ID_Paliw, Rodzaj_Paliwa, JM, Koszt_staly, Cena_Jedn, Koszt_Zmienny, J_Mr_Op, Stan_Zbiornika, BEP_Ilosciowy, Zapas,Ilosc_Ks,
+Podana_Ilosc,Podany_Proc_Ks,K_staly_proc,BEP_wartosciowy,Kwota_na_Koszt_zmienny,Kwota_na_koszt_staly,Mar_proc )
+
+
+AS (
+
+SELECT
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM ,
+@ks as k_staly,
+CenaJedn,
+Koszt_Zakupu as k_zmienny,
+ROUND(CenaJedn-Koszt_Zakupu,2) as J_Mr_op,
+Z.StanZbiornika,
+ROUND(@il,2) AS BEP_Ilosciowy,
+ROUND(Z.StanZbiornika - @il,2) as Zapas,
+ROUND(Marza*ISNULL(@il,0),2) AS Ilosc_Ks,
+ROUND(@il,2) AS Podana_ilosc,
+'' AS Podany_Proc_Ks,
+ROUND(ROUND(@il*ROUND(CenaJedn-Koszt_Zakupu,2),2)/@ks,2) AS K_staly_proc,
+ROUND(CenaJedn*@il,2) AS BEP_wartosciowy,
+ROUND(@il*Koszt_Zakupu,2) AS Kwota_na_Koszt_zmienny,
+ROUND(@il*(CenaJedn-Koszt_Zakupu),2) AS Kwota_na_koszt_staly,
+Marza as Mar_proc
+
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliwa.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE Z.RodzajPaliwa=@typ
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika,Marza,Koszt_Zakupu
+
+
+
+UNION
+
+
+
+SELECT 
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM,
+@ks as k_staly,
+CenaJedn,
+Koszt_Zakupu as k_zmienny,
+ROUND(CenaJedn-Koszt_Zakupu,2) as J_Mr_op,
+Z.StanZbiornika,
+ROUND(@il_2,2) AS BEP_Ilosciowy,
+ROUND(Z.StanZbiornika - @il_2,2) as Zapas,
+ROUND(Marza*ISNULL(@il_2,0),2) AS Ilosc_Ks,
+ROUND(@il_2,2) AS Podana_ilosc,
+'' AS Podany_Proc_Ks,
+ROUND(ROUND(@il_2*ROUND(CenaJedn-Koszt_Zakupu,2),2)/@ks,2) AS K_staly_proc,
+ROUND(CenaJedn*@il_2,2) AS BEP_wartosciowy,
+ROUND(@il_2*Koszt_Zakupu,2) AS Kwota_na_Koszt_zmienny,
+ROUND(@il_2*(CenaJedn-Koszt_Zakupu),2) AS Kwota_na_koszt_staly,
+Marza AS Mar_proc
+
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE  Z.RodzajPaliwa=@typ_2
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika,Marza,Koszt_Zakupu
+
+
+
+UNION
+
+
+
+SELECT
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM,
+@ks as k_staly,
+CenaJedn,
+Koszt_Zakupu as k_zmienny,
+ROUND(CenaJedn-Koszt_Zakupu,2) as J_Mr_op,
+Z.StanZbiornika,
+ROUND(@war_ks/(CenaJedn-Koszt_Zakupu),2) AS BEP_Ilosciowy,
+ROUND(Z.StanZbiornika-ROUND(@war_ks/(CenaJedn-Koszt_Zakupu),2),2) AS Zapas,
+ROUND(ROUND(@war_ks/(CenaJedn-Koszt_Zakupu),2)*Marza,2) AS Ilosc_kS, 
+'' AS Podana_ilosc,
+@ks_pro AS Podany_Proc_Ks,
+ROUND(@war_ks/@ks,2) AS K_staly_proc,
+ROUND(@war_ks/(CenaJedn-Koszt_Zakupu)*CenaJedn,2) AS BEP_wartosciowy,
+ROUND(ROUND(@war_ks/(CenaJedn-Koszt_Zakupu),2)*Koszt_Zakupu,2) AS Kwota_na_Koszt_zmienny,
+ROUND(@war_ks,2) AS Kwota_na_koszt_staly,
+Marza AS Mar_proc
+
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE  Z.RodzajPaliwa=@typ_1
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika,Marza,Koszt_Zakupu
+
+
+
+UNION
+
+
+
+SELECT 
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM,
+@ks as k_staly,
+CenaJedn,
+Koszt_Zakupu as k_zmienny,
+ROUND(CenaJedn-Koszt_Zakupu,2) as J_Mr_op,
+Z.StanZbiornika,
+ROUND(@war_ks_1/(CenaJedn-Koszt_Zakupu),2) AS BEP_Ilosciowy,
+ROUND(Z.StanZbiornika-ROUND(@war_ks_1/(CenaJedn-Koszt_Zakupu),2),2) AS Zapas,
+ROUND(Marza*ISNULL(ROUND(@war_ks_1/(CenaJedn-Koszt_Zakupu),2),0),2)  AS Ilosc_kS, 
+'' AS Podana_ilosc,
+@ks_pro_1 AS Podany_Proc_Ks,
+ROUND(@war_ks_1/@ks,2) AS K_staly_proc,
+ROUND(@war_ks_1/(CenaJedn-Koszt_Zakupu)*CenaJedn,2) AS BEP_wartosciowy,
+ROUND(ROUND(@war_ks_1/(CenaJedn-Koszt_Zakupu),2)*Koszt_Zakupu,2) AS Kwota_na_Koszt_zmienny,
+ROUND(@war_ks_1,2) AS Kwota_na_koszt_staly,
+Marza AS Mar_proc
+
+
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE Z.RodzajPaliwa=@typ_3
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika,Marza,Koszt_Zakupu
+
+
+
+UNION
+
+
+
+SELECT
+
+C.IDPALIW,
+Z.RodzajPaliwa,
+Z.JM,
+@ks as k_staly,
+CenaJedn,
+Koszt_Zakupu as k_zmienny,
+ROUND(CenaJedn-Koszt_Zakupu,2) as J_Mr_op,
+Z.StanZbiornika,
+ROUND(@poz_war/(CenaJedn-Koszt_Zakupu),2) AS BEP_Ilosciowy,
+ROUND(Z.StanZbiornika - ROUND(@poz_war/(CenaJedn-Koszt_Zakupu),2),2) as Zapas,
+ROUND(Marza*ISNULL(ROUND(@poz_war/(CenaJedn-Koszt_Zakupu),2),0),2) AS Ilosc_kS,
+'' AS Podana_ilosc,
+'' AS Podany_Proc_Ks,
+ROUND(@poz_war/@ks,2) AS K_staly_proc,
+ROUND(@poz_war/(CenaJedn-Koszt_Zakupu)*CenaJedn,2) AS BEP_wartosciowy,
+ROUND(ROUND(@poz_war/(CenaJedn-Koszt_Zakupu),2)*ROUND(Koszt_Zakupu,2),2) AS Kwota_na_Koszt_zmienny,
+ROUND(@poz_war,2) AS Kwota_na_koszt_staly,
+Marza AS Mar_proc
+
+
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+WHERE Z.RodzajPaliwa NOT IN (ISNULL(@typ,0),ISNULL(@typ_1,0),ISNULL(@typ_2,0),ISNULL(@typ_3,0)) 
+
+GROUP BY C.IDPALIW,Z.RodzajPaliwa,Z.JM ,CenaJedn,Z.StanZbiornika,Marza,Koszt_Zakupu
+
+)
+
+
+
+SELECT
+
+ID_Paliw,
+Rodzaj_Paliwa, 
+JM,
+Koszt_staly,
+SUM(Kwota_na_koszt_staly) OVER (ORDER BY ID_Paliw) AS Ks_Narastajaco, 
+Cena_Jedn, 
+Koszt_Zmienny, 
+J_Mr_Op, 
+Stan_Zbiornika,
+BEP_Ilosciowy,
+Zapas,Ilosc_Ks,
+Podana_Ilosc,
+Podany_Proc_Ks,
+K_staly_proc,
+BEP_wartosciowy,
+Kwota_na_Koszt_zmienny,
+Kwota_na_koszt_staly,
+Mar_proc
+
+FROM final_CTE 
+
+
+/*
+
+Procedura pozwalajaca na krzyzowe wyliczanie BEP w zaleznosci od wybranych rodzajow paliwa i podanych dla nich parametrow ilosciowych i procentowych.
+Parametr ilosciowy odnosi sie do odpowiendiej jednostki danego paliwa czyli m3, litra. Nalezy wybrac dwa rodzaje paliwa dla ktorych chce sie przeliczyc BEP krzyzowy,
+wynikajacy z przyjetego rozdzialu kosztow wedlug wskazanego procentu udzialu w kosztach lub/i ilosci. Mozna wytypowac dowolne dwa rodzaje paliwa i podac
+dla nich procent kosztow stalych do pokrycia lub ilosci. Mozna tez stworzyc dowolna kombinacje miedzy paliwami i procentami oraz iloscia.
+To znaczy mozna wprowadzic dla jednego paliwa procent kosztow a dla drugiego ilosc.
+Trzecie paliwo kompensuje pozostala do rozliczenia czesc kosztow stalych.
+Uzyte zaokraglenia sa do grosza, milimetra szesciennego i mililitra na kazdym kroku obliczen.
+
+*/
+
+
+
+
+
+
+
