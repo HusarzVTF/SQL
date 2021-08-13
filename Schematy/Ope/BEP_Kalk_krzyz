@@ -19,7 +19,7 @@ AS
 
 
 
-DECLARE @Lcz_Pal int=(SELECT COUNT(RodzajPaliwa) FROM Ope.Zbiorniki)
+DECLARE @Lcz_Pal int = (SELECT COUNT(RodzajPaliwa) FROM Ope.Zbiorniki)
 
 IF @Lcz_Pal>3 
 
@@ -28,67 +28,67 @@ do stu procent kosztow stalych. Jesli kolejne rodzaje paliwa sa na stale to trze
 
 
 
-IF @typ=Ope.ufZmalej(@typ) AND 
+IF @typ = Ope.ufZmalej(@typ) AND 
 Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
 OR Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
 OR Ope.ufZduzej(@typ) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
 
 
-SET @typ=Ope.ufZduzej(@typ)
+SET @typ = Ope.ufZduzej(@typ)
 
 
-IF @typ_1=Ope.ufZmalej(@typ_1) AND 
+IF @typ_1 = Ope.ufZmalej(@typ_1) AND 
 Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
 OR Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
 OR Ope.ufZduzej(@typ_1) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
 
 
-SET @typ_1=Ope.ufZduzej(@typ_1)
+SET @typ_1 = Ope.ufZduzej(@typ_1)
 
 
-IF @typ_2=Ope.ufZmalej(@typ_2) AND 
+IF @typ_2 = Ope.ufZmalej(@typ_2) AND 
 Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=1  )
 OR Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
 OR Ope.ufZduzej(@typ_2) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
 
 
-SET @typ_2=Ope.ufZduzej(@typ_2)
+SET @typ_2 = Ope.ufZduzej(@typ_2)
 
 
-IF @typ_3=Ope.ufZmalej(@typ_3) AND 
+IF @typ_3 = Ope.ufZmalej(@typ_3) AND 
 Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE  IDPaliwa=1 ) 
 OR Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=2  )
 OR Ope.ufZduzej(@typ_3) = (SELECT RodzajPaliwa FROM Ope.Zbiorniki WHERE IDPaliwa=3  )
 
 
-SET @typ_3=Ope.ufZduzej(@typ_3)
+SET @typ_3 = Ope.ufZduzej(@typ_3)
 
 
 
-DECLARE @ks real=ROUND(Ope.LiczWyn(@od,@do),2)
+DECLARE @ks real = ROUND(Ope.LiczWyn(@od,@do),2)
 
-DECLARE @wartosc real=ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ)*@il),0)
+DECLARE @wartosc real = ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ)*@il),0)
 
-DECLARE @wart_ks real=ISNULL(((
+DECLARE @wart_ks real = ISNULL(((
 SELECT CenaJedn-Koszt_Zakupu 
 FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa
 WHERE Z.RodzajPaliwa=@typ 
 )*@il),0)
 
-DECLARE @wartosc_2 real=ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ_2)*@il_2),0)
+DECLARE @wartosc_2 real = ISNULL(((SELECT CenaJedn FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa WHERE Z.RodzajPaliwa=@typ_2)*@il_2),0)
 
-DECLARE @wart_ks_2 real=ISNULL(((
+DECLARE @wart_ks_2 real = ISNULL(((
 SELECT CenaJedn-Koszt_Zakupu 
 FROM Ope.CenyPa AS C JOIN Ope.Zbiorniki AS Z ON C.IDPALIW=Z.IDPaliwa
 WHERE Z.RodzajPaliwa=@typ_2 
 )*@il_2),0)
 
 
-DECLARE @war_ks real= ISNULL(@ks*@ks_pro,0)
+DECLARE @war_ks real = ISNULL(@ks*@ks_pro,0)
 
-DECLARE @war_ks_1 real=ISNULL(@ks*@ks_pro_1,0) 
+DECLARE @war_ks_1 real = ISNULL(@ks*@ks_pro_1,0) 
 
-DECLARE @poz_war real=ISNULL((@ks-(@war_ks+@war_ks_1+@wart_ks+@wart_ks_2)),0)
+DECLARE @poz_war real = ISNULL((@ks-(@war_ks+@war_ks_1+@wart_ks+@wart_ks_2)),0)
 
 
 
@@ -111,7 +111,7 @@ INSERT INTO @typy (typ)
 SELECT @typ_3
 
 
-DECLARE @licz_zmie int=(SELECT COUNT(typ) FROM @typy WHERE typ IS NOT NULL)
+DECLARE @licz_zmie int = (SELECT COUNT(typ) FROM @typy WHERE typ IS NOT NULL)
 
 IF @licz_zmie<>2
 
@@ -161,62 +161,62 @@ DELETE FROM @blad_typ WHERE typ IS NULL
 
 
 
-DECLARE @bl varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ)
+DECLARE @bl varchar(100) = (SELECT typ  FROM @blad_typ WHERE typ=@typ)
 
-DECLARE @bl_1 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_1)
+DECLARE @bl_1 varchar(100) = (SELECT typ  FROM @blad_typ WHERE typ=@typ_1)
 
-DECLARE @bl_2 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_2)
+DECLARE @bl_2 varchar(100) = (SELECT typ  FROM @blad_typ WHERE typ=@typ_2)
 
-DECLARE @bl_3 varchar(100)=(SELECT typ  FROM @blad_typ WHERE typ=@typ_3)
+DECLARE @bl_3 varchar(100) = (SELECT typ  FROM @blad_typ WHERE typ=@typ_3)
 
 
 
-DECLARE @NOT_0_typ int=(SELECT COUNT(typ) FROM @blad_typ )
+DECLARE @NOT_0_typ int = (SELECT COUNT(typ) FROM @blad_typ )
 
-DECLARE @komunikat varchar(1000)='Blednie podano typ/y paliwa: '
+DECLARE @komunikat varchar(1000) = 'Blednie podano typ/y paliwa: '
 
 
 IF @NOT_0_typ=1 AND @bl IS NOT NULL  AND @bl_1 IS  NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl +  '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl +  '.'
 
 IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 +  '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_1 +  '.'
 
 IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS  NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_2 +  '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_2 +  '.'
 
 IF @NOT_0_typ=1 AND @bl IS  NULL  AND @bl_1 IS  NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_3 +  '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_3 +  '.'
 
 
 
 IF @NOT_0_typ=2 AND @bl IS NOT NULL  AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_1 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_1 + '.'
 
 IF @NOT_0_typ=2 AND @bl IS NOT NULL AND @bl_1 IS NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_2 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_2 + '.'
 
 IF @NOT_0_typ=2 AND @bl IS NOT NULL AND @bl_1 IS NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_3 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl + ', ' + @bl_3 + '.'
 
 IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NOT NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_2 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_2 + '.'
 
 IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NOT NULL AND @bl_2 IS NULL AND @bl_3 IS NOT NULL
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_3 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_1 + ', ' + @bl_3 + '.'
 
 IF @NOT_0_typ=2 AND @bl IS NULL AND @bl_1 IS NULL AND @bl_2 IS NOT NULL AND @bl_3 IS NOT NULL 
 
-SET @komunikat='Blednie podano typy/p paliwa: '  + @bl_2 + ', ' + @bl_3 + '.'
+SET @komunikat = 'Blednie podano typy/p paliwa: '  + @bl_2 + ', ' + @bl_3 + '.'
 
 
 IF @od is  null OR @do is null OR @od>@do 
@@ -480,10 +480,5 @@ Trzecie paliwo kompensuje pozostala do rozliczenia czesc kosztow stalych.
 Uzyte zaokraglenia sa do grosza, milimetra szesciennego i mililitra na kazdym kroku obliczen.
 
 */
-
-
-
-
-
 
 
