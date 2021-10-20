@@ -1,0 +1,235 @@
+USE Stacja_Paliw
+
+GO
+
+
+IF OBJECT_ID('Ope.uspAnaliza_Fin') IS NOT NULL
+DROP PROC Ope.uspAnaliza_Fin;
+ 
+GO
+
+CREATE PROC Ope.uspAnaliza_Fin (@od date , @do date ) AS 
+
+
+IF @od IS NULL AND @do IS NULL
+
+THROW 801000, 'Zakres dat musi byc podany',1
+
+
+IF (@od IS NOT NULL AND @do IS  NULL) OR (@do IS NOT NULL AND @od IS NULL)
+
+THROW 801001,'Jesli zostala podana jedna data musi zostac podana tez druga',1
+
+
+IF @do<@od 
+
+THROW 801002, 'Data do nie moze byc wczesniejsza niz od',1
+
+
+IF @od IS NOT NULL AND @do IS NOT NULL
+
+BEGIN
+
+DECLARE @sprzedaz  real = (SELECT SUM(KwotaNetto) FROM Ope.Sprzedaz WHERE CzasTransakcji Between @od and @do)
+
+DECLARE @nalezosci real = (SELECT SUM(KwotaNetto) FROM Ope.Sprzedaz WHERE DataZaplaty IS  NULL AND CzasTransakcji BETWEEN @od AND @do)
+
+DECLARE @zobowo_krotk real = (SELECT SUM(KwotaNetto) FROM Ope.Dostawy WHERE DataZaplaty IS  NULL AND CzasTransakcji BETWEEN @od AND @do) 
+
+/* zapasy ponizej */
+
+DECLARE @stan_ropa  real = (SELECT StanZbiornika FROM Ope.Zbiorniki WHERE RodzajPaliwa = 'Ropa')
+
+DECLARE @stan_gaz  real = (SELECT StanZbiornika FROM Ope.Zbiorniki WHERE RodzajPaliwa = 'Gaz')
+
+DECLARE @stan_ben  real = (SELECT StanZbiornika FROM Ope.Zbiorniki WHERE RodzajPaliwa = 'Benzyna')
+
+
+DECLARE @cen_ropa real = ( SELECT SUM(KwotaNetto)/SUM(IloscPaliwa) FROM Ope.Dostawy AS D INNER JOIN Ope.Zbiorniki AS Z ON  D.IDPaliw=Z.IDPaliwa 
+WHERE RodzajPaliwa = 'Ropa' )
+
+DECLARE @cen_gaz real = ( SELECT SUM(KwotaNetto)/SUM(IloscPaliwa) FROM Ope.Dostawy  AS D INNER JOIN Ope.Zbiorniki AS Z ON  D.IDPaliw=Z.IDPaliwa
+WHERE RodzajPaliwa = 'Gaz' )
+
+DECLARE @cen_ben real= ( SELECT SUM(KwotaNetto)/SUM(IloscPaliwa) FROM Ope.Dostawy AS D INNER JOIN Ope.Zbiorniki AS Z ON  D.IDPaliw=Z.IDPaliwa
+WHERE RodzajPaliwa = 'Benzyna' )
+
+
+
+DECLARE @zapas_ropa real = ROUND( @stan_ropa*@cen_ropa,2 )
+
+DECLARE @zapas_gaz real = ROUND( @stan_gaz*@cen_gaz,2 )
+
+DECLARE @zapas_ben real = ROUND( @stan_ben*@cen_ben,2 )
+
+DECLARE @zapasy real = ROUND( @zapas_ropa+@zapas_gaz+@zapas_ben,2 )
+
+
+/* wycena zapasow po sredniej wazonej cenie zakupu */
+
+
+DECLARE @k_paliwa real = ( SELECT SUM(KwotaNetto) FROM Ope.Dostawy WHERE Czastransakcji Between @od and @do )
+
+DECLARE @k_wyn real = Ope.LiczWyn(@od,@do)
+
+DECLARE @EBITDA real = ( @sprzedaz-(@k_paliwa+@k_wyn) )
+
+DECLARE @Dlug_Ebitda real = @zobowo_krotk/@EBITDA
+
+DECLARE @okres_w_dniach int = DATEDIFF( d,@od,@do ) 
+
+
+DECLARE @splata real = ROUND( @Dlug_Ebitda*@okres_w_dniach,2 )
+
+
+DECLARE @tabela table  (Wskaznik nvarchar(100), Wynik real,Interpretacja nvarchar(1000) )
+
+
+INSERT INTO @tabela 
+
+
+
+SELECT 
+
+'Rentownosc_EBITDA',
+ROUND(@EBITDA/@sprzedaz,2),
+'Interpretacja'= CASE
+WHEN ROUND(@EBITDA/@sprzedaz,2) < 0 THEN 'Biznes nie jest rentowny.'
+WHEN ROUND(@EBITDA/@sprzedaz,2) > 0 THEN 'Biznes jest rentowny. Dokładna ocena rentowności wymaga porównania wyniku firmy ze średnim dla rynku.'
+
+END
+
+INSERT INTO @tabela
+
+SELECT 
+
+'Dźwignia operacyjna',
+ROUND( (@sprzedaz-@k_paliwa)/(@sprzedaz-@k_paliwa-@k_wyn),2 ),
+'Im większa wartość wskaźnika tym większa zdolność firmy do generowania większego zysku przy wzroście przychodów.'
+
+INSERT INTO @tabela
+
+SELECT 
+
+'Plynnosci_biezacej',
+ROUND( (@zapasy+@nalezosci)/@zobowo_krotk,2 ),
+'Interpretacja'= CASE  
+WHEN ROUND( (@zapasy+@nalezosci)/@zobowo_krotk,2 ) < 1.2 THEN 'Możliwe problemy z terminowym spłacaniem zobowiazań krótkoterminowych.' 
+WHEN  ROUND( (@zapasy+@nalezosci)/@zobowo_krotk,2 ) > 3 THEN 'Niska rotowalnosc majatku obrotowego. 
+Prawdopdoobnie zalegaja zapasy, sa niespłacone należności krótkoterminowe lub/i firma posiada papiery wartosciowe, których nie da się sprzedać.' 
+
+END
+ 
+INSERT INTO @tabela
+
+SELECT
+
+'Plynnosci_szybkiej',
+ROUND(@nalezosci/@zobowo_krotk,2), 
+'Interpretacja'= CASE  
+WHEN ROUND(@nalezosci/@zobowo_krotk,2) < 1 THEN 'Istnieje ryzyko utraty zdolności do terminowego regulowania zobowiazań.' ELSE 'OK' 
+
+END
+
+
+
+INSERT INTO @tabela
+
+SELECT 
+
+'Rotacja_zapasow',
+ROUND(@sprzedaz/@zapasy,2),
+'Interpretacja'=CASE
+WHEN ROUND(@sprzedaz/@zapasy,2)<30 THEN 'Nadmierne zapasy.' ELSE 'Zbyt niski poziom zapasow.' 
+
+END
+
+INSERT INTO @tabela 
+ 
+SELECT
+
+'Rotacja_naleznosci',
+ROUND(@sprzedaz/@nalezosci,2),
+'Interpretacja'= CASE  
+WHEN ROUND(@sprzedaz/@nalezosci,2) < 7 THEN 'Firma kredytuje swoich klientów przez co zamraża na długi czas pieniadze w należnościach.' ELSE 'OK' 
+
+END
+ 
+
+
+INSERT INTO @tabela
+
+SELECT
+
+'Rotacja_zobowiazan_krotk',
+ROUND(@sprzedaz/@zobowo_krotk,2),
+'Odniesienie w interpretacji wskaznika Cyklu zobowiazań krótkoterminowych w dniach.'
+
+
+INSERT INTO @tabela
+
+SELECT
+
+'Cyklu_zapasow_w_dniach',
+ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zapasy,2),2),
+'Firma odnawia zapasy co '+CAST(ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zapasy,2),2) as nvarchar(1000))+' dni.'
+
+
+INSERT INTO @tabela
+
+SELECT 
+
+'Cyklu_naleznosci_w_dniach',
+ROUND( @okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2),
+'Interpretacja'= CASE
+WHEN ROUND( @okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2)>60 
+
+
+INSERT INTO @tabela
+
+SELECT 
+
+'Cyklu_zobow_krotk_w_dniach', 
+ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zobowo_krotk,2),2 ),
+'Firma reguluje swoje zobowiazania handlowe średnio co '+CAST(ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zobowo_krotk,2),2) as nvarchar(1000))+' dni.'
+
+INSERT INTO @tabela 
+
+SELECT 
+
+'Cykl_Operacyjny', 
+ROUND(@okres_w_dniach/ROUND(@sprzedaz/@zapasy,2)+@okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2),
+'Zainwestowana gotówka wraca do firmy co '+CAST(ROUND(@okres_w_dniach/ROUND(@sprzedaz/@zapasy,2)+@okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2) as nvarchar(1000))+' dni.'
+ 
+INSERT INTO @tabela
+
+SELECT 
+
+'Cykl_konwersji_gotowki',
+ROUND(@okres_w_dniach/ROUND(@sprzedaz/@zapasy,2)+@okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2)-ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zobowo_krotk,2),2),
+'Zainwestowane pieniadze wracaja do firmy co '
++CAST(ROUND(@okres_w_dniach/ROUND(@sprzedaz/@zapasy,2)+@okres_w_dniach/ROUND(@sprzedaz/@nalezosci,2),2)
+-ROUND( @okres_w_dniach/ROUND(@sprzedaz/@zobowo_krotk,2),2) as nvarchar(1000))+' dni.'
+
+INSERT INTO @tabela
+
+SELECT
+
+'Jak szybko można spłacić dług EBITDĄ?',
+ROUND(@Dlug_Ebitda,2),
+'Interpretacja'= CASE WHEN @Dlug_Ebitda<0 THEN 'Długu nie uda się spłacić przy obecnym poziomie EBITDA, bo jest ujemna.'
+WHEN @Dlug_Ebitda>0    
+THEN
+'Dług można spłacić utrzymujac obecny poziom EBITDA i przy przekazaniu jej w całości na pokrycie zobowiazań krótkoterminowych w przeciagu ' 
++ CAST(@splata as nvarchar(1000)) +' dni.'
+
+END
+
+SELECT*FROM @tabela
+
+
+END
+
+/* Procedura analizujaca sytuacje finansowa i operacyjna firmy */
+
+
