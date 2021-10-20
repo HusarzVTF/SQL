@@ -1,0 +1,14 @@
+
+
+USE Stacja_Paliw
+GO
+
+EXEC Ope.uspDataZap @obiekt='Sprzedaz',@NRFV=1,@idkon=1,@data='2020-09-01'
+EXEC Ope.uspDataZap @obiekt='Sprzedaz',@NRFV=2,@idkon=2,@data='2020-09-10'
+EXEC Ope.uspDataZap @obiekt='Sprzedaz',@NRFV=3,@idkon=4,@data='2020-10-10'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='0001A',@idkon=1,@data='2020-09-11'
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='0X01B',@idkon=2,@data='2020-09-30'
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='001FV',@idkon=5,@data='2020-10-19'
+
+
