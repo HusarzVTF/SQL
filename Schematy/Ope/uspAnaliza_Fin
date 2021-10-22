@@ -230,6 +230,6 @@ SELECT*FROM @tabela
 
 END
 
-/* Procedura analizujaca sytuacje finansowa i operacyjna firmy */
+/* Procedura analizujaca sytuacje finansowa i operacyjna firmy. Wyliczenia wskaznikow maja cahrakter uproszczony. */
 
 
