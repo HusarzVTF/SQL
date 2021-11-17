@@ -1,0 +1,45 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trMar') IS NOT NULL
+DROP TRIGGER Ope.trMar;
+ 
+GO
+
+CREATE TRIGGER Ope.trMar ON Ope.Zbiorniki AFTER INSERT,UPDATE,DELETE
+
+AS
+
+CREATE TABLE #mar  (Id tinyint, Marza real);
+INSERT INTO #mar(Id,Marza)
+SELECT IDPaliwa,1+Marza FROM Ope.Zbiorniki;
+
+
+
+CREATE TABLE #kz  (Id tinyint, Koszt_zmienny real, cena real);
+INSERT INTO #kz (Id, Koszt_zmienny)
+SELECT IDPaliw,ROUND(SUM(D.KwotaNetto)/SUM(D.IloscPaliwa),2) AS Koszt_zmienny
+FROM Ope.Dostawy AS D 
+INNER JOIN Ope.Zbiorniki AS Z ON D.IDPaliw=Z.IDPaliwa
+INNER JOIN #mar AS mr ON mr.Id=D.IDPaliw
+GROUP BY IDPaliw;
+
+
+
+UPDATE #kz SET Cena=ROUND((Koszt_zmienny*mr.Marza),2)
+FROM #kz
+INNER JOIN #mar AS mr ON mr.Id=#kz.Id;
+
+
+
+UPDATE Ope.CenyPa SET CenaJedn=#kz.Cena, Koszt_Zakupu=#kz.Koszt_zmienny
+FROM Ope.CenyPa INNER JOIN #kz ON Ope.CenyPa.IDPALIW=#kz.Id
+DROP TABLE #kz;
+DROP TABLE #mar;
+
+/*trigger aktualizaujacy cene paliwa po kazdej zmianie w tabli Zbiorniki*/
+
+
