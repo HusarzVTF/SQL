@@ -1,0 +1,24 @@
+USE Stacja_Paliw
+GO
+
+EXEC Ope.uspWstawFV_Zakup 
+
+		@nrfv = '001AS',
+		@pozfv = 1,
+		@id_d = 606,
+		@iddost = 4,
+		@idprac = 2,
+		@idpal = 2,
+		@ilo = 200000,
+		@kwn = 400000,
+		@kwb = 600000,
+		@term = '2022-02-14',
+		@podatek = 200000,
+		@tpl = 'Przelew',
+		@czastr = '2021-11-16',
+		@dataz = NULL,
+		@datakz = NULL
+
+
+
+
