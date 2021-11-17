@@ -1,0 +1,17 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt='Sprzedaz',@NRFV=4,@idkon=5,@data='2021-10-15'
+EXEC Ope.uspDataZap @obiekt='Sprzedaz',@NRFV=5,@idkon=7,@data='2021-11-16'
+
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='00101F',@idkon=3,@data='2021-09-11'
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='011FV',@idkon=7,@data='2021-10-30'
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='FV010001',@idkon=6,@data='2021-11-16'
+
+/*Oplacenie czesci FV zakupowych i otrzymanie platnosci z tytulu czesci naleznosci*/
+
+
