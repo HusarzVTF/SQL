@@ -1,0 +1,13 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+DROP TRIGGER Ope.trCenDo
+
+/*Trigger uaktualniajacy cene paliwa po kazdym zakupie nie jest juz potrzebny.
+Trigger Ope.trMar bedzie aktualizowal cene paliwa po kazdej zmianie w tabeli Zbiorniki 
+a jest ona tez aktualizowana po kazdym zakupie przez trigger Ope.trOilINZbior , bo zmienia sie stan zbiornikow .*/
+
+
