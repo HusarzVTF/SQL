@@ -1,0 +1,29 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspWstawFV_Sprzedaz') IS NOT NULL
+DROP PROC Ope.uspWstawFV_Sprzedaz;
+GO
+
+CREATE PROC Ope.uspWstawFV_Sprzedaz ( @IdKlienta int, @IdPracownika tinyint,@IDPaliwa tinyint,
+@IloscPaliwa real,
+@DataZaplaty date,@DataAktuZaplaty date)
+ 
+AS
+
+INSERT INTO Ope.Sprzedaz(nrfv ,PozycjaNaFV  ,ID_Dat , IdKlienta , IdPracownika ,IDPaliwa ,
+IloscPaliwa ,KwotaNetto ,KwotaBrutto ,CzasTransakcji , TerminZaplaty ,
+DataZaplaty ,DataAktuZaplaty ,TypPlatnosci )
+ 
+VALUES
+( Ope.NRFV( @IdKlienta,GETDATE() ) ,Ope.PozFV( Ope.NRFV( @IdKlienta,GETDATE() ), @IdKlienta, GETDATE())  ,
+Czas.uIdDaty(GETDATE()) , @IdKlienta ,@IdPracownika ,@IDPaliwa ,
+@IloscPaliwa ,Ope.CenaSprz(@IDPaliwa)*@IloscPaliwa  ,Ope.SpKWBrutto(@IDPaliwa, @IloscPaliwa) ,GETDATE() , Ope.TerZaKL(@IdKlienta,GETDATE()) ,
+@DataZaplaty ,@DataAktuZaplaty ,Ope.WarunkiSprzedazy(@IdKlienta) )
+
+/*procedura na wystawianie fv sprzedazy*/
+
+
