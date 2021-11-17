@@ -1,0 +1,28 @@
+USE Stacja_Paliw
+GO 
+
+
+ IF OBJECT_ID('Ope.uspWstawFV_Zakup') IS NOT NULL
+ DROP PROC Ope.uspWstawFV_Zakup;
+
+ --Instukcja sprawdzajaca czy istnieje juz procedura Ope.uspWstawFV_Zakup jesli tak to jest likwidowana. Zakladamy, ze jesli istnieje to przez pomylke--
+
+
+ GO
+
+CREATE PROC Ope.uspWstawFV_Zakup (@nrfv varchar(100),@pozfv smallint ,@id_d int, @iddost int, @idprac tinyint,@idpal tinyint,
+@ilo real,@kwn real,@kwb real,@term date,@podatek real, @tpl varchar(7),@czastr datetime, @dataz date, @datakz datetime)
+ 
+ AS
+
+ INSERT INTO Ope.Dostawy(NRFV, PozycjaNAFV,ID_Dat,IdDostawcy,IdPracownika,IDPaliw,IloscPaliwa,KwotaNetto,KwotaBrutto,TerminZaplaty,
+ Podatek,TypPlatnosci,CzasTransakcji,DataZaplaty,DataAktuDatZap)
+ 
+ VALUES
+ (@nrfv ,@pozfv  ,@id_d , @iddost , @idprac ,@idpal ,
+@ilo ,@kwn ,@kwb ,@term ,@podatek , @tpl ,@czastr , @dataz , @datakz )
+
+/*procedura wstawiajaca fv zakupowa na paliwa do tabeli dostawy.*/
+
+
+
