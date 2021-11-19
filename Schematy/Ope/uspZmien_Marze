@@ -1,0 +1,25 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+
+IF OBJECT_ID('Ope.uspZmien_Marze') IS NOT NULL
+DROP PROC Ope.uspZmien_Marze;
+
+/*instrukcja sprawdzajaca czy istnieje juz procedura Ope.uspZmien_Marze jesli tak to zakladamy, ze istniala przez pomylke i zostanie zlikwidowana a pwostanie nowa */
+
+
+
+GO
+
+CREATE PROC Ope.uspZmien_Marze(@rdz varchar(7),@marza decimal(5,4))
+
+AS
+
+UPDATE Ope.Zbiorniki SET Marza=@marza WHERE RodzajPaliwa=@rdz
+
+/*procedura na aktualizacje marz w tabeli Zbiorniki*/
+
+
