@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+GO
+ALTER TABLE Ope.Zbiorniki
+ADD  CHECK(Marza>0)
+
+/*dodanie warunku dla kolumny Marza w tabeli Zbiorniki, ktory nie pozwoli na wstawienie ujemnje marzy*/
+
+
