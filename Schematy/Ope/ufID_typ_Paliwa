@@ -1,0 +1,26 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufID_typ_Paliwa') IS NOT NULL
+DROP FUNCTION Ope.ufID_typ_Paliwa;
+
+GO
+
+CREATE FUNCTION Ope.ufID_typ_Paliwa(@typ varchar(7))
+RETURNS varchar(7)
+WITH SCHEMABINDING
+AS
+
+BEGIN
+
+DECLARE @id varchar(7)=(SELECT IDPaliwa FROM Ope.Zbiorniki WHERE RodzajPaliwa =@typ)
+
+RETURN @id;
+
+END;
+
+--Funkcja zwracajaca id paliwa z tabeli Zbiorniki na podstawie podanego typu paliwa--
+
