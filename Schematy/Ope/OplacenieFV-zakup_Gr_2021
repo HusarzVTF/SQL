@@ -1,0 +1,27 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='00101FAfd',@idkon=7,@data='2021-12-11'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='XXXX1234',@idkon=2,@data='2021-12-10'
+
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='TRVRVR0005566',@idkon=10,@data='2021-12-12'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='101FA',@idkon=6,@data='2021-12-15'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='FV00003',@idkon=1,@data='2021-12-16'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='FV00002',@idkon=2,@data='2021-12-17'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='FV00001',@idkon=5,@data='2021-12-18'
+
+/*Zaplacenie czesci FV zakupowych*/
+
+
+
+
+
