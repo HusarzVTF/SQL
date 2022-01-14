@@ -1,0 +1,31 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+
+ALTER FUNCTION Ope.SpKWBrutto (@IdPaliwa tinyint, @Ilosc real)
+RETURNS real
+WITH SCHEMABINDING
+
+
+AS
+
+
+
+BEGIN
+
+DECLARE @akc real=(SELECT ROUND(stawka,2) FROM Ope.StPodat WHERE ID=@IdPaliwa)
+
+DECLARE @cena real=(SELECT ROUND(CenaJedn,2) FROM Ope.CenyPa WHERE IDPALIW=@idpaliwa)
+
+DECLARE @KWB real=ROUND(ROUND((@akc+@cena),2)*ROUND(@Ilosc,2),2) 
+				
+
+RETURN @KWB
+END;
+
+--funkcja obliczajaca kwote brutto dla danego idpaliwa i ilosci--
+
+
