@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 2,3,1,150000,'2022-03-01','2022-03-01'
+EXEC Ope.uspWstawFV_Sprzedaz 5,3,2,170000,'2022-03-01','2022-03-01'
+EXEC Ope.uspWstawFV_Sprzedaz 8,3,3,100000,null,null
+
+
