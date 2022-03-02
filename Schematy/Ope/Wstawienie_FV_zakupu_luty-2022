@@ -1,0 +1,56 @@
+USE Stacja_Paliw
+GO;
+
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'102FV',
+		@pozfv = 1,
+		@id_d = 1079,
+		@iddost = 2,
+		@idprac = 1,
+		@idpal = 1,
+		@ilo = 300000,
+		@kwn = 765000,
+		@kwb = 940950,
+		@term ='2022-03-05',
+		@podatek = 175950,
+		@tpl = 'przelew',
+		@czastr =  '2022-02-24',
+		@dataz = NULL,
+		@datakz = NULL
+
+		
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'103F',
+		@pozfv = 1,
+		@id_d = 1079,
+		@iddost = 5,
+		@idprac = 1,
+		@idpal = 2,
+		@ilo = 200000,
+		@kwn = 405000,
+		@kwb = 498150,
+		@term ='2022-04-03',
+		@podatek = 93150,
+		@tpl = 'przelew',
+		@czastr =  '2022-02-24',
+		@dataz = NULL,
+		@datakz = NULL
+
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'F01',
+		@pozfv = 1,
+		@id_d = 1079,
+		@iddost = 9,
+		@idprac = 1,
+		@idpal = 3,
+		@ilo = 150000,
+		@kwn = 413100,
+		@kwb = 508113,
+		@term = '2022-03-11',
+		@podatek = 93150,
+		@tpl = 'przelew',
+		@czastr = '2022-02-24',
+		@dataz = NULL,
+		@datakz = NULL
+    
+    
