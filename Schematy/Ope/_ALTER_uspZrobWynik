@@ -1,0 +1,66 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspZrobWynik (@czasOD date , @czasDO date) AS
+
+BEGIN
+
+DECLARE @WynikOperacyjny table (Kategoria varchar(14) UNIQUE not null, Kwota real) 
+INSERT INTO @WynikOperacyjny (Kategoria) VALUES 
+('Przychody'),
+('WydPaliwa'),
+('WydWyn'),
+('Wynik'),
+('%M_operacyjnej') 
+
+
+DECLARE @Przychody real = (ISNULL((SELECT ROUND(SUM(KwotaNetto),2) 
+FROM Ope.Sprzedaz AS S 
+INNER JOIN Czas.Kalendarz AS K ON S.ID_Dat=K.ID
+WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO 
+AND DataZaplaty IS NOT NULL),0))
+
+DECLARE @K_paliwa real = (ISNULL((SELECT ROUND(SUM(KwotaNetto),2)
+FROM Ope.Dostawy  AS D 
+INNER JOIN Czas.Kalendarz AS K ON D.ID_Dat=K.ID  
+WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO
+AND DataZaplaty IS NOT NULL),0))
+
+DECLARE @K_wynagrodzenia real = Ope.LiczWyn(@czasOD,@czasDO)
+
+DECLARE @wynik real = @Przychody - (@K_paliwa+@k_wynagrodzenia)
+
+UPDATE @WynikOperacyjny SET Kwota = @Przychody
+WHERE Kategoria='Przychody';
+
+UPDATE @WynikOperacyjny SET Kwota = @K_paliwa
+WHERE Kategoria='WydPaliwa';
+
+UPDATE @WynikOperacyjny SET Kwota = @K_wynagrodzenia
+WHERE Kategoria='WydWyn';
+
+UPDATE @WynikOperacyjny SET Kwota = @Wynik
+WHERE Kategoria='Wynik'
+
+
+UPDATE @WynikOperacyjny SET Kwota = (SELECT '%' = CASE 
+WHEN @Przychody=0 THEN 0
+WHEN @Przychody>0 THEN ROUND(@wynik/@Przychody,2)
+END)
+WHERE Kategoria='%M_operacyjnej'
+
+SELECT*FROM @WynikOperacyjny
+
+END;
+
+
+
+/*Procedura wypełniająca tabelę danymi z uproszczonym  zrealizowanym wynikiem operacyjnym  za wskazany okres czasu.
+Na jpg wynik dla danych za okres 2020-2022*/
+
+
+
+
