@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+DROP table Ope.WynikOpe
+
+/*Usunięcie tabeli Ope.WynikOpe*/
+
