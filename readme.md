@@ -16,10 +16,10 @@
 ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 
 ## Features
-* Customers segmentation ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
-* Simplified financial analysis based on basic indicators
-* Aging: receivables, labilities
-* Break even point calculator
+* ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
+* ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
+* ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
+* ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 * Automated pricing system 
 	
 ## Technologies
