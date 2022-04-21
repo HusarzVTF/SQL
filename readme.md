@@ -16,10 +16,10 @@
 ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 
 ## Features
-* Customers segmentation
+* Customers segmentation ![Customers segmentation]()
 * Simplified financial analysis based on basic indicators
 * Aging: receivables, labilities
-* Break even point calc
+* Break even point calculator
 * Automated pricing system 
 	
 ## Technologies
