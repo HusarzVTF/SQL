@@ -10,7 +10,7 @@
 * [Features](#Features)
 
 ## General info
-* Database diagram
+* Database diagram ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 	
 ## Technologies
 Project is created with:
