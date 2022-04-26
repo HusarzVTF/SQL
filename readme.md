@@ -8,7 +8,6 @@
 * [Features](#features)
 * [Setup](#setup)
 * [Acknowledgements](#Acknowledgements)
-* [Features](#Features)
 * [Extras](#Extras)
 
 ## General info
@@ -43,7 +42,7 @@ Project is created with:
 
 ## Acknowledgements
 Inspiration to this project was to join working experiance as financial analyst and  knowledge and also experience  in field of
-SQL databases to show some examples of my skils.
+SQL databases to show some examples of my skills.
 
 	
 ## Setup
