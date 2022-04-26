@@ -16,6 +16,7 @@
 ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 
 ## Features
+### Stored Procedures
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
