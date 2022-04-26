@@ -17,12 +17,25 @@
 ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 
 ## Features
+
 ### Stored Procedures
-* ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
+* ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
+* ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
+* ![Transactions](Schematy/Ope/PROC_Transakcje)
+* ![Sales Rank](Schematy/Ope/usp_SprzedazRanking)
+* ![Supply Rank](Schematy/Ope/usp_DostawRanking) 
 
+
+### Functions
+
+
+### Views
+* ![Delivery transactions](Schematy/Ope/V_ListaDostaw)
+* ![Sales transactions](Schematy/Ope/V_ListaSprzedazy)
+* ![Differences in payments conditions](Schematy/Ope/V_Rozb_w_TermDostaw)
 	
 ## Technologies
 Project is created with:
