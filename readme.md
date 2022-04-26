@@ -9,6 +9,7 @@
 * [Setup](#setup)
 * [Acknowledgements](#Acknowledgements)
 * [Features](#Features)
+* [Extras](#Extras)
 
 ## General info
 * Database diagram 
@@ -21,7 +22,7 @@
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
-<! --- * Automated pricing system --
+
 	
 ## Technologies
 Project is created with:
@@ -33,5 +34,6 @@ SQL databases to show some examples of my skils.
 
 	
 ## Setup
-
+## Extras
+*Automated pricing system 
 
