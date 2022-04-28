@@ -19,9 +19,12 @@
 
 ### Stored Procedures
 * ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
-(./Schematy/Ope/Analiza_fin_2020-2022.JPG)
+* ![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
+* ![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
+* ![Screenshot example for aging receivables](./Schematy/Ope/Wiekowanie_Naleznosci_total.JPG)
+* ![Screenshot example for aging labilities](./Schematy/Ope/Zobowiazanie_Wiekowanie_total.JPG)
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 * ![Transactions](Schematy/Ope/PROC_Transakcje)
@@ -33,6 +36,7 @@
 * ![Function to calculate netto payroll costs](Schematy/Ope/LiczWyn)
 * ![Function to calculate days in year](Schematy/Czas/uDni_Rok)
 * ![Function to check payments conditions of customers](Schematy/Ope/ufWarunkiSprzedazy)
+* ![Function to calculate gross amount for provided productid and quantity](Schematy/Ope/SpKWBrutto-ALTER)
 
 
 
