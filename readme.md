@@ -19,7 +19,10 @@
 
 ### Stored Procedures
 * ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
-* ![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
+* Screenshot example of summary report
+
+![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
+
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 * Screenshot example of analysis
 
