@@ -19,7 +19,7 @@
 
 ### Stored Procedures
 * ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
-(.Schematy/Ope/Analiza_fin_2020-2022.JPG)
+(./Schematy/Ope/Analiza_fin_2020-2022.JPG)
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
