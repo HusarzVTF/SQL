@@ -10,18 +10,32 @@ DROP PROC Ope.uspTOPDostawcy;
 GO
 
 CREATE PROC Ope.uspTOPDostawcy AS
+
 BEGIN
-SELECT NazwaDostawcy,
-SUM(IloscPaliwa) AS IloscPaliwa,
-Z.JM,SUM(KwotaNetto) AS WartoscPaliwa,
-SUM(KwotaBrutto) AS WartoscBruttoPaliwa, 
-SUM(KwotaBrutto)-SUM(KwotaNetto) AS  Podatek, 
-SUM(KwotaNetto)/SUM(IloscPaliwa) AS SRCenaZAKUPUNetto,
-SUM(KwotaBrutto)/SUM(IloscPaliwa) AS SRCenaZAKUPUBrutto,
-Z.RodzajPaliwa
+
+SELECT
+Dst.IdDostawcy,
+Dst.NazwaDostawcy,
+ISNULL(Z.RodzajPaliwa,'Brak') AS RodzajPaliwa,
+ISNULL(Z.JM,'Brak') AS JM,
+ISNULL(ROUND(SUM(IloscPaliwa),2),0) AS IloscPaliwa,  
+ISNULL(Round(SUM(KwotaNetto),2),0) AS WartoscNettoPaliwa,
+ISNULL(ROUND(SUM(KwotaBrutto),2),0) AS WartoscBruttoPaliwa, 
+ISNULL(ROUND(SUM(KwotaBrutto)-SUM(KwotaNetto),2),0) AS  Podatek,
+Sr_Cen_Zak_Netto = CASE
+WHEN SUM(IloscPaliwa)=0 THEN 0
+ELSE ISNULL(ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2),0)  
+END,
+Sr_Cen_Zak_Brutto = CASE
+WHEN SUM(IloscPaliwa)=0 THEN 0
+ELSE ISNULL(ROUND(SUM(KwotaBrutto)/SUM(IloscPaliwa),2),0) 
+END 
+
 FROM Ope.Dostawy  AS D
-INNER JOIN Ope.Dostawcy  AS Dst ON DST.IDDostawcy=D.IdDostawcy INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
-GROUP BY  NazwaDostawcy,Z.RodzajPaliwa,Z.JM ORDER BY IloscPaliwa DESC;
+RIGHT JOIN Ope.Dostawcy  AS Dst ON DST.IDDostawcy=D.IdDostawcy LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
+GROUP BY  Dst.IdDostawcy, Dst.NazwaDostawcy, Z.RodzajPaliwa, Z.JM ORDER BY Dst.IdDostawcy, Z.RodzajPaliwa ASC;
+
 END;
 
 --Procedura pokazująca zestawienie prezentujące dostawców posortowanych od największego do najmniejszego wg ilości zakupionego od nich paliwa.--
