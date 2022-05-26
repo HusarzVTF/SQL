@@ -45,7 +45,7 @@
 
 * Screenshot example for aging labilities
 
-![Screenshot example for aging labilities](./Schematy/Ope/Zobowiazanie_Wiekowanie_total.JPG)
+![Screenshot example for aging labilities](./Schematy/Ope/Wiekowanie_Zobowiazan_total.JPG)
 
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
