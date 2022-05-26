@@ -15,73 +15,76 @@ CREATE PROC Ope.uspKlasyfikacja_klientow
  
  AS
 
-WITH  Obr_Zafak_CTE (IdKlienta,Obrot_Z_FV) AS
+WITH  Obr_Zafak_CTE (IdKlienta,Obrot_Z_FV) AS 
+(
+SELECT
+K.IdKlienta,
+ISNULL(ROUND(SUM(KwotaNetto),2),0) 
 
-(SELECT
-IdKlienta,
-SUM(KwotaNetto)
-FROM Ope.Sprzedaz
-GROUP BY IdKlienta),
+FROM Ope.Klienci AS K LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta=S.IdKlienta  GROUP BY K.IdKlienta), 
 
-Obr_Niezap_CTE (IdKlienta,Obrot_Niezaplacony) AS
+Obr_Niezap_CTE (IdKlienta,Obrot_Niezaplacony) AS 
+(
+SELECT 
+K.IdKlienta,
+ROUND(SUM(KwotaNetto),2)
 
-(SELECT 
-IdKlienta, 
-SUM(KwotaNetto)
-FROM Ope.Sprzedaz
-WHERE DataZaplaty IS NULL 
-GROUP BY IdKlienta),
+FROM Ope.Klienci AS K LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta=S.IdKlienta WHERE DataZaplaty IS NULL 
+GROUP BY K.IdKlienta),
  
 
 Obr_Przeter_CTE (IdKlienta,Obrot_Przeterminowany) AS
+(
+SELECT 
+K.IdKlienta,
+ROUND(SUM(KwotaNetto),2)
 
-(SELECT
-IdKlienta, 
-SUM(KwotaNetto)
-FROM Ope.Sprzedaz
+FROM Ope.Klienci AS K LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta=S.IdKlienta
 WHERE DataZaplaty IS NULL 
-AND DATEDIFF(d,TerminZaplaty,GETDATE())>0
-GROUP BY IdKlienta,DataZaplaty), 
+AND DATEDIFF(d,TerminZaplaty,GETDATE())>0 GROUP BY K.IdKlienta,DataZaplaty), 
 
 FV_CTE (IdKlienta, FV) AS 
-
-(SELECT
-IdKlienta,
+(
+SELECT
+K.IdKlienta,
 NRFV 
-FROM Ope.Sprzedaz 
-GROUP BY IdKlienta, NRFV),
 
-Ile_FV (IdKlienta, Il_FV) AS
+FROM Ope.Klienci AS K LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta=S.IdKlienta GROUP BY K.IdKlienta,NRFV),
 
-(SELECT 
-k.IdKlienta, 
-COUNT(FV) 
+Ile_FV (IdKlienta, Il_FV) AS 
+(
+SELECT 
+k.IdKlienta,
+ISNULL(COUNT(FV),0) 
+
 FROM FV_CTE  as C RIGHT JOIN Ope.Klienci as K ON k.IdKlienta=c.IdKlienta
 GROUP BY k.IdKlienta ),
 
-Paliwa_CTE (IdKlienta, Paliwa) AS
-
-(SELECT 
-IdKlienta,
+Paliwa_CTE (IdKlienta, Paliwa) AS 
+(
+SELECT
+K.IdKlienta,
 IDPaliwa 
-FROM Ope.Sprzedaz
-GROUP BY IdKlienta, IDPaliwa)
+
+FROM Ope.Klienci AS K LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta=S.IdKlienta  GROUP BY K.IdKlienta,IDPaliwa)
 
 
- SELECT
+ SELECT 
  K.IdKlienta, 
- K.NazwaKlienta, 
- ROUND(SUM(Obrot_Z_FV),2) AS Obrot_Z_FV,
- ROUND(SUM(Obrot_Niezaplacony),2) AS Obrot_Niezaplacony,
-  '%_Niezaplacony' = CASE  WHEN  SUM(Obrot_Niezaplacony)=0 OR SUM(Obrot_Niezaplacony) IS NULL  THEN 0 
- WHEN SUM(Obrot_Niezaplacony)>0 THEN ROUND(SUM(Obrot_Niezaplacony)/SUM(Obrot_Z_FV),2) 
- END ,
- ROUND( SUM(Obrot_Przeterminowany),2) AS Obrot_Przeterminowany,
- '%_Przeterminowany' = CASE WHEN SUM(Obrot_Przeterminowany)=0 OR SUM(Obrot_Przeterminowany) IS NULL  THEN 0 
- WHEN SUM(Obrot_Przeterminowany)>0 THEN ROUND(SUM(Obrot_Przeterminowany)/SUM(Obrot_Z_FV),2) 
+ K.NazwaKlienta,
+ Obrot_Z_FV,
+ ISNULL(Obrot_Niezaplacony,0) AS Obrot_Niezaplacony,
+ '%_Niezaplacony' = CASE
+ WHEN  ISNULL(Obrot_Niezaplacony,0) = 0   THEN 0 
+ WHEN SUM(Obrot_Niezaplacony) > 0 THEN ROUND(Obrot_Niezaplacony/Obrot_Z_FV,2) 
+ END,
+ ISNULL(Obrot_Przeterminowany,0) AS Obrot_Przeterminowany,
+ '%_Przeterminowany' = CASE 
+ WHEN ISNULL(Obrot_Przeterminowany,0) = 0   THEN 0 
+ WHEN SUM(Obrot_Przeterminowany) > 0 THEN ROUND(Obrot_Przeterminowany/Obrot_Z_FV,2) 
  END, 
- Il_FV AS Z_Ilu_FV ,
- COUNT(Paliwa) AS Na_Ilu_Paliwach
+ Il_FV AS Z_Ilu_FV, 
+ ISNULL(COUNT(Paliwa),0) AS Na_Ilu_Paliwach
  
  FROM Ope.Klienci AS K
  LEFT JOIN Obr_Zafak_CTE AS O ON K.IdKlienta=O.IdKlienta 
@@ -90,8 +93,8 @@ GROUP BY IdKlienta, IDPaliwa)
  LEFT JOIN Ile_FV AS F ON K.IdKlienta=F.IdKlienta
  LEFT JOIN Paliwa_CTE AS Pa ON K.IdKlienta=Pa.IdKlienta
  
- GROUP BY K.IdKlienta,K.NazwaKlienta,Il_FV ORDER BY  SUM(Obrot_Z_FV)  DESC
-
+ GROUP BY K.IdKlienta, K.NazwaKlienta, Obrot_Z_FV , Obrot_Niezaplacony, Obrot_Przeterminowany, Il_FV ORDER BY  SUM(Obrot_Z_FV)  DESC
+ 
  /*Procedura klasyfikujaca klientow wg parametrow takich jak obrot w rozbiciu na przeterminowany i niezaplacony ilosc fv i ilosc kupowanych paliw*/
  
  
