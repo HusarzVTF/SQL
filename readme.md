@@ -58,7 +58,12 @@
 
 * ![Transactions](Schematy/Ope/PROC_Transakcje)
 * ![Sales Rank](Schematy/Ope/usp_SprzedazRanking)
+
+* (./Schematy/Ope/TOP_Klienci.JPG)
+
 * ![Supply Rank](Schematy/Ope/usp_DostawRanking) 
+
+* (./Schematy/Ope/TOP_Dostawcy.JPG)
 
 
 ### Functions
