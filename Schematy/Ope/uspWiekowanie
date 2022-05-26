@@ -14,80 +14,127 @@ GO
 
 CREATE PROC Ope.uspWiekowanie (@co varchar(12),@jakie varchar(18), @paliwo_1 varchar(7),@paliwo_2 varchar(7),@paliwo_3 varchar(7) ) 
  
- AS
+AS
 
  /*Ponizej wiekowanie naleznosci przeterminowanych*/
 
+
+ 
 
  IF @co='Naleznosci' AND @jakie='Przeterminowane'
  
  BEGIN
 
  WITH  Trzydz_CTE_N (IdKlienta,Nal_Net_0_30,Nal_Br_0_30) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT 
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 0 AND 30  ),
 
  Szescdz_CTE_N (IdKlienta,Nal_Net_31_60,Nal_Br_31_60) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE_N (IdKlienta,Nal_Net_61_90,Nal_Br_61_90) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_61_90, SUM(KwotaBrutto) AS Nal_Br_61_90
+(
+SELECT 
+IdKlienta,
+ROUND(SUM(KwotaNetto),2) ,
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE_N (IdKlienta,Nal_Net_91_120,Nal_Br_91_120) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_91_120, SUM(KwotaBrutto) AS Nal_Br_91_120
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz  AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE_N (IdKlienta,Nal_Net_121_180,Nal_Br_121_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_121_180, SUM(KwotaBrutto) AS Nal_Br_121_180
+(
+SELECT 
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE())  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE_N (IdKlienta,Nal_Net_POW_180,Nal_Br_POW_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_POW_180, SUM(KwotaBrutto) AS Nal_Br_POW_180
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE())  > 180)
 
  
  
-SELECT  K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+SELECT  
+K.IdKlienta,
+K.NazwaKlienta,
+ISNULL(Nal_Net_0_30,0) AS Nal_Net_0_30,  ISNULL(Nal_Br_0_30,0) AS Nal_Br_0_30,
+ISNULL(Nal_Net_31_60,0) AS Nal_Net_31_60,  ISNULL(Nal_Br_31_60,0) AS Nal_Br_31_60,
+ISNULL(Nal_Net_61_90,0) AS Nal_Net_61_90, ISNULL(Nal_Br_61_90,0) AS Nal_Br_61_90,
+ISNULL(Nal_Net_91_120,0) AS Nal_Net_91_120, ISNULL(Nal_Br_91_120,0) AS Nal_Br_91_120,
+ISNULL(Nal_Net_121_180,0) AS Nal_Net_121_180, ISNULL(Nal_Br_121_180,0) AS Nal_Br_121_180, 
+ISNULL(Nal_Net_POW_180,0) AS Nal_Net_POW_180, ISNULL(Nal_Br_POW_180,0) AS Nal_Br_POW_180
+
 FROM Ope.Klienci AS K 
 LEFT  JOIN Trzydz_CTE_N AS T ON K.IdKlienta = T.IdKlienta
 LEFT  JOIN Szescdz_CTE_N AS Sz ON K.IdKlienta = Sz.IdKlienta
@@ -95,16 +142,15 @@ LEFT JOIN Dziewcdz_CTE_N AS Dz ON K.IdKlienta = Dz.IdKlienta
 LEFT JOIN Stodwadz_CTE_N AS St ON K.IdKlienta = St.IdKlienta
 LEFT JOIN Stoosiemdz_CTE_N AS Ps ON K.IdKlienta = Ps.IdKlienta
 LEFT JOIN StoOsiemPOW_CTE_N  AS Sto ON K.IdKlienta = Sto.IdKlienta
-GROUP BY K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+
 ORDER BY K.IdKlienta
 
-END
+
+
+
+
+
+ END
 
  /*Ponizej wiekowanie wszystkich naleznosci */
 
@@ -112,70 +158,115 @@ END
  
  BEGIN
 
- WITH  Trzydz_CTE_NT (IdKlienta,Nal_Net_0_30,Nal_Br_0_30) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+  WITH  Trzydz_CTE_NT (IdKlienta,Nal_Net_0_30,Nal_Br_0_30) AS  
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)<=30),
 
  Szescdz_CTE_NT (IdKlienta,Nal_Net_31_60,Nal_Br_31_60) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT 
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE_NT (IdKlienta,Nal_Net_61_90,Nal_Br_61_90) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_61_90, SUM(KwotaBrutto) AS Nal_Br_61_90
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE_NT (IdKlienta,Nal_Net_91_120,Nal_Br_91_120) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_91_120, SUM(KwotaBrutto) AS Nal_Br_91_120
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz   AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE_NT (IdKlienta,Nal_Net_121_180,Nal_Br_121_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_121_180, SUM(KwotaBrutto) AS Nal_Br_121_180
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE_NT (IdKlienta,Nal_Net_POW_180,Nal_Br_POW_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_POW_180, SUM(KwotaBrutto) AS Nal_Br_POW_180
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  > 180)
 
  
-SELECT  K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+SELECT 
+K.IdKlienta,
+K.NazwaKlienta,
+ISNULL(Nal_Net_0_30,0) AS Nal_Net_0_30, ISNULL(Nal_Br_0_30,0) AS Nal_Br_0_30,
+ISNULL(Nal_Net_31_60,0) AS Nal_Net_31_60, ISNULL(Nal_Br_31_60,0) AS Nal_Br_31_60,
+ISNULL(Nal_Net_61_90,0) AS Nal_Net_61_90, ISNULL(Nal_Br_61_90,0) AS Nal_Br_61_90,
+ISNULL(Nal_Net_91_120,0) AS Nal_Net_91_120, ISNULL(Nal_Br_91_120,0) AS Nal_Br_91_120,
+ISNULL(Nal_Net_121_180,0) AS Nal_Net_121_180,ISNULL(Nal_Br_121_180,0) AS Nal_Br_121_180, 
+ISNULL(Nal_Net_POW_180,0) AS Nal_Net_POW_180, ISNULL(Nal_Br_POW_180,0) AS Nal_Br_POW_180 
+
 FROM Ope.Klienci AS K 
 LEFT  JOIN Trzydz_CTE_NT AS T ON K.IdKlienta = T.IdKlienta
 LEFT  JOIN Szescdz_CTE_NT AS Sz ON K.IdKlienta = Sz.IdKlienta
@@ -183,14 +274,13 @@ LEFT JOIN Dziewcdz_CTE_NT AS Dz ON K.IdKlienta = Dz.IdKlienta
 LEFT JOIN Stodwadz_CTE_NT AS St ON K.IdKlienta = St.IdKlienta
 LEFT JOIN Stoosiemdz_CTE_NT AS Ps ON K.IdKlienta = Ps.IdKlienta
 LEFT JOIN StoOsiemPOW_CTE_NT  AS Sto ON K.IdKlienta = Sto.IdKlienta
-GROUP BY K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+
 ORDER BY K.IdKlienta
+
+
+
+
+
 
  END
 
@@ -199,69 +289,114 @@ ORDER BY K.IdKlienta
  BEGIN
 
   WITH  Trzydz_CTE_NT (IdKlienta,Nal_Net_0_30,Nal_Br_0_30) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) between 0 and 30),
 
  Szescdz_CTE_NT (IdKlienta,Nal_Net_31_60,Nal_Br_31_60) AS  
-(SELECT IdKlienta,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE_NT (IdKlienta,Nal_Net_61_90,Nal_Br_61_90) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_61_90, SUM(KwotaBrutto) AS Nal_Br_61_90
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE_NT (IdKlienta,Nal_Net_91_120,Nal_Br_91_120) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_91_120, SUM(KwotaBrutto) AS Nal_Br_91_120
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz   AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE_NT (IdKlienta,Nal_Net_121_180,Nal_Br_121_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_121_180, SUM(KwotaBrutto) AS Nal_Br_121_180
+(
+SELECT
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE_NT (IdKlienta,Nal_Net_POW_180,Nal_Br_POW_180) AS  
-(SELECT IdKlienta,SUM(KwotaNetto) AS Nal_Net_POW_180, SUM(KwotaBrutto) AS Nal_Br_POW_180
+(
+SELECT 
+IdKlienta,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2) 
+
 FROM Ope.Sprzedaz AS S
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdKlienta,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  > 180)
 
  
-SELECT  K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+SELECT
+K.IdKlienta,
+K.NazwaKlienta,
+ISNULL(Nal_Net_0_30,0) AS Nal_Net_0_30,ISNULL(Nal_Br_0_30,0) AS Nal_Br_0_30,
+ISNULL(Nal_Net_31_60,0) AS Nal_Net_31_60, ISNULL(Nal_Br_31_60,0) AS Nal_Br_31_60,
+ISNULL(Nal_Net_61_90,0) AS Nal_Net_61_90,ISNULL(Nal_Br_61_90,0) AS Nal_Br_61_90,
+ISNULL(Nal_Net_91_120,0) AS Nal_Net_91_120,ISNULL(Nal_Br_91_120,0) AS Nal_Br_91_120,
+ISNULL(Nal_Net_121_180,0) AS Nal_Net_121_180,ISNULL(Nal_Br_121_180,0) AS Nal_Br_121_180, 
+ISNULL(Nal_Net_POW_180,0) AS Nal_Net_POW_180, ISNULL(Nal_Br_POW_180,0) AS Nal_Br_POW_180 
+
 FROM Ope.Klienci AS K 
 LEFT  JOIN Trzydz_CTE_NT AS T ON K.IdKlienta = T.IdKlienta
 LEFT  JOIN Szescdz_CTE_NT AS Sz ON K.IdKlienta = Sz.IdKlienta
@@ -269,16 +404,14 @@ LEFT JOIN Dziewcdz_CTE_NT AS Dz ON K.IdKlienta = Dz.IdKlienta
 LEFT JOIN Stodwadz_CTE_NT AS St ON K.IdKlienta = St.IdKlienta
 LEFT JOIN Stoosiemdz_CTE_NT AS Ps ON K.IdKlienta = Ps.IdKlienta
 LEFT JOIN StoOsiemPOW_CTE_NT  AS Sto ON K.IdKlienta = Sto.IdKlienta
-GROUP BY K.IdKlienta,K.NazwaKlienta,
-Nal_Net_0_30,  Nal_Br_0_30,
-Nal_Net_31_60,  Nal_Br_31_60,
-Nal_Net_61_90,Nal_Br_61_90,
-Nal_Net_91_120,Nal_Br_91_120,
-Nal_Net_121_180,Nal_Br_121_180, 
-Nal_Net_POW_180, Nal_Br_POW_180
+
 ORDER BY K.IdKlienta
 
+
+
  END
+
+
 
  /*Wiekowanie zobowiazan przterminowanych ponizej*/
 
@@ -289,70 +422,115 @@ ORDER BY K.IdKlienta
 
 
  WITH  Trzydz_CTE (IdDostawcy,Zob_Net_0_30,Zob_Br_0_30) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3) 
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 0 AND 30 ),
 
  Szescdz_CTE (IdDostawcy,Zob_Net_31_60,Zob_Br_31_60) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE (IdDostawcy,Zob_Net_61_90,Zob_Br_61_90) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_61_90, SUM(KwotaBrutto) AS Zob_Br_61_90
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE (IdDostawcy,Zob_Net_91_120,Zob_Br_91_120) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_91_120, SUM(KwotaBrutto) AS Zob_Br_91_120
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy  AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE()) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE (IdDostawcy,Zob_Net_121_180,Zob_Br_121_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_121_180, SUM(KwotaBrutto) AS Zob_Br_121_180
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE())  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE (IdDostawcy,Zob_Net_POW_180,Zob_Br_POW_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_POW_180, SUM(KwotaBrutto) AS Zob_Br_POW_180
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,TerminZaplaty,GETDATE())  > 180)
 
  
  
-SELECT  DS.IdDostawcy, DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+SELECT  
+DS.IdDostawcy,
+DS.NazwaDostawcy,
+ISNULL(Zob_Net_0_30,0) AS Zob_Net_0_30, ISNULL(Zob_Br_0_30,0) AS Zob_Br_0_30,
+ISNULL(Zob_Net_31_60,0) AS Zob_Net_31_60,  ISNULL(Zob_Br_31_60,0) AS Zob_Br_31_60,
+ISNULL(Zob_Net_61_90,0) AS Zob_Net_61_90, ISNULL(Zob_Br_61_90,0) AS Zob_Br_61_90,
+ISNULL(Zob_Net_91_120,0) AS Zob_Net_91_120, ISNULL(Zob_Br_91_120,0) AS Zob_Br_91_120,
+ISNULL(Zob_Net_121_180,0) AS Zob_Net_121_180, ISNULL(Zob_Br_121_180,0) AS Zob_Br_121_180, 
+ISNULL(Zob_Net_POW_180,0) AS Zob_Net_POW_180, ISNULL(Zob_Br_POW_180,0) AS Zob_Br_POW_180 
+
 FROM Ope.Dostawcy AS DS 
 LEFT  JOIN Trzydz_CTE AS T ON DS.IdDostawcy = T.IdDostawcy
 LEFT  JOIN Szescdz_CTE AS Sz ON DS.IdDostawcy = Sz.IdDostawcy
@@ -360,14 +538,11 @@ LEFT JOIN Dziewcdz_CTE AS Dz ON DS.IdDostawcy = Dz.IdDostawcy
 LEFT JOIN Stodwadz_CTE AS St ON DS.IdDostawcy = St.IdDostawcy
 LEFT JOIN Stoosiemdz_CTE AS Ps ON DS.IdDostawcy = Ps.IdDostawcy
 LEFT JOIN StoOsiemPOW_CTE  AS Sto ON DS.IdDostawcy = Sto.IdDostawcy
-GROUP BY DS.IdDostawcy,DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+
 ORDER BY DS.IdDostawcy
+
+
+
 
 
  END
@@ -379,70 +554,114 @@ ORDER BY DS.IdDostawcy
  BEGIN
 
  WITH  Trzydz_CTE_T (IdDostawcy,Zob_Net_0_30,Zob_Br_0_30) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)<=30 ),
 
  Szescdz_CTE_T (IdDostawcy,Zob_Net_31_60,Zob_Br_31_60) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE_T (IdDostawcy,Zob_Net_61_90,Zob_Br_61_90) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_61_90, SUM(KwotaBrutto) AS Zob_Br_61_90
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND(SUM(KwotaBrutto),2)
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE_T (IdDostawcy,Zob_Net_91_120,Zob_Br_91_120) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_91_120, SUM(KwotaBrutto) AS Zob_Br_91_120
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy  AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE_T (IdDostawcy,Zob_Net_121_180,Zob_Br_121_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_121_180, SUM(KwotaBrutto) AS Zob_Br_121_180
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE_T (IdDostawcy,Zob_Net_POW_180,Zob_Br_POW_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_POW_180, SUM(KwotaBrutto) AS Zob_Br_POW_180
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  > 180)
 
  
  
-SELECT  DS.IdDostawcy,DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+SELECT  
+DS.IdDostawcy,
+DS.NazwaDostawcy,
+ISNULL(Zob_Net_0_30,0) AS Zob_Net_0_30, ISNULL(Zob_Br_0_30,0) AS Zob_Br_0_30,
+ISNULL(Zob_Net_31_60,0) AS Zob_Net_31_60,  ISNULL(Zob_Br_31_60,0) AS Zob_Br_31_60,
+ISNULL(Zob_Net_61_90,0) AS Zob_Net_61_90,ISNULL(Zob_Br_61_90,0) AS Zob_Br_61_90,
+ISNULL(Zob_Net_91_120,0) AS Zob_Net_91_120,ISNULL(Zob_Br_91_120,0) AS Zob_Br_91_120,
+ISNULL(Zob_Net_121_180,0) AS Zob_Net_121_180,ISNULL(Zob_Br_121_180,0) AS Zob_Br_121_180, 
+ISNULL(Zob_Net_POW_180,0) AS Zob_Net_POW_180, ISNULL(Zob_Br_POW_180,0) AS Zob_Br_POW_180 
+
 FROM Ope.Dostawcy AS DS 
 LEFT  JOIN Trzydz_CTE_T AS T ON DS.IdDostawcy = T.IdDostawcy
 LEFT  JOIN Szescdz_CTE_T AS Sz ON DS.IdDostawcy = Sz.IdDostawcy
@@ -450,88 +669,128 @@ LEFT JOIN Dziewcdz_CTE_T AS Dz ON DS.IdDostawcy = Dz.IdDostawcy
 LEFT JOIN Stodwadz_CTE_T AS St ON DS.IdDostawcy = St.IdDostawcy
 LEFT JOIN Stoosiemdz_CTE_T AS Ps ON DS.IdDostawcy = Ps.IdDostawcy
 LEFT JOIN StoOsiemPOW_CTE_T  AS Sto ON DS.IdDostawcy = Sto.IdDostawcy
-GROUP BY DS.IdDostawcy,DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+
 ORDER BY DS.IdDostawcy
+
+
 
  END
 
-/*ponizej wiekowanie zobowiazan nieprzeterminowanych*/
-
+ 
  IF @co='Zobowiazania' AND @jakie='Nieprzeterminowane'
  
  BEGIN
 
  WITH  Trzydz_CTE_T (IdDostawcy,Zob_Net_0_30,Zob_Br_0_30) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) between 0 and 30 ),
 
  Szescdz_CTE_T (IdDostawcy,Zob_Net_31_60,Zob_Br_31_60) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto), SUM(KwotaBrutto) 
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2) 
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY  IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL 
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 31 AND 60), 
 
  Dziewcdz_CTE_T (IdDostawcy,Zob_Net_61_90,Zob_Br_61_90) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_61_90, SUM(KwotaBrutto) AS Zob_Br_61_90
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 61 AND 90 ),
 
 
 Stodwadz_CTE_T (IdDostawcy,Zob_Net_91_120,Zob_Br_91_120) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_91_120, SUM(KwotaBrutto) AS Zob_Br_91_120
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy  AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty) BETWEEN 91 AND 120 ),
 
 
 Stoosiemdz_CTE_T (IdDostawcy,Zob_Net_121_180,Zob_Br_121_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_121_180, SUM(KwotaBrutto) AS Zob_Br_121_180
+(
+SELECT 
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  BETWEEN 121 AND 180),
 
 StoOsiemPOW_CTE_T (IdDostawcy,Zob_Net_POW_180,Zob_Br_POW_180) AS  
-(SELECT IdDostawcy,SUM(KwotaNetto) AS Zob_Net_POW_180, SUM(KwotaBrutto) AS Zob_Br_POW_180
+(
+SELECT
+IdDostawcy,
+ROUND(SUM(KwotaNetto),2),
+ROUND( SUM(KwotaBrutto),2)
+
 FROM Ope.Dostawy AS D
 LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+
 WHERE RodzajPaliwa IN(@paliwo_1,@paliwo_2,@paliwo_3)
+
 GROUP BY IdDostawcy,DataZaplaty,TerminZaplaty
 HAVING DataZaplaty IS NULL  
 AND DATEDIFF(d,GETDATE(),TerminZaplaty)  > 180)
 
  
  
-SELECT  DS.IdDostawcy,DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+SELECT 
+DS.IdDostawcy,
+DS.NazwaDostawcy,
+ISNULL(Zob_Net_0_30,0) AS Zob_Net_0_30, ISNULL(Zob_Br_0_30,0) AS Zob_Br_0_30,
+ISNULL(Zob_Net_31_60,0) AS Zob_Net_31_60 , ISNULL(Zob_Br_31_60,0) AS Zob_Br_31_60,
+ISNULL(Zob_Net_61_90,0) AS Zob_Net_61_90, ISNULL(Zob_Br_61_90,0) AS Zob_Br_61_90,
+ISNULL(Zob_Net_91_120,0) AS Zob_Net_91_120, ISNULL(Zob_Br_91_120,0) AS Zob_Br_91_120,
+ISNULL(Zob_Net_121_180,0) AS Zob_Net_121_180, ISNULL(Zob_Br_121_180,0) AS Zob_Br_121_180, 
+ISNULL(Zob_Net_POW_180,0) AS Zob_Net_POW_180, ISNULL(Zob_Br_POW_180,0) AS Zob_Br_POW_180
+
 FROM Ope.Dostawcy AS DS 
 LEFT  JOIN Trzydz_CTE_T AS T ON DS.IdDostawcy = T.IdDostawcy
 LEFT  JOIN Szescdz_CTE_T AS Sz ON DS.IdDostawcy = Sz.IdDostawcy
@@ -539,21 +798,15 @@ LEFT JOIN Dziewcdz_CTE_T AS Dz ON DS.IdDostawcy = Dz.IdDostawcy
 LEFT JOIN Stodwadz_CTE_T AS St ON DS.IdDostawcy = St.IdDostawcy
 LEFT JOIN Stoosiemdz_CTE_T AS Ps ON DS.IdDostawcy = Ps.IdDostawcy
 LEFT JOIN StoOsiemPOW_CTE_T  AS Sto ON DS.IdDostawcy = Sto.IdDostawcy
-GROUP BY DS.IdDostawcy,DS.NazwaDostawcy,
-Zob_Net_0_30,  Zob_Br_0_30,
-Zob_Net_31_60,  Zob_Br_31_60,
-Zob_Net_61_90,Zob_Br_61_90,
-Zob_Net_91_120,Zob_Br_91_120,
-Zob_Net_121_180,Zob_Br_121_180, 
-Zob_Net_POW_180, Zob_Br_POW_180
+
 ORDER BY DS.IdDostawcy
+
 
  END
  
- /* 
- Procedura na wiekowania zobowiazan i naleznosci. Mozna wiekowac calosc naleznosci i zobowiazan lub te z  nich ktore sa przeterminowane lub nie i 
- dla dowowlnie wybranych rodzajow paliwa. Przeterminowana czesc w przypadku wybrania wiekowania calosci trafia wowczas w czesc wymagalna do 30 dni.
- Z racji tego, ze ich termin zaplaty juz minal staja sie one wymagalne natychmiast.  
- */
- 
- 
+ /* Procedura na wiekowanie naleznosci i zobowiazan. Calkowite traktuja przeterminowane jako nalezne natychmiast czyli w okresie do 30
+dni, bo nie mozna powiedziec, ze przeterminowane powinny splynac w terminie tylu dni o ile sa przeterminowane
+winny byc windykowane i jak najszybciej splacone czyli w pierwszym najkrotszym terminie. I analogicznie jest dla zobowiazan. */
+
+
+
