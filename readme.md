@@ -27,34 +27,26 @@
 
 * ![Simplified profit and loss statment](Schematy/Ope/_ALTER_uspZrobWynik)
 
-* Screenshot example of simple P&L
-
-![Screenshot example](./Schematy/Ope/Wynik_Operacyjny.JPG)
+  ![Screenshot example](./Schematy/Ope/Wynik_Operacyjny.JPG)
 
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 
-* Screenshot example of analysis
-
-![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
+  ![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
 
 * ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
 
-* Screenshot example for aging receivables
 
-![Screenshot example for aging receivables](./Schematy/Ope/Wiekowanie_Naleznosci_total.JPG)
+  ![Screenshot example for aging receivables](./Schematy/Ope/Wiekowanie_Naleznosci_total.JPG)
 
-* Screenshot example for aging labilities
-
-![Screenshot example for aging labilities](./Schematy/Ope/Wiekowanie_Zobowiazan_total.JPG)
+  ![Screenshot example for aging labilities](./Schematy/Ope/Wiekowanie_Zobowiazan_total.JPG)
 
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 
-* Screenshot example for customers segmentation
 
-![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
+  ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
 * ![Transactions](Schematy/Ope/PROC_Transakcje)
 * ![Sales Rank](Schematy/Ope/usp_SprzedazRanking)
