@@ -20,9 +20,8 @@
 ### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2022
 * ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
 
-* Screenshot example of summary report
 
-![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
+  ![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
 
 
 * ![Simplified profit and loss statment](Schematy/Ope/_ALTER_uspZrobWynik)
