@@ -48,13 +48,13 @@
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
 * ![Transactions](Schematy/Ope/PROC_Transakcje)
-* ![Sales Rank](Schematy/Ope/usp_SprzedazRanking)
+* ![Fuel_Sales Rank](Schematy/Ope/uspSprz_Rank_Paliwa)
 
-  ![Sales Rank](./Schematy/Ope/TOP_Klienci.JPG)
+  ![Fuel_Sales Rank](./Schematy/Ope/Sprzedaz_paliw_Rank.JPG)
 
-* ![Supply Rank](Schematy/Ope/usp_DostawRanking) 
+* ![Fuel_Supply Rank](Schematy/Ope/uspDst_Rank_Paliwa) 
 
-  ![Supply Rank](./Schematy/Ope/TOP_Dostawcy.JPG)
+  ![Fuel_Supply Rank](./Schematy/Ope/Dostawy_Paliw_Rank.JPG)
 
 
 ### Functions
