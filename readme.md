@@ -27,6 +27,16 @@
 * ![Simplified profit and loss statment](Schematy/Ope/_ALTER_uspZrobWynik)
 
   ![Screenshot example](./Schematy/Ope/Wynik_Operacyjny.JPG)
+  
+  
+* ![Simplified cash flow statment](Schematy/Ope/uspCash_Flow)
+
+### Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
+### If user provide data only from future column 'Realny' will be empty.
+### If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
+
+  ![Screenshot example](./Schematy/Ope/Casf_Flow.JPG)
+    
 
 * ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
 
