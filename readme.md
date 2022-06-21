@@ -1,8 +1,8 @@
-## Petrol Station
+### Petrol Station
 
     Simplified simulation of petrol station.
 
-## Table of contents
+### Table of contents
 * [General info](#general-info)
 * [Technologies](#technologies)
 * [Features](#features)
@@ -10,12 +10,12 @@
 * [Acknowledgements](#Acknowledgements)
 * [Extras](#Extras)
 
-## General info
+### General info
 * Database diagram 
 
 ![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
 
-## Features
+### Features
 
 ### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2022
 * ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
@@ -31,9 +31,9 @@
   
 * ![Simplified cash flow statment](Schematy/Ope/uspCash_Flow)
 
-### Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
-### If user provide data only from future column 'Realny' will be empty.
-### If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
+## Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
+## If user provide data only from future column 'Realny' will be empty.
+## If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
 
   ![Screenshot example](./Schematy/Ope/Casf_Flow.JPG)
     
@@ -54,13 +54,13 @@
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 
-### The idea of customer segmentation is to choose correct parameters to describe real value of customers.
-### Choosen parameters are (in order from left to right according to below screenshot): 
-### - income from invoices
-### - percentage of unpaid income from invoices calculated as unpaid income divided by income
-### - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
-### - number of invoices
-### - number of bought fuels
+## The idea of customer segmentation is to choose correct parameters to describe real value of customers.
+## Choosen parameters are (in order from left to right according to below screenshot): 
+## - income from invoices
+## - percentage of unpaid income from invoices calculated as unpaid income divided by income
+## - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
+## - number of invoices
+## - number of bought fuels
 
 
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
@@ -100,16 +100,16 @@
 * ![Script to generate kalendar data](Schematy/Czas/Kalendarz-2022)
 
 	
-## Technologies
+### Technologies
 Project is created with:
 * Microsoft SQL Server 2014 
 
-## Acknowledgements
+### Acknowledgements
 Inspiration to this project was to join working experiance as financial analyst and  knowledge and also experience  in field of
 SQL databases to show some examples of my skills.
 
 	
-## Setup
-## Extras
+### Setup
+### Extras
 *Automated pricing system 
 
