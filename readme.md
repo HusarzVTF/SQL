@@ -54,6 +54,14 @@
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 
+### The idea of customer segmentation is to choose correct parameters to describe real value of customers.
+### Choosen parameters are (in order from left to right according to below screenshot): 
+### - income from invoices
+### - percentage of unpaid income from invoices calculated as unpaid income divided by income
+### - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
+### - number of invoices
+### - number of bought fuels
+
 
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
