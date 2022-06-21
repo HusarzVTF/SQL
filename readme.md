@@ -31,9 +31,9 @@
   
 * ![Simplified cash flow statment](Schematy/Ope/uspCash_Flow)
 
-# Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
-# If user provide data only from future column 'Realny' will be empty.
-# If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
+ Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
+ If user provide data only from future column 'Realny' will be empty.
+ If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
 
   ![Screenshot example](./Schematy/Ope/Casf_Flow.JPG)
     
@@ -51,24 +51,24 @@
 
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
-# BEP calculator is useful tool to answer questions like:
-# "How much litres of fuel one we need to sell in current prices and in provided period of time,
-# if we sell one hundred litres of fuel two and three or if we want to cover half costs by selling fuel two."
-# We are able to provide such parameters: 
-# - period of time
-# - fuel/s
-# - quantity for fuels or percentage of costs to cover
+ BEP calculator is useful tool to answer questions like:
+ "How much litres of fuel one we need to sell in current prices and in provided period of time,
+ if we sell one hundred litres of fuel two and three or if we want to cover half costs by selling fuel two."
+ We are able to provide such parameters: 
+ - period of time
+ - fuel/s
+ - quantity for fuels or percentage of costs to cover
 
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 
-# The idea of customer segmentation is to choose correct parameters to describe real value of customers.
-# Choosen parameters are (in order from left to right according to below screenshot): 
-# - income from invoices
-# - percentage of unpaid income from invoices calculated as unpaid income divided by income
-# - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
-# - number of invoices
-# - number of bought fuels
+ The idea of customer segmentation is to choose correct parameters to describe real value of customers.
+ Choosen parameters are (in order from left to right according to below screenshot): 
+ - income from invoices
+ - percentage of unpaid income from invoices calculated as unpaid income divided by income
+ - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
+ - number of invoices
+ - number of bought fuels
 
 
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
