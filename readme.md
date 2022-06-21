@@ -51,6 +51,14 @@
 
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
+## BEP calculator is useful tool to answer questions like:
+## "How much litres of fuel one we need to sell in current prices and in provided period of time,
+## if we sell one hundred litres of fuel two and three or if we want to cover half costs by selling fuel two."
+## We are able to provide such parameters: 
+## - period of time
+## - fuel/s
+## - quantity for fuels or percentage of costs to cover
+
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
 
