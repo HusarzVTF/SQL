@@ -104,6 +104,15 @@
 
 ![Differences in payments conditions](./Schematy/Ope/V_War_Rozb.JPG)
 
+
+### Automated pricing system 
+
+It's a mechanism to ensure gross margin on desirable level. The table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw)
+has column Marza which is consider as desirable margin level counted from delivery price. On the table Zbiorniki
+is trigger ![trMar](./Schematy/Ope/Ope.trMar) which calcuclates prices after insert, update, delete made on Zbiorniki.
+
+
+
 ### Scripts
 * ![Script to generate kalendar data](Schematy/Czas/Kalendarz-2022)
 
@@ -119,5 +128,5 @@ SQL databases to show some examples of my skills.
 	
 ### Setup
 ### Extras
-*Automated pricing system 
+
 
