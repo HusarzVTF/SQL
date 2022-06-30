@@ -52,8 +52,8 @@
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
  BEP calculator is useful tool to answer questions like:
- "How much litres of fuel one we need to sell in current prices and in provided period of time,
- if we sell one hundred litres of fuel two and three or if we want to cover half costs by selling fuel two."
+ "How much litres of fuel type one we need to sell in current prices and in provided period of time,
+ if we sell one hundred litres of fuel type two and three or if we want to cover half costs by selling fuel two."
  We are able to provide such parameters: 
  - period of time
  - fuel/s
@@ -107,7 +107,7 @@
 
 ### Automated pricing system 
 
-It's a mechanism to ensure gross margin (without substracting costs) on desirable level. Sales price is caluclated from 
+It's a mechanism to ensure gross margin (without substracting costs like wages etc.) on desirable level. Sales price is caluclated from 
 average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3. 
 Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel.
 Desirable margin level is stored in column Marza in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw). 
@@ -117,8 +117,9 @@ After every supply of fuel which is represented in ![Dostawy](./Schematy/Ope/Dos
 also available in ![Dostawy](./Schematy/Ope/Dostawy)) changes current levels of fuels flow in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw).
 After every DML event (without merge) made on table Zbiorniki trigger ![trMar](./Schematy/Ope/Ope.trMar) updates
 sales prices to current level in table ![CenyPa](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw).
-When sales invoice is made function ![Ope.WSprz](./Schematy/Ope/Sprzedaz) calculates net amount and function ![Ope.SpKWBrutto](./Schematy/Ope/SpKWBrutto-ALTER)
-calculates gross amount.
+If new fuel will be added to table Zbiorniki trigger ![trNEWCenPaliwa](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw)
+will update table CenyPa with new fuel.
+When sales invoice is made function ![Ope.WSprz](./Schematy/Ope/Sprzedaz) calculates net amount and function ![Ope.SpKWBrutto](./Schematy/Ope/SpKWBrutto-ALTER) calculates gross amount.
 
 
 
