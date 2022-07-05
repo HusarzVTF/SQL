@@ -88,8 +88,11 @@ quantity to sell. We can mix it like that:
  
  The result of such query is shown on below screenshot:
  
+ (./Stacja_Paliw/Schematy/Ope/BEP_calc.JPG)
  
- 
+ In this case we see that we don't have enough gas in stocks if we want to keep strategy
+ with provided parameters. In this case we need to change margin levels to higher
+ or buy more gas or combine all off it.
  
 
 
