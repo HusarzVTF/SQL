@@ -51,6 +51,11 @@
 
 * ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
 
+ Break event point gives answer how much a company needs to sell to cover all costs (fixed and variable which refers to the volume of production).
+ When production is greater then estimated by BEP company is earning profit.
+ In some cases it is good to have a better precision and more flexible simulation.
+ Especially when we have more than one product with different margin levels and supply prices.
+ All calculations are in current margin levels, supply prices and costs.
  BEP calculator is useful tool to answer questions like:
  "How much litres of fuel type one we need to sell in current prices and in provided period of time,
  if we sell one hundred litres of fuel type two and three or if we want to cover half costs by selling fuel two."
@@ -58,6 +63,34 @@
  - period of time
  - fuel/s
  - quantity for fuels or percentage of costs to cover
+ 
+ Which are represented by such parameters in BEP_Kalk stored procedure:
+ 
+ 	@od = '2020-01-01',
+	@do = '2022-12-31',
+	@typ = N'Benzyna',
+	@il = 105999,
+	@typ_1 = N'Gaz',
+	@ks_pro = 0.57,
+	@typ_2 = NULL,
+	@il_2 = NULL,
+	@typ_3 = NULL,
+	@ks_pro_1 = NULL
+		
+Which means that we wanted to know how much oil do we need to sell if we sell 105 999 litres of petrol 
+and we will simulate that we want to cover 45% of costs by selling gas. 
+We are able to change the question flexible with parameters like costs level to cover and
+quantity to sell. We can mix it like that:
+ - we provide quantity for two fuels
+ - we provide quantity for one fuel and costs percentage to cover for second fuel
+ - we provide percentage costs to cover for two fuels
+ In every case we are able to provide data for two fules out of three.
+ 
+ The result of such query is shown on below screenshot:
+ 
+ 
+ 
+ 
 
 
 * ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
