@@ -1,9 +1,0 @@
-
-
-USE Stacja_Paliw
-GO
-ALTER TABLE Ope.Pracownicy ADD CONSTRAINT chkPensja CHECK (Pensja>0)
-
-/* nalozenie restrykcji na kolumne Pensja w tabeli Pracownicy by nie mozna bylo wstawic pensji w ujemnej wartosci. */
-
-

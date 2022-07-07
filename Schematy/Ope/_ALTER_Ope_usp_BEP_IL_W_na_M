@@ -1,0 +1,77 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspBEP_IL_W_na_M
+
+AS
+
+DECLARE @ks real=(SELECT SUM(Pensja) FROM Stacja_Paliw.Ope.Pracownicy)
+
+
+SELECT
+
+C.IDPALIW, 
+Z.RodzajPaliwa,
+Z.JM , 
+CenaJedn,
+@ks as Licznik,
+ROUND(CenaJedn-SUM(D.KwotaNetto)/SUM(D.IloscPaliwa),2) AS Mianownik,
+ROUND(@ks/(CenaJedn-SUM(D.KwotaNetto)/SUM(D.IloscPaliwa)),2) AS BEP_Ilosciowy,
+Z.StanZbiornika,
+Z.StanZbiornika-ROUND(@ks/(CenaJedn-SUM(D.KwotaNetto)/SUM(D.IloscPaliwa)),2) AS Zapas,
+ROUND((@ks/(CenaJedn-SUM(D.KwotaNetto)/SUM(D.IloscPaliwa))*CenaJedn),2) AS BEP_Wartosciowy
+
+INTO #wynik
+
+FROM Stacja_Paliw.Ope.CenyPa AS C
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM , CenaJedn, StanZbiornika
+ORDER BY C.IDPALIW
+
+SELECT*FROM #wynik ORDER BY IDPALIW
+
+
+IF EXISTS (SELECT Zapas FROM #wynik WHERE Zapas<0 )
+
+BEGIN
+
+SELECT RodzajPaliwa,JM,Zapas*-1 AS Dokupic
+FROM #wynik
+WHERE Zapas<0 
+
+PRINT
+
+'Ilosc paliwa dostepnego w sprzedazy jest zbyt mala do przekroczenia break even point. 
+Trzeba zamowic dodatkowa ilosc paliwa w wysokosci wskazanej w tabelce albo zamknac dzialanosc 
+jesli nie masz wiecej srodkow finansowych, bo dzialanosc przy dostepnych zasobach jest nieoplacalna.'
+
+END
+
+IF EXISTS (SELECT Zapas FROM #wynik WHERE Zapas=0 )
+
+BEGIN
+
+SELECT RodzajPaliwa,JM,Zapas
+FROM #wynik 
+WHERE Zapas=0 
+
+PRINT 'Ilosc paliwa dostepnego w sprzedazy jest na styk break even point.'
+
+END
+
+
+DROP TABLE #wynik
+
+/* Poprzednia wersja tej procedury nie pokazywala pozostalego zapasu paliwa,
+albo jego braku i koniecznosci uzupelnienia ich by osiagnac BEP lub zakonczenia 
+dzialalnosci w przypadku braku srodkow finansowych i nie informowala o tym, 
+ze ilosc paliwa jest na styk BEP gdyby sie tak zdarzylo. */
+
+
+
+
+

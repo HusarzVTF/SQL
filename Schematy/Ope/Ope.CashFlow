@@ -1,0 +1,172 @@
+
+
+
+USE Stacja_Paliw
+GO
+
+
+ALTER PROC Ope.uspCashflow (@dni int , @typ varchar(8) )
+
+AS 
+
+IF @typ NOT IN('prognoza','realny')
+
+BEGIN
+PRINT 'Wpisano nieprawidlowy typ, nalezy wpisac prognoza lub realny '
+END;
+
+
+
+DECLARE @dzis date=GETDATE()
+
+
+
+
+IF @typ='prognoza'
+BEGIN
+
+DECLARE @CashFlow table(Cash varchar(7) PRIMARY KEY, OkresI real, OkresII real, OkresIII real);
+
+INSERT INTO @CashFlow (Cash) VALUES('INCOME'), ('OUTCOME'),('FLOW');
+
+UPDATE @CashFlow SET OkresI= ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN CAST(GETDATE() AS Date) AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) WHERE Cash='INCOME';
+
+UPDATE @CashFlow SET OkresII= ISNULL ((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS Date))),0)  WHERE Cash='INCOME';
+
+
+UPDATE @CashFlow SET OkresIII= ISNULL( (SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE TerminZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date)) AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0)
+WHERE Cash='INCOME';
+
+
+
+
+
+
+UPDATE @CashFlow SET OkresI= (ISNULL(  (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN CAST(GETDATE() AS Date) AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis)))  *-1 
+WHERE Cash='OUTCOME';
+
+UPDATE @CashFlow SET OkresII=(ISNULL( (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis))) *-1 WHERE Cash='OUTCOME';
+
+
+UPDATE @CashFlow SET OkresIII=(ISNULL( (SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE TerminZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis)) )*-1 WHERE Cash='OUTCOME';
+
+
+DECLARE @FlowOkrIInc real=(SELECT OkresI FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkrIOut real=(SELECT OkresI FROM @CashFlow WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr2IInc real=(SELECT OkresII FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkr2IOut real=(SELECT OkresII FROM @CashFlow WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr3IInc real=(SELECT OkresIII FROM @CashFlow WHERE Cash='INCOME')
+
+DECLARE @FlowOkr3IOut real=(SELECT OkresIII FROM @CashFlow WHERE Cash='OUTCOME')
+
+
+
+UPDATE @CashFlow SET OkresI=@FlowOkrIInc + @FlowokrIOut
+WHERE Cash='FLOW';
+
+UPDATE @CashFlow SET OkresII=@FlowOkr2IInc + @Flowokr2IOut
+WHERE Cash='FLOW'; 
+
+UPDATE @CashFlow SET OkresIII=@FlowOkr3IInc + @Flowokr3IOut
+WHERE Cash='FLOW';
+
+
+
+SELECT*FROM @CashFlow
+
+
+END;
+
+
+IF @typ='realny'
+
+BEGIN
+
+DECLARE @CashFlowR table(Cash varchar(7) PRIMARY KEY, OkresI real, OkresII real, OkresIII real);
+
+INSERT INTO @CashFlowR (Cash) VALUES('INCOME'), ('OUTCOME'),('FLOW');
+
+UPDATE @CashFlowR SET OkresI= ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN CAST(GETDATE() AS Date) AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) WHERE Cash='INCOME';
+
+UPDATE @CashFlowR SET OkresII=ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) AND DATEADD(d,2*@dni,CAST(GETDATE() AS Date))),0) WHERE Cash='INCOME';
+
+
+UPDATE @CashFlowR SET OkresIII=ISNULL((SELECT SUM(KwotaNetto) FROM Sprzedaz 
+WHERE DataZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date)) AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0) WHERE Cash='INCOME';
+
+
+
+UPDATE @CashFlowR SET OkresI=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN CAST(GETDATE() AS Date) AND DATEADD(d,@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis)) )*-1 WHERE Cash='OUTCOME';
+
+UPDATE @CashFlowR SET OkresII=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN DATEADD(d,@dni,CAST(GETDATE() AS Date)) 
+AND DATEADD(d,2*@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis)) ) *-1 WHERE Cash='OUTCOME';
+
+
+UPDATE @CashFlowR SET OkresIII=(ISNULL((SELECT SUM(KwotaNetto) FROM Dostawy 
+WHERE DataZaplaty BETWEEN DATEADD(d,2*@dni,CAST(GETDATE() AS Date))
+ AND DATEADD(d,3*@dni,CAST(GETDATE() AS DATE))),0) + Ope.LiczWyn(CAST (GETDATE() as date), 
+DATEADD(d,@dni,@dzis)) )*-1 WHERE Cash='OUTCOME';
+
+
+DECLARE @FlowOkrIIncR real=(SELECT OkresI FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkrIOutR real=(SELECT OkresI FROM @CashFlowR WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr2IIncR real=(SELECT OkresII FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkr2IOutR real=(SELECT OkresII FROM @CashFlowR WHERE Cash='OUTCOME')
+
+DECLARE @FlowOkr3IIncR real=(SELECT OkresIII FROM @CashFlowR WHERE Cash='INCOME')
+
+DECLARE @FlowOkr3IOutR real=(SELECT OkresIII FROM @CashFlowR WHERE Cash='OUTCOME')
+
+
+
+UPDATE @CashFlowR SET OkresI=@FlowOkrIIncR + @FlowokrIOutR
+WHERE Cash='FLOW';
+
+UPDATE @CashFlowR SET OkresII=@FlowOkr2IIncR + @Flowokr2IOutR
+WHERE Cash='FLOW'; 
+
+UPDATE @CashFlowR SET OkresIII=@FlowOkr3IIncR + @Flowokr3IOutR
+WHERE Cash='FLOW';
+
+
+
+SELECT*FROM @CashFlowR
+
+
+
+
+
+END;
+
+
+
+--Procedura zwracająca Cash flow liczony od dziś zawsze na 3 okresy będące wielokrotnością okresu co jaki chcemy liczyć Cash Flow. Zmieniono sposob liczenia wynagrodzen.--
+
+
+
+
