@@ -5,7 +5,10 @@ USE Stacja_Paliw
 
 GO
 
-CREATE FUNCTION Ope.u_LiczWyn (@od date, @do date) 
+IF OBJECT_ID('Ope.uf_LiczWyn) IS NOT NULL
+DROP FUNCTION Ope.uf_LiczWyn;
+
+CREATE FUNCTION Ope.uf_LiczWyn (@od date, @do date) 
 
 RETURNS real
 
