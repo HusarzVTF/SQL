@@ -58,7 +58,7 @@ END;
 
 
 
-/*Procedura wypełniająca tabelę danymi z uproszczonym  zrealizowanym wynikiem operacyjnym  za wskazany okres czasu.
+/*Procedura wypełniająca tabelę tymczasowa z danymi uproszczonym  zrealizowanym wynikiem operacyjnym  za wskazany okres czasu.
 Na jpg wynik dla danych za okres 2020-2022*/
 
 
