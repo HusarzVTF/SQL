@@ -1,0 +1,11 @@
+
+
+USE Stacja_Paliw;
+
+GO
+
+CREATE SCHEMA Ope;
+
+-- Tworzenie schematu Ope --
+
+
