@@ -1,0 +1,12 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt='Sprzedaz', @NRFV=20, @idkon=8, @data='2022-08-09'
+
+/* sciagnecie naleznosci */
+
+
+
