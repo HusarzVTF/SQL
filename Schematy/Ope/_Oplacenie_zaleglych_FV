@@ -1,0 +1,16 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='102FV', @idkon=2, @data='2022-07-19'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='103F', @idkon=5, @data='2022-07-31'
+
+EXEC Ope.uspDataZap @obiekt='Dostawy',@NRFV='F01', @idkon=9, @data='2022-08-09'
+
+/*Oplacenie zaleglych Fv za dostawy paliw*/
+
+
+
