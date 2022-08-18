@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+GO
+ALTER TABLE Ope.Dostawy
+DROP CONSTRAINT CK__Dostawy__Podatek__7E37BEF6
+
+/* usuwanie checku na kolumnie podatek w tabeli Dostawy. Check blokował wartość podatku równa zero.
+A taka wartosc moze wystapic gdy rzad wprowadzi zerowy podatek od paliw. */
+
