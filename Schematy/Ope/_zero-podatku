@@ -1,0 +1,12 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Podatek @rdz='Gaz',@stawka=0
+EXEC Ope.uspZmien_Podatek @rdz='Ropa',@stawka=0
+EXEC Ope.uspZmien_Podatek @rdz='Benzyna',@stawka=0
+
+/*Ustawienie zerowego podatku jest to symulacja wzniesienia podatku na paliwa przez rzad.*/
+
