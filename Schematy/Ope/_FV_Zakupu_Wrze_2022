@@ -1,0 +1,111 @@
+Use Stacja_Paliw
+
+GO
+
+EXEC	Ope.uspWstawFV_Zakup
+		@nrfv =N'0002A' ,
+		@pozfv = 1,
+		@id_d = 1237,
+		@iddost = 1,
+		@idprac =1 ,
+		@idpal = 1,
+		@ilo = 350000,
+		@kwn = 1872500,
+		@kwb = 1872500,
+		@term ='2022-08-26',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr =  '2022-08-01',
+		@dataz = '2022-09-01',
+		@datakz = '2022-09-01'
+
+		
+EXEC	Ope.uspWstawFV_Zakup
+		@nrfv =N'0X02B' ,
+		@pozfv = 1,
+		@id_d = 1251,
+		@iddost = 2,
+		@idprac =1 ,
+		@idpal = 2,
+		@ilo = 500000,
+		@kwn = 940000,
+		@kwb =940000 ,
+		@term ='2022-08-25',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr =  '2022-08-15',
+		@dataz = '2022-09-01',
+		@datakz = '2022-09-01'
+
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv =N'00102F' ,
+		@pozfv = 1,
+		@id_d = 1266,
+		@iddost =3 ,
+		@idprac = 2,
+		@idpal = 3,
+		@ilo = 450000,
+		@kwn =2934000 ,
+		@kwb = 2934000,
+		@term = '2022-10-15',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr = '2022-08-30',
+		@dataz = NULL,
+		@datakz = NULL
+
+		
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'0077FV',
+		@pozfv = 1,
+		@id_d =1268 ,
+		@iddost = 4,
+		@idprac = 2,
+		@idpal = 1,
+		@ilo = 456000,
+		@kwn = 2152320,
+		@kwb = 2152320,
+		@term = '2022-10-16',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr = '2022-09-01',
+		@dataz = NULL,
+		@datakz = NULL
+
+
+		EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'FV00002',
+		@pozfv = 1,
+		@id_d = 1279,
+		@iddost = 5,
+		@idprac =3 ,
+		@idpal = 2,
+		@ilo = 460000,
+		@kwn = 901600,
+		@kwb = 901600,
+		@term = '2022-10-22',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr = '2022-09-12',
+		@dataz = NULL,
+		@datakz = NULL
+
+		EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'107FVA',
+		@pozfv = 1,
+		@id_d = 1279,
+		@iddost = 6,
+		@idprac = 3,
+		@idpal = 3,
+		@ilo =480000 ,
+		@kwn = 3264000,
+		@kwb = 3264000,
+		@term = '2022-09-17',
+		@podatek = 0,
+		@tpl = 'przelew',
+		@czastr = '2022-09-12',
+		@dataz = NULL,
+		@datakz = NULL
+
+		/*Zakup paliw po wprowadzeniu zerowego podatku na paliwa przez rzad*/
+		
