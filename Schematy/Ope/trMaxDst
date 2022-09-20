@@ -1,0 +1,33 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trMaxDst') IS NOT NULL
+DROP TRIGGER Ope.trMaxDst;
+
+GO 
+
+CREATE  TRIGGER Ope.trMaxDst ON Ope.Dostawy AFTER INSERT,UPDATE
+
+AS
+
+IF EXISTS(
+
+SELECT IDFVZak FROM Ope.Dostawy AS D
+
+JOIN Ope.Zbiorniki AS Z ON D.IDPaliw=Z.IDPaliwa 
+
+WHERE IloscPaliwa>Pojemnosc-StanZbiornika
+ )
+ 
+BEGIN
+PRINT'Proba przyjecia dostawy na wieksza ilosc niż moze przyjac zbiornik.'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger blokujacy przyjecie dostawy paliwa na wieksza ilosc niz to mozliwe.--
+
+
+
