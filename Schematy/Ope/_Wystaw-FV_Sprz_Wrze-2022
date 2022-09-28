@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz @IdKlienta =1,@IdPracownika=1,@IDPaliwa=1,@IloscPaliwa=10000,@DataZaplaty='2022-09-27',@DataAktuZaplaty='2022-09-27'
+EXEC Ope.uspWstawFV_Sprzedaz @IdKlienta =5,@IdPracownika=1,@IDPaliwa=2,@IloscPaliwa=170000,@DataZaplaty='2022-09-27',@DataAktuZaplaty='2022-09-27' 
+EXEC Ope.uspWstawFV_Sprzedaz 3,1,3,10500,null,null
+
