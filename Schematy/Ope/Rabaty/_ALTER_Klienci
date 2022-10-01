@@ -1,0 +1,9 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.Klienci ADD  Poziom_Rabatu tinyint 
+
+/* Dodanie kolumny z poziomami rabatow dla klientow */
