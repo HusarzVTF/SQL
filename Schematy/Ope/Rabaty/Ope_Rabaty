@@ -1,0 +1,18 @@
+
+
+USE Stacja_Paliw
+GO
+
+IF OBJECT_ID('Ope.Rabaty') IS NOT NULL
+DROP TABLE Ope.Rabaty
+
+GO
+
+CREATE TABLE Ope.Rabaty(
+
+Row_ID int PRIMARY KEY IDENTITY,
+Poziom_Rab tinyint not null CHECK (Poziom_Rab>=0),
+ID_Paliwa tinyint FOREIGN KEY REFERENCES Ope.Zbiorniki(IDPALIWA),
+Jedn_war_Rab float not null  CHECK (Jedn_war_Rab>=0 AND Jedn_war_Rab<=1))
+
+/* Tabela z rabatami */
