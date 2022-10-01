@@ -1,0 +1,13 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+UPDATE Ope.Klienci SET Poziom_Rabatu=3 WHERE Idklienta=5 
+UPDATE Ope.Klienci SET Poziom_Rabatu=2 WHERE Idklienta=2
+UPDATE Ope.Klienci SET Poziom_Rabatu=1 WHERE Idklienta=8
+UPDATE Ope.Klienci SET Poziom_Rabatu=0 WHERE Idklienta NOT IN(5,2,8)
+
+/*Na podstawie klasyfikacji klientów bazujacej na ich dotychczasowych zakupach przyznane zostaly rabaty wybranym klientom*/
+
