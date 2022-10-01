@@ -1,0 +1,30 @@
+
+
+USE Stacja_Paliw;
+
+GO
+
+ IF OBJECT_ID('Ope.trRabaty') IS NOT NULL
+ DROP TRIGGER Ope.trRabaty;
+
+GO
+
+CREATE TRIGGER Ope.trRabaty ON Ope.Klienci AFTER INSERT,UPDATE
+ 
+AS
+
+IF EXISTS(
+
+SELECT  Poziom_Rabatu FROM Ope.Klienci 
+
+WHERE Poziom_Rabatu NOT IN (SELECT Poziom_Rab FROM Ope.Rabaty)
+
+)
+BEGIN
+PRINT'Proba przyznania  rabatu klientowi, ktorego nie ma.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* trigger blokujacy wstawienie rabatu, ktorego nie ma w tabeli rabaty*/
+
