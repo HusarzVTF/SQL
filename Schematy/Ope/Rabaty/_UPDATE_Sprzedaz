@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+GO
+
+UPDATE Ope.Sprzedaz SET Typ_rabatu='brak'
+UPDATE Ope.Sprzedaz SET  Rabat_Jedn=0
+UPDATE Ope.Sprzedaz SET Wartosc_Rabatu=0
+
+/*uzupelnienie dotychczasowych danych sprzedazowych dla nowych kolumn zwiazanych z rabatami*/
