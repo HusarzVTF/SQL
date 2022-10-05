@@ -1,0 +1,37 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER FUNCTION Ope.CenaSprz (@IDPaliwa tinyint, @idklienta int ) 
+
+RETURNS real
+
+WITH SCHEMABINDING
+
+AS
+
+BEGIN
+
+DECLARE @cena real = 
+
+(SELECT
+ 
+ CenaJedn-Jedn_war_Rab
+ 
+ FROM Ope.CenyPa As CP
+ 
+ JOIN Ope.Rabaty  AS R ON CP.IDPALIW=R.ID_Paliwa
+
+ JOIN Ope.Klienci AS K ON R.Poziom_Rab=K.Poziom_Rabatu
+ 
+ WHERE IDPALIW=@IDPaliwa AND K.IdKlienta=@idklienta);
+
+RETURN @cena;
+
+END;
+
+
+/* Funkcja potrzebna do wyliczenia jednostkowej ceny sprzedazy dla danego paliwa z uwzglednieniem rabatu danego klienta co zostalo ddodane w tej modyfikacji funkcji */
+
