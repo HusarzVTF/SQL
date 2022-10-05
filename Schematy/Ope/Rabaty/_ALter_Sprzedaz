@@ -1,0 +1,11 @@
+
+
+USE Stacja_Paliw
+GO
+
+ALTER TABLE Ope.Sprzedaz ADD Typ_rabatu varchar(12) CHECK (Typ_rabatu IN ('reczny','automatyczny','brak'));
+ALTER TABLE Ope.Sprzedaz ADD Rabat_Jedn float CHECK (Rabat_Jedn>=0);
+ALTER TABLE Ope.Sprzedaz ADD Wartosc_Rabatu real CHECK (Wartosc_Rabatu>=0);
+
+/* dodanie do tabeli sprzedaz kolumn zwiazanych z rabatami*/
+
