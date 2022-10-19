@@ -1,0 +1,40 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID ('Ope.ufRab_klient') IS NOT NULL
+DROP FUNCTION Ope.ufRab_klient;
+
+GO
+
+CREATE FUNCTION
+
+Ope.ufRab_klient (@idklienta int, @idpaliwa tinyint)
+
+RETURNS float
+
+WITH SCHEMABINDING
+
+AS
+
+BEGIN
+
+DECLARE @Jedn_war_Rab float = (
+
+SELECT Jedn_war_Rab
+
+FROM Ope.Rabaty
+
+WHERE ID_Paliwa = @idpaliwa
+
+AND 
+
+Poziom_Rab = (SELECT Poziom_Rabatu FROM Ope.Klienci WHERE IdKlienta = @idklienta))
+
+RETURN @Jedn_war_Rab;
+
+END;
+
+--Funkcja zwracajaca poziom rabatu z tabeli Klienci na podstawie podanego idklienta i paliwa--
