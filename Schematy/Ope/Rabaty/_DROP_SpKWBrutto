@@ -1,0 +1,7 @@
+USE Stacja_Paliw
+
+GO
+
+DROP FUNCTION Ope.SpKWBrutto
+
+/*stara funkcja zostanie zastpiona nowa*/
