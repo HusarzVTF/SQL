@@ -1,0 +1,35 @@
+
+
+USE Stacja_Paliw;
+
+
+GO
+
+
+ IF OBJECT_ID ('Ope.trRab_Sprz_brak') IS NOT NULL
+ DROP TRIGGER Ope.trRab_Sprz_brak;
+
+  GO
+
+CREATE TRIGGER trRab_Sprz_brak ON Ope.Sprzedaz AFTER INSERT, UPDATE
+ 
+AS
+
+IF EXISTS(
+
+
+SELECT Rabat_Jedn  FROM Ope.Sprzedaz 
+
+WHERE (Rabat_Jedn>0 OR Wartosc_Rabatu>0)
+
+AND Typ_rabatu='brak'
+ 
+
+)
+BEGIN
+PRINT 'Jezeli nie ma rabatu to rabat jednostkowy i wartosciowy moga wynosic jedynie zero.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/*blokuje jak w komunikacie*/
