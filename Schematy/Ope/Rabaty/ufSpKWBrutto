@@ -1,0 +1,36 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+
+
+CREATE FUNCTION Ope.ufSpKWBrutto (@IdPaliwa tinyint, @Ilosc real, @idklienta int)
+RETURNS real
+WITH SCHEMABINDING
+
+
+AS
+
+
+
+BEGIN
+
+DECLARE @akc real = (SELECT ROUND(stawka,2) FROM Ope.StPodat WHERE ID=@IdPaliwa)
+
+DECLARE @cena real = ROUND( (SELECT  CenaJedn-Jedn_war_Rab FROM Ope.CenyPa As CP
+ 
+ JOIN Ope.Rabaty  AS R ON CP.IDPALIW=R.ID_Paliwa
+
+ JOIN Ope.Klienci AS K ON R.Poziom_Rab=K.Poziom_Rabatu
+ 
+ WHERE IDPALIW = @IDPaliwa AND K.IdKlienta = @idklienta),2)
+
+DECLARE @KWB real = ROUND(ROUND((@akc+@cena),2)*ROUND(@Ilosc,2),2) 
+				
+
+RETURN @KWB
+END;
+
+--nowa funkcja obliczajaca kwote brutto dla danego idpaliwa ,ilosci i klienta--
