@@ -1,0 +1,40 @@
+
+
+USE Stacja_Paliw;
+
+GO
+
+
+ IF OBJECT_ID('Ope.trRab_Sprz-_klient_konf') IS NOT NULL
+ DROP TRIGGER Ope.trRab_Sprz_klient_konf;
+
+ GO
+
+CREATE TRIGGER Ope.trRab_Sprz_klient_konf ON Ope.Sprzedaz AFTER INSERT, UPDATE
+ 
+AS
+
+IF EXISTS(
+
+
+SELECT Rabat_Jedn  FROM Ope.Sprzedaz AS S 
+
+JOIN Ope.Klienci  AS K ON S.IdKlienta=K.IdKlienta
+
+JOIN Ope.Rabaty AS R ON R.ID_Paliwa = S.IDPaliwa AND K.Poziom_Rabatu = R.Poziom_Rab
+
+WHERE R.Jedn_war_Rab>0 
+
+AND S.Typ_rabatu='reczny' 
+ 
+
+)
+
+
+BEGIN
+PRINT 'Proba wstawienia rabatu recznego na klienci, ktory ma przyznany rabat odgornie'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* blokuje jak w komunikacie*/
