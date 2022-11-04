@@ -1,0 +1,42 @@
+
+
+USE Stacja_Paliw;
+
+
+GO
+
+
+ IF OBJECT_ID('Ope.trRab_Sprz') IS NOT NULL
+ DROP TRIGGER Ope.trRab_Sprz;
+
+  GO
+
+CREATE TRIGGER trRab_Sprz ON Ope.Sprzedaz AFTER INSERT, UPDATE
+ 
+AS
+
+IF EXISTS(
+
+
+SELECT Rabat_Jedn 
+
+FROM Ope.Sprzedaz 
+
+WHERE Typ_rabatu='reczny'  
+
+AND
+
+(Rabat_Jedn=0
+
+OR
+
+Rabat_Jedn>(SELECT Jedn_war_Rab FROM Ope.Rabaty WHERE Poziom_Rab=2 AND ID_Paliwa=IDPaliwa)) 
+ 
+)
+BEGIN
+PRINT 'Wartosc recznie ustawianego rabatu nie moze byc wieksza od poziomu drugiego rabatu na danym paliwie ani rowna zero.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/*blokuje jak w komunikacie*/
