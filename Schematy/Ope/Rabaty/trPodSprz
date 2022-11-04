@@ -1,0 +1,41 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trPodSprz ON Ope.Sprzedaz
+AFTER INSERT, UPDATE
+AS
+
+DECLARE @maxID bigint=(SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @maxIDPa tinyint=(SELECT IDPaliwa FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @akcyza real=(SELECT ROUND(Stawka,2) FROM Ope.StPodat WHERE ID=@maxIDPa) 
+
+DECLARE @Ilo real=(SELECT ROUND(IloscPaliwa,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @kwN real=(SELECT ROUND(KwotaNetto,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+
+DECLARE @kwB real=ROUND(ROUND(@Ilo*@akcyza,2)+ROUND(@kwN,2),2) 
+
+DECLARE @MaxKWB real=ROUND((SELECT ROUND(KwotaBrutto,2) FROM Ope.Sprzedaz WHERE ID=@maxID),2)
+
+DECLARE @roznica real=ROUND(@kwB-@MaxKWB,2)
+
+IF ROUND(@kwB,2)<>ROUND(@MaxKWB,2)
+
+
+BEGIN
+PRINT 'Nieprawidlowa kwota brutto. Operacja zostala cofnieta roznica wynosi '+ CAST(@roznica as varchar)+' kwota z funkcji wynosi ' 
++ CAST(@MaxKWB as varchar)+' kwota z triggera wynosi '+CAST(@kwB as varchar)
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+
+
+--Trigger sprawdzajcy czy kwota brutto jest poprawna--
+
+
