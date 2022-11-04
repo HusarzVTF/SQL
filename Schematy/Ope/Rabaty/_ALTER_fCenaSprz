@@ -4,21 +4,18 @@ USE Stacja_Paliw
 
 GO
 
+
 ALTER FUNCTION Ope.CenaSprz (@IDPaliwa tinyint, @idklienta int ) 
-
 RETURNS real
-
 WITH SCHEMABINDING
-
 AS
-
 BEGIN
 
 DECLARE @cena real = 
 
 (SELECT
  
- CenaJedn-Jedn_war_Rab
+ ROUND(CenaJedn-Jedn_war_Rab,2)
  
  FROM Ope.CenyPa As CP
  
@@ -32,6 +29,5 @@ RETURN @cena;
 
 END;
 
-
-/* Funkcja potrzebna do wyliczenia jednostkowej ceny sprzedazy dla danego paliwa z uwzglednieniem rabatu danego klienta co zostalo ddodane w tej modyfikacji funkcji */
-
+/* Funkcja potrzebna do wyliczenia ceny sprzedazy za sprzedana ilosc paliwa trzeba pomnozyc jej
+wynik przez ilosc paliwa jaka bedzie sprzedawana */
