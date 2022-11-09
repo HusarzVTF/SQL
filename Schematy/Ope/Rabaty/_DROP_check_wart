@@ -1,0 +1,9 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+ALTER TABLE Ope.Sprzedaz DROP CONSTRAINT CK__Sprzedaz__Wartos__0579B962
+
+/* obecny constraint jest nieodpowiedni dlatego jest likwidowany */
