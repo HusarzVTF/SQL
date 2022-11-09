@@ -1,0 +1,38 @@
+
+
+USE Stacja_Paliw
+GO
+
+
+ALTER TRIGGER Ope.trCzSprz ON Ope.Sprzedaz AFTER INSERT, UPDATE
+
+AS
+
+
+IF EXISTS(
+SELECT 
+
+TerminZaplaty,
+CzasTransakcji,
+DataZaplaty
+
+FROM Ope.Sprzedaz AS S
+
+JOIN Ope.Klienci AS K
+ON K.IdKlienta=S.IdKlienta  
+
+WHERE (DataZaplaty<CAST(CzasTransakcji AS date) 
+OR TerminZaplaty<CAST(CzasTransakcji AS date)) 
+AND K.DnidoZaplaty>0
+AND S.PozycjaNaFV>0
+
+)
+BEGIN
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. Dane nie zostaly wstawione lub zmienione w tabeli'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--trigger sprawdzajacy poprawnosc danych pod wzgledem termniow platnosci i zaplaty wobec czasu transakcji--
+
+ 
