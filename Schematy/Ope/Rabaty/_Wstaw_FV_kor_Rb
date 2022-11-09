@@ -1,0 +1,22 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+DECLARE	@return_value int
+
+EXEC
+
+@return_value = Ope.uspWstkor
+@obiekt = N'Sprzedaz',
+@fv = 25,
+@poz = 1,
+@pesel = N'12040678911'
+
+SELECT	'Return Value' = @return_value
+
+GO
+
+/* wystawienie fv korekty */
+
