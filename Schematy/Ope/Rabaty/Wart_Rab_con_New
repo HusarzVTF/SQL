@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+ALTER TABLE Ope.Sprzedaz ADD CHECK (Wartosc_Rabatu IS NOT NULL)
+
+/*nowy constraint na wartosc rabatu, ktory umozliwa wstawianie ujemnej wartosci rabatu co bedzie mozliwe w przypadku fv korekt*/
+
