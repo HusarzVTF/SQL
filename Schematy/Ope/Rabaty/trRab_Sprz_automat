@@ -1,0 +1,45 @@
+
+
+USE Stacja_Paliw;
+
+
+GO
+
+
+IF OBJECT_ID('Ope.trRab_Sprz_automat') IS NOT NULL
+DROP TRIGGER Ope.trRab_Sprz_automat;
+
+GO
+
+CREATE TRIGGER Ope.trRab_Sprz_automat ON Ope.Sprzedaz AFTER INSERT, UPDATE
+ 
+AS
+
+IF EXISTS(
+
+
+SELECT Rabat_Jedn  
+
+FROM Ope.Sprzedaz AS S 
+
+JOIN Ope.Klienci  AS K ON S.IdKlienta = K.IdKlienta
+
+JOIN Ope.Rabaty AS R ON R.ID_Paliwa = S.IDPaliwa AND K.Poziom_Rabatu = R.Poziom_Rab
+
+WHERE R.Jedn_war_Rab <> S.Rabat_Jedn 
+
+AND Typ_rabatu='automatyczny' 
+ 
+
+)
+
+
+BEGIN
+PRINT 'Proba wstawienia rabatu automatycznego niezgodnej wielkosci w ujeciu jednostkowym.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* Trigger blokujacy wstawienie z automatu rabatu innego niz zdeklarowany w tabeli rabatowej */
+
+
