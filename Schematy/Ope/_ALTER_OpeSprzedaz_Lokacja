@@ -1,0 +1,221 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspSprzedaz_Lokacja
+ 
+AS
+
+DECLARE @Tot_Gaz real = (SELECT SUM(KwotaNetto)
+FROM Ope.Sprzedaz AS S
+JOIN OPe.Zbiorniki AS Z ON S.IDPaliwa=Z.IDPaliwa
+WHERE Z.RodzajPaliwa='Gaz')
+
+
+DECLARE @Tot_Ropa real = (SELECT SUM(KwotaNetto)
+FROM Ope.Sprzedaz AS S
+JOIN OPe.Zbiorniki AS Z ON S.IDPaliwa=Z.IDPaliwa
+WHERE Z.RodzajPaliwa='Ropa')
+
+
+DECLARE @Tot_Ben real = (SELECT SUM(KwotaNetto)
+FROM Ope.Sprzedaz AS S
+JOIN OPe.Zbiorniki AS Z ON S.IDPaliwa=Z.IDPaliwa
+WHERE Z.RodzajPaliwa='Benzyna')
+
+
+
+SELECT K.IdKlienta, 
+NazwaKlienta, 
+ISNULL(Z.RodzajPaliwa,'brak') as RodzajPaliwa, 
+@Tot_Gaz AS Net_Paliwo_tot,
+ROUND(ISNULL(ROUND(SUM(S.KwotaNetto),2),0) / @Tot_Gaz,2) AS Udz_Kl_Paliwo,
+ISNULL(ROUND(SUM(S.IloscPaliwa),2),0) AS IloscPaliwa_kl, 
+ROUND(ISNULL(SUM(S.KwotaNetto),0),0) AS NetWar_kl,
+ 'Cena_kl' = CASE WHEN SUM(S.IloscPaliwa) = 0 THEN 0
+WHEN SUM(S.IloscPaliwa) > 0 THEN
+ROUND(SUM(S.KwotaNetto) / SUM(S.IloscPaliwa),2)
+WHEN SUM(S.IloscPaliwa) IS NULL THEN 0  END,
+ISNULL(ROUND(SUM(S.Wartosc_Rabatu),2),0) AS Wrt_Nt_Rab,
+'%_OBr_Rb' = CASE WHEN  SUM(S.KwotaNetto) = 0 THEN 0
+WHEN SUM(S.KwotaNetto) <> 0 THEN
+ROUND(ROUND(SUM(S.Wartosc_Rabatu),2) / ROUND(SUM(S.KwotaNetto),2),2)
+WHEN  SUM(S.KwotaNetto) IS NULL THEN 0 END ,
+W.Wojewodztwo, 
+P.Powiat,
+G.Gmina, 
+M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Klienci AS K 
+LEFT JOIN Stacja_Paliw.Ope.Sprzedaz AS S
+ON S.IdKlienta = K.IdKlienta
+
+LEFT JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa = S.IDPaliwa
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej = K.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy = M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu = G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj = P.IdWOJ
+
+WHERE Z.RodzajPaliwa='Gaz'
+
+GROUP BY K.IdKlienta, NazwaKlienta, Z.RodzajPaliwa, Wojewodztwo, Powiat, Gmina, Miejscowosc
+
+
+UNION
+
+SELECT K.IdKlienta,
+NazwaKlienta,
+ISNULL(Z.RodzajPaliwa,'brak') as RodzajPaliwa, 
+@Tot_Ropa ,
+ROUND(ISNULL(ROUND(SUM(S.KwotaNetto),2),0) / @Tot_Ropa,2),
+ISNULL(ROUND(SUM(S.IloscPaliwa),2),0) AS IloscPaliwa_kl, 
+ROUND(ISNULL(SUM(S.KwotaNetto),0),0) AS NetWar_kl,
+ 'Cena_kl'= CASE WHEN SUM(S.IloscPaliwa) = 0 THEN 0
+WHEN SUM(S.IloscPaliwa) > 0 THEN
+ROUND(SUM(S.KwotaNetto) / SUM(S.IloscPaliwa),2)
+WHEN SUM(S.IloscPaliwa) IS NULL THEN 0  END,
+ISNULL(ROUND(SUM(S.Wartosc_Rabatu),2),0) AS Wrt_Nt_Rab,
+'%_OBr_Rb' = CASE WHEN  SUM(S.KwotaNetto) = 0 THEN 0
+WHEN SUM(S.KwotaNetto)<>0 THEN
+ROUND(ROUND(SUM(S.Wartosc_Rabatu),2) / ROUND(SUM(S.KwotaNetto),2),2)
+WHEN  SUM(S.KwotaNetto) IS NULL THEN 0 END ,
+W.Wojewodztwo,
+P.Powiat,
+G.Gmina,
+M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Klienci AS K 
+LEFT JOIN Stacja_Paliw.Ope.Sprzedaz AS S
+ON S.IdKlienta = K.IdKlienta
+
+LEFT JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa = S.IDPaliwa
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej = K.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy = M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu = G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj = P.IdWOJ
+
+WHERE Z.RodzajPaliwa='Ropa'
+
+GROUP BY K.IdKlienta,
+NazwaKlienta,
+Z.RodzajPaliwa,
+Wojewodztwo,
+Powiat,
+Gmina,
+Miejscowosc
+
+UNION
+
+SELECT K.IdKlienta, 
+NazwaKlienta,
+ISNULL(Z.RodzajPaliwa,'brak') as RodzajPaliwa, 
+@Tot_Ben,
+ROUND(ISNULL(ROUND(SUM(S.KwotaNetto),2),0) / @Tot_Ben,2) ,
+ISNULL(ROUND(SUM(S.IloscPaliwa),2),0) AS IloscPaliwa_kl, 
+ROUND(ISNULL(SUM(S.KwotaNetto),0),0) AS NetWar_kl,
+ 'Cena_kl' = CASE WHEN SUM(S.IloscPaliwa) = 0 THEN 0
+WHEN SUM(S.IloscPaliwa) > 0 THEN
+ROUND(SUM(S.KwotaNetto) / SUM(S.IloscPaliwa),2)
+WHEN SUM(S.IloscPaliwa) IS NULL THEN 0  END,
+ISNULL(ROUND(SUM(S.Wartosc_Rabatu),2),0) AS Wrt_Nt_Rab,
+'%_OBr_Rb' = CASE WHEN  SUM(S.KwotaNetto) = 0 THEN 0
+WHEN SUM(S.KwotaNetto)<>0 THEN
+ROUND(ROUND(SUM(S.Wartosc_Rabatu),2) / ROUND(SUM(S.KwotaNetto),2),2)
+WHEN  SUM(S.KwotaNetto) IS NULL THEN 0 END ,
+W.Wojewodztwo,
+P.Powiat,
+G.Gmina,
+M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Klienci AS K 
+LEFT JOIN Stacja_Paliw.Ope.Sprzedaz AS S
+ON S.IdKlienta = K.IdKlienta
+
+LEFT JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa = S.IDPaliwa
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej = K.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy = M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu = G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj = P.IdWOJ
+
+WHERE Z.RodzajPaliwa='Benzyna'
+
+GROUP BY K.IdKlienta,
+NazwaKlienta,
+Z.RodzajPaliwa,
+Wojewodztwo,
+Powiat,
+Gmina,
+Miejscowosc
+
+UNION
+
+SELECT K.IdKlienta, 
+NazwaKlienta,
+ISNULL(Z.RodzajPaliwa,'brak') as RodzajPaliwa, 
+0 ,
+0 ,
+0, 
+0,
+0,
+0,
+0 ,
+W.Wojewodztwo, 
+P.Powiat,
+G.Gmina,
+M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Klienci AS K 
+LEFT JOIN Stacja_Paliw.Ope.Sprzedaz AS S
+ON S.IdKlienta = K.IdKlienta
+
+LEFT JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa = S.IDPaliwa
+
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej = K.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy = M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu = G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj = P.IdWOJ
+
+WHERE Z.RodzajPaliwa IS NULL
+
+GROUP BY K.IdKlienta, NazwaKlienta, Z.RodzajPaliwa, Wojewodztwo, Powiat, Gmina, Miejscowosc
+
+ORDER BY NetWar_kl DESC
+
