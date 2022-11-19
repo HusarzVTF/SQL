@@ -1,0 +1,41 @@
+
+
+USE Stacja_Paliw
+GO
+
+ALTER PROC Ope.uspTOPKlienci AS
+
+BEGIN
+
+SELECT 
+
+K.IdKlienta,
+K.NazwaKlienta,
+ISNULL(Typ_rabatu,'Brak_Sprzedazy') as Typ_Rabatu, 
+ISNULL(Z.RodzajPaliwa,'Brak') AS RodzajPaliwa,
+ISNULL(Z.JM,'Brak') AS JM,
+ISNULL(ROUND(SUM(IloscPaliwa),2),0) AS IloscPaliwa,
+ISNULL(ROUND(SUM(KwotaNetto),2),0) AS WartoscNettoPaliwa,
+ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) AS Wart_Rab,
+'Udz_Proc_Rab' = CASE WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0) = 0 THEN 0
+WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0)>0 THEN
+ROUND(ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) / ISNULL(ROUND(SUM(KwotaNetto),2),0),2) END , 
+ISNULL(ROUND(SUM(KwotaBrutto) - SUM(KwotaNetto),2),0) AS  Podatek,
+ISNULL(ROUND(SUM(KwotaBrutto),2),0) AS WartoscBruttoPaliwa,  
+Sr_Cen_Sprz_Netto = CASE 
+WHEN SUM(IloscPaliwa) = 0 THEN 0
+ELSE
+ISNULL(ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa),2),0) END , 
+Sr_Cen_Sprz_Brutto =  CASE
+WHEN SUM(IloscPaliwa) = 0 THEN 0
+ELSE 
+ISNULL(ROUND(SUM(KwotaBrutto)/SUM(IloscPaliwa),2),0) END  
+
+FROM Ope.Sprzedaz AS S RIGHT JOIN Ope.Klienci AS K ON K.IdKlienta=S.IdKlienta  
+LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+GROUP BY K.IdKlienta, K.NazwaKlienta, Z.JM, Z.RodzajPaliwa, Typ_rabatu ORDER BY K.IdKlienta, Z.RodzajPaliwa  ASC
+
+END;
+
+--Procedura pokazująca zestawienie prezentujące klientów posortowanych od największego do najmniejszego wg ilości sprzedanego paliwa z uwzględnieniem rabatów. --
+
