@@ -1,0 +1,33 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspPaliwa_SprzRanking AS
+
+BEGIN
+
+SELECT 
+
+RodzajPaliwa,
+Z.JM,
+ISNULL(ROUND(SUM(IloscPaliwa),2),0) AS IloscPaliwa, 
+ISNULL(ROUND(SUM(KwotaNetto),2),0) AS Wart_Paliwa_nt,
+ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) AS Wart_Rab,
+'Udz_Proc_Rab' = CASE WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0) = 0 THEN 0
+WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0)>0 THEN
+ROUND(ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) / ISNULL(ROUND(SUM(KwotaNetto),2),0),2) END, 
+ISNULL(ROUND(SUM(KwotaBrutto),2),0) AS Wart_Paliwa_br,  
+ISNULL(ROUND(SUM(KwotaBrutto) - SUM(KwotaNetto),2),0) AS  Podatek,
+ISNULL(ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa),2),0) AS Sr_Cena_Sprz_nt, 
+ISNULL(ROUND(SUM(KwotaBrutto) / SUM(IloscPaliwa),2),0) AS Sr_Cena_Sprz_br
+
+FROM Ope.Zbiorniki  AS Z
+LEFT JOIN Ope.Sprzedaz AS S ON Z.IDPaliwa=S.IDPaliwa
+GROUP BY  RodzajPaliwa, Z.RodzajPaliwa, Z.JM ORDER BY IloscPaliwa DESC
+
+END;
+
+--Procedura pokazująca zestawienie prezentujące sprzedaz paliwa posortowana od największej do najmniejszejs wg ilości sprzedanego paliwa. Z uwzględnieniem rabatów--
+
