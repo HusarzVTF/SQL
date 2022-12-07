@@ -1,0 +1,16 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt = 'Dostawy', @NRFV = '00102F', @idkon = 3, @data = '2022-12-06'
+
+EXEC Ope.uspDataZap @obiekt = 'Dostawy', @NRFV = '0077FV', @idkon = 4, @data = '2022-12-06'
+
+EXEC Ope.uspDataZap @obiekt = 'Dostawy', @NRFV = '107FVA', @idkon = 6, @data = '2022-12-06'
+
+
+
+
+
