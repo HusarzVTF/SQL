@@ -1,0 +1,85 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspWstkor (@obiekt varchar(8) ,@fv varchar(100), @poz smallint, @pesel char(11),@iddos int = NULL) 
+
+AS
+
+BEGIN
+
+IF @obiekt= 'Dostawy' 
+
+BEGIN
+
+INSERT INTO Ope.Dostawy (NRFV, PozycjaNAFV, ID_Dat, IdDostawcy, IdPracownika, IDPaliw, IloscPaliwa, KwotaNetto,
+KwotaBrutto, TerminZaplaty, Podatek, TypPlatnosci, CzasTransakcji, DataZaplaty, DataAktuDatZap)
+
+SELECT 
+
+NRFV,
+PozycjaNAFV*-1,
+ID_Dat,
+IdDostawcy,
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+IDPaliw,
+IloscPaliwa*-1,
+KwotaNetto*-1,
+KwotaBrutto*-1,
+TerminZaplaty,
+Podatek*-1,
+TypPlatnosci,
+GETDATE(),
+DataZaplaty,
+DataAktuDatZap
+
+FROM Ope.Dostawy 
+WHERE NRFV = @fv AND PozycjaNAFV = @poz AND IdDostawcy = @iddos;
+
+END;
+
+IF @obiekt = 'Sprzedaz'
+
+BEGIN
+
+INSERT INTO Ope.Sprzedaz(NRFV, PozycjaNAFV, ID_Dat, IdKlienta, IdPracownika, IDPaliwa, IloscPaliwa, KwotaNetto,
+KwotaBrutto, TerminZaplaty, TypPlatnosci, CzasTransakcji, DataZaplaty, DataAktuZaplaty, Typ_rabatu, Rabat_Jedn, Wartosc_Rabatu)
+
+SELECT  
+
+NRFV,
+PozycjaNAFV*-1,
+Czas.uIdDaty(CAST(GETDATE() AS Date)),
+IdKlienta,
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+IDPaliwa,
+IloscPaliwa*-1,
+KwotaNetto*-1,
+KwotaBrutto*-1,
+TerminZaplaty,
+TypPlatnosci,
+GETDATE(),
+DataZaplaty,
+DataAktuZaplaty,
+Typ_rabatu,
+Rabat_Jedn,
+-Wartosc_Rabatu
+
+FROM Ope.Sprzedaz
+WHERE NRFV=@fv AND PozycjaNAFV=@poz;
+
+END;
+
+IF @obiekt NOT IN ('Dostawy' ,'Sprzedaz')
+
+BEGIN
+PRINT 'Wprowadzona nieprawidlowa nazwe, mozna wstawic korekte dla Dostawy lub Sprzedazy'
+END;
+END;
+
+/*Procedura na wystawienie Fv korekty korygujcej zakupy lub sprzedaz paliwa z uwzglednieniem rabatow na sprzedazy.*/
+
+
+
