@@ -1,0 +1,29 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trCz_kor') IS NOT NULL
+DROP TRIGGER Ope.trCz_kor;
+ 
+GO
+
+CREATE  TRIGGER Ope.trCz_kor ON Ope.Dostawy AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS(
+SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV < 0 AND 
+(DataZaplaty > CAST(DataAktuDatZap AS date) ))
+
+BEGIN
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. Dane nie zostaly wstawione lub zmienione w tabeli'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--trigger sprawdzajacy poprawnosc danych pod wzgledem termniow platnosci i zaplaty wobec czasu transakcji--
+
+
+
