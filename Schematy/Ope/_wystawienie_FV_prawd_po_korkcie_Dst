@@ -1,0 +1,30 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+DECLARE	@return_value int
+
+EXEC
+
+@return_value = Ope.uspWstawFV_Zakup
+@nrfv = N'F02',
+@pozfv = 1,
+@id_d = 1357,
+@iddost = 9,
+@idprac = 1,
+@idpal = 3,
+@ilo = 150000,
+@kwn = 413100,
+@kwb = 506250,
+@term = '2022-04-11',
+@czastr='2022-04-11',
+@podatek =93150,
+@dataz='2022-04-11',
+@datakz='2022-04-11',
+@tpl = N'przelew'
+
+SELECT	'Return Value' = @return_value
+
+GO
