@@ -1,0 +1,75 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trFVKORECH ON Ope.Dostawy AFTER INSERT, UPDATE
+
+AS
+
+DECLARE @max bigint = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+
+DECLARE @iddos smallint = (SELECT IdDostawcy FROM Ope.Dostawy WHERE IDFvzak = @max)
+
+DECLARE @czas datetime = (SELECT Czastransakcji FROM Ope.Dostawy WHERE IDFVZak = @max)
+
+
+DECLARE @FV varchar(100) = (SELECT DISTINCT NRFV FROM Ope.Dostawy WHERE NRFV = (SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak = @max)
+AND IdDostawcy = @iddos AND Czastransakcji = @czas)
+
+DECLARE @Poz smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Dostawy WHERE NRFV = (SELECT NRFV FROM Ope.Dostawy WHERE IDFvzak = @max)
+AND IdDostawcy = @iddos AND Czastransakcji = @czas)
+
+DECLARE @licz int = (SELECT COUNT(NRFV) FROM Ope.Dostawy WHERE NRFV = @FV  AND idDostawcy = @iddos)
+
+DECLARE @liczKore int = (SELECT COUNT(*) FROM Ope.Dostawy WHERE NRFV = @FV AND  IdDostawcy = @idDos AND PozycjaNAFV = @Poz*-1)
+
+IF @licz > 1 AND 1 >= @liczKore 
+
+BEGIN
+
+IF EXISTS(SELECT NRFV, PozycjaNAFV FROM Ope.Dostawy WHERE PozycjaNAFV < 0 AND NRFV = @FV)
+
+BEGIN
+
+SELECT 
+NRFV,
+PozycjaNAFV,
+IDPaliw,
+ID_Dat,
+IdDostawcy,
+IloscPaliwa,
+KwotaNetto,
+KwotaBrutto,
+TerminZaplaty,
+Podatek,
+TypPlatnosci,
+DataZaplaty,
+DataAktuDatZap
+
+INTO #check
+
+FROM Ope.Dostawy 
+WHERE PozycjaNAFV < 0 AND NRFV = @FV 
+
+IF  EXISTS(
+SELECT D.NRFV 
+FROM Ope.Dostawy AS D 
+JOIN #check  AS C 
+ON D.NRFV = C.NRFV AND D.IDPaliw = C.IDPaliw AND D.IdDostawcy = C.IdDostawcy AND D.PozycjaNAFV = C.PozycjaNAFV*-1
+
+WHERE  D.IloscPaliwa + C.IloscPaliwa <> 0 OR D.KwotaNetto + C.KwotaNetto <> 0 OR D.KwotaBrutto + C.KwotaBrutto <> 0
+OR D.ID_Dat <> C.ID_Dat OR D.TerminZaplaty < >C.TerminZaplaty OR D.Podatek + C.Podatek <> 0 OR D.DataZaplaty <> C.DataZaplaty 
+OR D.DataAktuDatZap <> C.DataAktuDatZap)
+BEGIN
+PRINT 'Niezgodnosc w danych pomiedzy FV korekta i poprawna. Operacja zostala cofnieta';
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP table #check
+END
+END;
+
+/*Trigger sprawdzajacy czy faktura korekta ma prawidlowe dane wzgledem fv poprawnej.*/
+
