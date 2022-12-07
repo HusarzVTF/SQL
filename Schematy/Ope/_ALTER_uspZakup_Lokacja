@@ -1,0 +1,64 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Ope.uspZakup_Lokacja
+ 
+AS
+
+SELECT 
+
+D.IdDostawcy, 
+NazwaDostawcy,
+RodzajPaliwa,
+Z.JM,
+
+'Cena_Nt'= CASE WHEN SUM(Dst.IloscPaliwa) = 0 THEN 0
+WHEN SUM(Dst.IloscPaliwa) > 0  THEN ISNULL(ROUND(SUM(Dst.KwotaNetto) / SUM(Dst.IloscPaliwa),2),0) END,
+
+'Jedn_Podatek' = CASE WHEN  SUM(Dst.IloscPaliwa) = 0 THEN 0
+WHEN SUM(Dst.IloscPaliwa) > 0 THEN 
+ISNULL(ROUND(SUM(Podatek) / SUM(Dst.IloscPaliwa),2),0)
+END,
+
+'Cena_Br' = CASE WHEN SUM(Dst.IloscPaliwa) = 0 THEN 0
+WHEN SUM(Dst.IloscPaliwa) > 0 THEN
+ISNULL(ROUND(SUM(KwotaBrutto) / SUM(Dst.IloscPaliwa),2),0)
+
+END,
+
+ISNULL(ROUND(SUM(Dst.IloscPaliwa),2),0) AS Ilosc,
+ISNULL(ROUND(SUM(Dst.KwotaNetto),2),0) AS NetWar,
+ISNULL(ROUND(SUM(Podatek),2),0) AS Podatek,
+ISNULL(ROUND(SUM(Dst.KwotaBrutto),2),0) AS BrtWar,
+W.Wojewodztwo,
+P.Powiat,
+G.Gmina,
+M.Miejscowosc
+
+FROM Stacja_Paliw.Ope.Dostawcy AS D
+LEFT JOIN Stacja_Paliw.Ope.Dostawy AS Dst
+ON Dst.IdDostawcy = D.IdDostawcy
+
+INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z
+ON Z.IDPaliwa = Dst.IDPaliw
+
+INNER JOIN Stacja_Paliw.Lokacje.Miejscowosc AS M
+ON M.IDMiej = D.IDMiejscowosc
+
+INNER JOIN Stacja_Paliw.Lokacje.Gmina AS G
+ON G.IdGminy = M.IDGminy
+
+INNER JOIN Stacja_Paliw.Lokacje.Powiat AS P
+ON P.IdPowiatu = G.IdPowiatu
+
+INNER JOIN Stacja_Paliw.Lokacje.Wojewodztwa AS W
+ON W.IdWoj = P.IdWOJ
+
+GROUP BY D.IdDostawcy, NazwaDostawcy, RodzajPaliwa, JM, Wojewodztwo, Powiat, Gmina, Miejscowosc
+ORDER BY SUM(Dst.KwotaNetto) DESC
+
+/*lepsza zwierajaca wiecej danych wersja starej procedury pokazujacej wielkosc zakupionych przez stacje paliw wg dostawcow*/
+
