@@ -1,0 +1,20 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+DECLARE	@return_value int
+
+EXEC
+
+@return_value = Ope.uspWstkor
+@obiekt = N'Dostawy',
+@fv = N'F01',
+@poz = 1,
+@pesel = N'12040678911',
+@iddos = 9
+
+SELECT	'Return Value' = @return_value
+
+GO
