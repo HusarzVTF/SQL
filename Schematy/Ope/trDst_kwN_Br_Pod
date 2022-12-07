@@ -1,0 +1,27 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trDst_KwN_Br_Pod') IS NOT NULL
+DROP TRIGGER Ope.trDst_KwN_Br_Pod;
+
+GO
+
+CREATE TRIGGER Ope.trDst_KwN_Br_Pod ON Ope.Dostawy AFTER INSERT, UPDATE
+
+AS 
+
+DECLARE @max bigint=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+
+IF EXISTS(
+SELECT*FROM Dostawy
+WHERE KwotaNetto + Podatek <> KwotaBrutto AND IDFVZak = @max) 
+BEGIN 
+PRINT 'Wstawiono rekord w ktorym kwota netto plus podatek nie rowna sie brutto rekord zostal  usuniety z tabeli Dostawy' 
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+/*trigger blokujacy wstawienie fv na dostawy gdzie netto plus podatek jest rozne od brutto*/
