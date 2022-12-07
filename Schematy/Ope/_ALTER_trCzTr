@@ -1,0 +1,26 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trCzTr ON Ope.Dostawy AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS(
+SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV > 0 AND 
+(DataZaplaty < CAST(CzasTransakcji AS date) OR DataZaplaty > CAST(DataAktuDatZap AS date) OR TerminZaplaty < CAST(CzasTransakcji AS date) )
+)
+
+BEGIN
+PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji lub/i daty aktualizacji oplacenia faktury. 
+Dane nie zostaly wstawione lub zmienione w tabeli'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--trigger sprawdzajacy poprawnosc danych pod wzgledem termniow platnosci i zaplaty wobec czasu transakcji--
+
+
+
