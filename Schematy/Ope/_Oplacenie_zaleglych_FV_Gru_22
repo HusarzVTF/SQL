@@ -1,0 +1,20 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 23, @idkon = 3, @data = '2022-12-01'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 24, @idkon = 3,@data = '2022-12-06'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 25, @idkon = 1, @data = '2022-12-10'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 26, @idkon = 3, @data = '2022-12-12'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 27, @idkon = 4, @data = '2022-12-13'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 28, @idkon = 2, @data = '2022-12-15'
+
+EXEC Ope.uspDataZap @obiekt = 'Sprzedaz', @NRFV = 29, @idkon = 8, @data = '2022-12-17'
+
