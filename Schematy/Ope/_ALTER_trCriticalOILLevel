@@ -1,0 +1,38 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER  Ope.trCriticalOILLevel ON Ope.Zbiorniki
+AFTER INSERT, UPDATE, DELETE
+AS
+
+DECLARE @StanZbioBEN real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Benzyna')
+
+IF @StanZbioBEN < 0.3*(SELECT Pojemnosc FROM Zbiorniki WHERE RodzajPaliwa = 'Benzyna')
+BEGIN
+DECLARE @erromessage varchar(500) = ('Niski poziom zbiorników benzyny wynosi obecnie ' + CAST(@StanZbioBEN AS varchar(400)) + ' Litrów');
+PRINT @erromessage; 
+END;
+  
+
+DECLARE @StanZbioROP real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Ropa')
+
+IF @StanZbioROP < 0.3*(SELECT Pojemnosc FROM Zbiorniki WHERE RodzajPaliwa = 'Ropa')
+BEGIN 
+DECLARE @erromessageOne varchar(500) = ('Niski poziom zbiorników ropy wynosi obecnie ' + CAST(@StanZbioROP AS varchar(400)) + ' Litrów');
+PRINT @erromessageOne; 
+END;
+
+DECLARE @StanZbioGAZ real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Gaz')
+
+IF @StanZbioGAZ < 0.3*(SELECT Pojemnosc FROM Zbiorniki WHERE RodzajPaliwa = 'Gaz')
+BEGIN 
+DECLARE @erromessageTwo varchar(500) = ('Niski poziom zbiorników gazu ' + CAST(@StanZbioGAZ AS varchar(400)) + ' M3');
+PRINT @erromessageTwo; 
+END;
+
+
+--Trigger, który wyświetli komunikat o zbyt niskim stanie danego paliwa w postaci błędu.--
+
