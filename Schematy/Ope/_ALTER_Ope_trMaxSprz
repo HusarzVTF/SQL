@@ -1,0 +1,27 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER  TRIGGER Ope.trMaxSprz ON Ope.Sprzedaz AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS (
+
+SELECT IDPaliwa FROM Ope.Zbiorniki  
+
+WHERE StanZbiornika < 0
+
+)
+BEGIN
+PRINT 'Proba wystawienia fv sprzedazy na wieksza ilosc niz to mozliwe, bo nie ma takiej ilosci paliwa w zbiorniku.'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger blokujacy sprzedaz wiekszej ilosci paliwa niz to mozliwe--
+
+
+
