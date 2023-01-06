@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+INSERT INTO Stacja_Paliw.Czas.Rok (Rok_Num)
+VALUES ('2023')
+
+/*dodanie do tabeli z latami nowego roku 2023*/
