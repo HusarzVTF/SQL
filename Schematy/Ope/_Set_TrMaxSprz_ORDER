@@ -1,0 +1,8 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+sp_settriggerorder @triggername = 'Ope.trMaxSprz', @order = 'last', @stmttype = 'INSERT' ;
+
