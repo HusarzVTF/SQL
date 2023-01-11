@@ -1,0 +1,35 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER FUNCTION Ope.NRFV (@idkl int)
+RETURNS bigint
+WITH SCHEMABINDING
+
+AS
+
+BEGIN
+
+DECLARE @czasTran smalldatetime = SYSDATETIMEOFFSET()
+
+DECLARE @maxidnrfv bigint = (SELECT MAX(NRFV) FROM Ope.Sprzedaz)
+
+DECLARE @nrfkolej bigint = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE IdKlienta = @idkl AND CAST(CzasTransakcji AS smalldatetime) = @czasTran)
+
+SELECT @maxidnrfv = CASE
+WHEN @maxidnrfv IS NULL  THEN 0 
+WHEN @maxidnrfv>=1 THEN  @maxidnrfv
+END
+
+SELECT @nrfkolej = CASE
+WHEN @nrfkolej IS NULL OR @nrfkolej=0  THEN @maxidnrfv+1
+WHEN @nrfkolej IS NOT NULL OR @nrfkolej>0 THEN @nrfkolej
+END
+RETURN  @nrfkolej
+END
+
+
+-- Funkcja na NRFV kolejny --
+
