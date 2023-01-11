@@ -1,0 +1,29 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER FUNCTION Ope.PozFV(@Fv bigint, @idkl int, @czasTran smalldatetime)
+RETURNS smallint
+WITH SCHEMABINDING
+
+AS
+BEGIN
+
+DECLARE @countLowMax smallint = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE   NRFV = @FV   AND IdKlienta = @idkl AND
+CAST(CzasTransakcji AS smalldatetime) = @czasTran)
+
+IF @countLowMax IS NULL OR @countLowMax=0
+
+BEGIN
+RETURN 1
+END
+ELSE
+DECLARE  @Pozycja smallint = @countLowMax+1 
+RETURN @Pozycja
+END;
+
+
+--Funkcja na pozycje na fakturze--
+
