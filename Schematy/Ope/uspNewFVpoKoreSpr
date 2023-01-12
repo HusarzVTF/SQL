@@ -1,0 +1,103 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspNewFVpoKoreSpr') IS NOT NULL
+DROP PROC Ope.uspNewFVpoKoreSpr;
+
+
+ GO
+
+CREATE PROC Ope.uspNewFVpoKoreSpr
+ 
+
+(@fv varchar(100), @poz int, @IdDos int, @pesel bigint, @IDPaliw tinyint, @IdKlienta int,@IloscPaliwa real, @KwotaNetto real,
+@KwotaBrutto real, @TerminZaplaty date, @Podatek real, @TypPlatnosci varchar(7),@DataZaplaty date=NULL)
+
+AS 
+
+IF @poz<=0
+BEGIN
+THROW 70000,'Pozycja fv dla prawidlowej fv musi byc wieksza od 0',1;
+END
+ELSE
+
+--Mimo, ze na czerwono to dziala--
+
+IF @DataZaplaty IS NULL
+BEGIN
+
+IF EXISTS (
+SELECT 
+
+NRFV, 
+PozycjaNAFV 
+
+FROM Ope.Sprzedaz 
+
+WHERE NRFV = @fv AND PozycjaNAFV = @poz
+)
+BEGIN
+INSERT INTO Ope.Sprzedaz(NRFV, PozycjaNAFV, ID_Dat, IdKlienta, IdPracownika, IDPaliwa, IloscPaliwa, KwotaNetto,
+KwotaBrutto, TerminZaplaty, TypPlatnosci, CzasTransakcji)
+
+SELECT  
+
+NRFV,
+PozycjaNAFV,
+Czas.uIdDaty(CAST(GETDATE() AS Date)),
+IdKlienta,
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+@IDPaliw,
+@IloscPaliwa ,
+@KwotaNetto,
+@KwotaBrutto,
+@TerminZaplaty,
+@TypPlatnosci,
+GETDATE()
+
+FROM Ope.Sprzedaz
+
+WHERE NRFV = @fv AND PozycjaNAFV = @poz AND IdKlienta = @IdKlienta;
+
+END
+
+END
+
+ELSE
+
+BEGIN
+
+INSERT INTO Ope.Sprzedaz(NRFV, PozycjaNAFV, ID_Dat, IdKlienta, IdPracownika, IDPaliwa, IloscPaliwa, KwotaNetto,
+KwotaBrutto, TerminZaplaty, TypPlatnosci, CzasTransakcji, DataZaplaty)
+
+SELECT  
+
+NRFV,
+PozycjaNAFV,
+Czas.uIdDaty(CAST(GETDATE() AS Date)),
+IdKlienta,
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+@IDPaliw,
+@IloscPaliwa ,
+@KwotaNetto,
+@KwotaBrutto,
+@TerminZaplaty,
+@TypPlatnosci,
+GETDATE(),
+@DataZaplaty
+
+FROM Ope.Sprzedaz 
+
+WHERE NRFV=@fv AND PozycjaNAFV=@poz AND IdKlienta=@IdKlienta;
+
+END;
+
+--Faktura wstawiajaca nowa fv, ktora była korygowana jesli rzeczywiscie jest taka potrzeba--
+
+
+
+
+
