@@ -1,0 +1,179 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trKorPopFVSprz ON Ope.Sprzedaz AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS(
+
+SELECT * 
+FROM Ope.Sprzedaz
+WHERE
+
+EXISTS( 
+
+SELECT 
+
+NRFV,
+PozycjaNAFV,
+IloscPaliwa,
+KwotaNetto,
+KwotaBrutto
+
+FROM Ope.Sprzedaz
+
+WHERE  ( PozycjaNAFV>0 AND IloscPaliwa<0 )
+OR (PozycjaNAFV<0 AND IloscPaliwa>0 )))
+
+BEGIN
+PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+--Trigger blokujacy wstawienie niepoprawnej faktury wg typu.(prawidlowa albo korekta) do tabeli Sprzedaz--
+
+DECLARE @maxSp bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+DECLARE @idkl int = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxSp)
+
+DECLARE @czasSp datetime = (SELECT Czastransakcji FROM Ope.Sprzedaz WHERE ID = @maxSp)
+
+DECLARE @FVSp bigint = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSp)
+AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
+
+
+DECLARE @liczSp int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @FVSp  AND IdKlienta = @idkl)
+
+
+DECLARE @PozSp smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSp)
+AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
+
+DECLARE @sumaSp real = (SELECT SUM(IloscPaliwa) FROM Ope.Sprzedaz WHERE NRFV = @FVSp AND IdKlienta = @idkl)
+
+-- SELECT @liczSp AS Licznik, @PozSp AS Pozycja --
+
+
+IF @liczSp>1 AND @PozSp>0
+BEGIN
+IF EXISTS (
+
+SELECT 
+
+NRFV,
+ID_Dat,
+IdKlienta, 
+IdPracownika,
+TerminZaplaty,
+TypPlatnosci, 
+DataZaplaty,
+DataAktuZaplaty,
+CzasTransakcji
+
+FROM Ope.Sprzedaz 
+
+WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0
+
+EXCEPT
+
+SELECT 
+
+NRFV,
+ID_Dat, 
+IdKlienta, 
+IdPracownika, 
+TerminZaplaty, 
+TypPlatnosci, 
+DataZaplaty,
+DataAktuZaplaty,
+CzasTransakcji 
+
+FROM Ope.Sprzedaz 
+
+WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0)
+BEGIN
+PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+-- Walidacja danych na pozycjach tej samej fv nie korekty--
+
+--SELECT @liczSp AS Licznik, @PozSp AS Pozycja--
+
+
+IF @liczSp>1 AND @PozSp<0
+BEGIN
+IF EXISTS (SELECT NRFV,ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty FROM Ope.Sprzedaz WHERE ID<(SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta=@idkl  AND NRFV=@FVSp AND PozycjaNAFV<0
+EXCEPT
+SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+DataAktuZaplaty FROM Ope.Sprzedaz WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta=@idkl AND NRFV=@FVSp AND PozycjaNAFV<0)
+BEGIN
+PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
+ROLLBACK TRANSACTION;
+RETURN
+END
+END;
+
+-- Walidacja danych na pozycjach tej samej fv  korekty. Przy warunku, ze korekte moze wystawic tylko ten sam pracownik, ktory wystawil prawidlowa fv--
+
+--SELECT @liczSp AS Licznik, @sumaSp AS IloscSuma--
+
+ 
+IF @liczSp>1 AND @sumaSp<>0  AND @PozSp>0 
+
+BEGIN
+
+SELECT DISTINCT CzasTransakcji 
+INTO #CzasChkSp
+FROM Ope.Sprzedaz WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)) 
+AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
+
+
+--SELECT *FROM #CzasChkSp--
+
+IF NOT EXISTS (
+
+SELECT CAST(CzasTransakcji AS smalldatetime) FROM #CzasChkSp 
+
+INTERSECT
+
+SELECT CAST(CzasTransakcji AS smalldatetime) FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+)
+BEGIN
+PRINT 'Kolejne pozycje tej samej faktury na tym samym dostawcy musza byc wstawione za jednym razem'
+ROLLBACK TRANSACTION;
+RETURN
+END
+DROP TABLE #CzasChkSp
+END;
+
+
+
+/* Ta instrukcja blokuje  wtawienie kolejnej pozycji po czasie tj. oddzielnie. Faktura od danego dostawcy powinna byc wstawiona naraz
+czyli wszystkie jej pozycje w tym samym czasie */
+
+/* trigger sprawdzajacy prawidlowosc danych na fv */
+
+
+
+
+
+
+
+
+
