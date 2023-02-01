@@ -1,0 +1,12 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC  Ope.uspZmien_Podatek 'Benzyna',0.1;
+EXEC  Ope.uspZmien_Podatek 'Gaz',0.15;
+EXEC Ope.uspZmien_Podatek 'Ropa',0.1;
+
+/*koniec tarczy podatkowej na paliwa. Rzad przywraca stawki*/
+
