@@ -1,0 +1,69 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Stacja_Paliw.Ope.Pracownicy ADD  
+status_pracownika varchar(9) CHECK (status_pracownika IN ('zwolniony','pracuje')),
+data_Zatrudnienia date FOREIGN KEY REFERENCES Czas.Kalendarz (Data),
+data_Zwolnienia date  FOREIGN KEY REFERENCES Czas.Kalendarz (Data)
+
+ /* dodanie nowych kolumn do tabeli Pracownicy */
+
+ GO
+ 
+IF OBJECT_ID('Ope.trDatZwol') IS NOT NULL
+DROP TRIGGER Ope.trDatZwol;
+
+GO
+
+CREATE TRIGGER Ope.trDatZwol ON Stacja_Paliw.Ope.Pracownicy AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS(
+SELECT IDPracownika
+FROM Ope.Pracownicy WHERE 
+data_Zwolnienia < data_Zatrudnienia )
+BEGIN
+PRINT 'Data zwolnienia nie moze byc wczesniejsza niz data zatrudnienia.'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+GO
+
+/* trigger kontrolujacy poprawnosc dat w tabeli Pracownicy */
+  
+IF OBJECT_ID('Ope.trStatPrac') IS NOT NULL
+DROP TRIGGER Ope.trStatPrac;
+
+GO
+
+CREATE TRIGGER Ope.trStatPrac ON Stacja_Paliw.Ope.Pracownicy AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS(
+SELECT IDPracownika 
+FROM Ope.Pracownicy WHERE 
+status_pracownika = 'zwolniony' AND data_Zwolnienia IS  NULL 
+OR (status_pracownika = 'pracuje' AND data_Zwolnienia IS NOT NULL)
+OR (data_Zatrudnienia IS NULL)
+)
+BEGIN
+PRINT'Bledny status pracownika wzgledem dat zatrudnienia lub/i zwolenienia tudziez brak daty zatrudnienia.'
+ROLLBACK TRANSACTION;
+RETURN
+END;
+GO
+
+/* trigger kontrolujacy poprawnosc statusu pracownika i dat rozpoczecia i zakonczenia pracy */
+
+
+ UPDATE  Ope.Pracownicy SET status_pracownika = 'pracuje', 
+ data_Zatrudnienia = (SELECT MIN(data) FROM Stacja_Paliw.Czas.Kalendarz)
+  
+  /* aktualizacja danych w nowych kolumnach tabeli Pracownicy */
+  
+  
