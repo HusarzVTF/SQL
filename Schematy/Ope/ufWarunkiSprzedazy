@@ -5,7 +5,7 @@ GO
 
 
  IF OBJECT_ID('Ope.ufWarunkiSprzedazy') IS NOT NULL
- DROP PROC Ope.ufWarunkiSprzedazy;
+ DROP FUNCTION Ope.ufWarunkiSprzedazy;
  GO
 
 --Instukcja sprawdzajaca czy istnieje juz procedura Ope.WarunkiSprzedazy jesli tak to jest likwidowana. Zakladamy, ze jezeli istniala to przez pomylke--
