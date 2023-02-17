@@ -1,0 +1,31 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Czas.ufPierwszydzienMiesiaca') IS NOT NULL
+DROP FUNCTION Czas.ufPierwszydzienMiesiaca;
+ 
+GO
+
+CREATE FUNCTION Czas.ufPierwszydzienMiesiaca(@data date)
+
+RETURNS date
+WITH SCHEMABINDING 
+AS
+BEGIN 
+
+DECLARE @zlaczmie varchar(3) = CONCAT('0', MONTH(@data)) 
+IF LEN(@zlaczmie) = 3
+SET @zlaczmie = RIGHT(@zlaczmie,2)
+
+
+DECLARE @zwroc date =  CAST( CONCAT( CONCAT( CONCAT(YEAR(@data), '-'), @zlaczmie),'-01') AS date) 
+RETURN @zwroc;
+END;
+
+/*funkcja zwracajaca pierwszy dzien miesiaca dla daty podanej jako argument*/
+
+
+
