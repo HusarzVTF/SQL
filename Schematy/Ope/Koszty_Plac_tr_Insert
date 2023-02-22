@@ -1,0 +1,67 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.Koszty_Plac') IS NOT NULL
+DROP TABLE Ope.Koszty_Plac;
+
+CREATE TABLE Ope.Koszty_Plac(
+ID INT  IDENTITY PRIMARY KEY,
+OD date not null , 
+DO date not null FOREIGN KEY REFERENCES Czas.Kalendarz (Data),
+Rok AS YEAR(OD),
+Miesiac AS MONTH(OD), 
+Koszt_Plac real not null ,
+stawka_dzienna AS ROUND(Koszt_Plac / DATEDIFF(d,OD,DATEADD(d,1,DO)) ,2), 
+stawka_h AS ROUND(Koszt_Plac / (DATEDIFF(d,OD,DATEADD(d,1,DO))*24) ,2)
+)
+
+/*tabela z kosztami plac w ujeciu miesiecznym*/
+
+GO
+IF OBJECT_ID('Ope.trkszPlac_Data') IS NOT NULL
+DROP TRIGGER Ope.trkszPlac_Data;
+GO
+CREATE TRIGGER trkszPlac_Data ON Ope.Koszty_Plac AFTER INSERT,UPDATE
+AS
+IF EXISTS(  SELECT ID FROM Ope.Koszty_Plac WHERE DO <> EOMONTH(DO) 
+)
+BEGIN
+PRINT 'Bledna data  do koszty liczone sa w ujeciu miesiecznym dlatego do moze przypadac tylko na ostatni dzien danego miesiaca.';
+ROLLBACK TRANSACTION
+END
+
+GO
+
+/*trigger walidujacy date do w tabli z kosztami plac*/
+
+
+
+IF OBJECT_ID('Ope.trkszPlac_Dat_OD') IS NOT NULL
+DROP TRIGGER Ope.trkszPlac_Dat_OD;
+GO
+CREATE TRIGGER trkszPlac_Dat_OD ON Ope.Koszty_Plac AFTER INSERT,UPDATE
+AS
+IF EXISTS(  SELECT ID FROM Ope.Koszty_Plac WHERE OD <> Czas.PierwszydzienMiesiaca(OD)  
+)
+BEGIN
+PRINT 'Bledna data  od koszty liczone sa w ujeciu miesiecznym dlatego od moze przypadac tylko na pierwszy dzien danego miesiaca.';
+ROLLBACK TRANSACTION
+END
+
+GO
+
+/*trigger walidujacy date od w tabli z kosztami plac*/
+
+
+INSERT INTO Ope.Koszty_Plac (OD, DO, Koszt_Plac)
+SELECT Czas.PierwszydzienMiesiaca(Data), Data , (SELECT SUM(Pensja) FROM Ope.Pracownicy) 
+FROM Czas.Kalendarz WHERE Data = EOMONTH(Data) 
+
+/*wstawienie danych do tabeli z kosztami plac w okresach miesiecznych*/
+
+
+
+
