@@ -1,0 +1,13 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 7, 1, 1, 5000, 'automatyczny', null, '2023-02-28', '2023-02-28'
+EXEC Ope.uspWstawFV_Sprzedaz 8, 1, 2, 1000, 'automatyczny', null, '2023-02-28', '2023-02-28'
+EXEC Ope.uspWstawFV_Sprzedaz 3, 5, 3, 15230, 'automatyczny', null, '2023-02-28', '2023-02-28'
+EXEC Ope.uspWstawFV_Sprzedaz 4, 5, 2, 1336.67, 'automatyczny', null, '2023-02-28', '2023-02-28'
+EXEC Ope.uspWstawFV_Sprzedaz 5, 7, 1, 100, 'automatyczny', null, '2023-02-28', '2023-02-28'
+
+/* Faktury sprzedazy za luty */
