@@ -1,0 +1,33 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspZatrudnij') IS NOT NULL
+DROP PROC Ope.uspZatrudnij;
+
+GO
+
+CREATE PROC Ope.uspZatrudnij (
+@id_mie int, @imie varchar(35), @nazw varchar(35), @pesel char(11), @rokur int,
+@iddatzatr int, @idumo tinyint, @idwyk tinyint, @kierstud varchar(50), @idstan tinyint, 
+@pensja real, @kodpoc char(6), @ulica varchar(50), @nrdom int, @nrlok int, @adrspecj varchar(10),
+@tel char(9), @plec char(1), @uwagi varchar(500), @dat_zat date, @dat_zwol date
+) 
+
+AS
+
+INSERT INTO Ope.Pracownicy (
+IDMiejscowosc, Imie, Nazwisko, PESEL, RokUrodzenia, ID_datyZatr,
+ID_Umowy, ID_Wyksztalcenie, ID_Umowy , KierunekStudiow, ID_Stanowisko, 
+Pensja, KODPocztowy, Ulica, NrDomu, NrLokalu, AdresSpecj, TEL, Plec, 
+UWAGI, status_pracownika, data_Zatrudnienia, data_Zwolnienia, status_pracownika
+)
+
+VALUES (
+@id_mie, @imie, @nazw, @pesel, @rokur, @iddatzatr, @idumo, @idwyk, @kierstud, @idstan,
+@pensja,@kodpoc,@ulica,@nrdom,@nrlok,@adrspecj,@tel,@plec,@uwagi,@dat_zat,@dat_zwol,'pracuje'
+)
+
+/*procedura na zatrudnienie nowego pracownika*/
