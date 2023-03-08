@@ -1,0 +1,24 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+
+IF OBJECT_ID('Ope.trBlok_Zatr') IS NOT NULL
+DROP TRIGGER Ope.trBlok_Zatr;
+
+GO
+
+CREATE TRIGGER trBlok_Zatr ON Ope.Pracownicy AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS( SELECT IDPracownika, COUNT(PESEL) FROM Ope.Pracownicy   GROUP BY IDPracownika HAVING COUNT(PESEL)>1 )
+BEGIN
+PRINT 'Nie moze byc dwoch i wiecej pracownikow o tym samym numerze pesel.';
+ROLLBACK TRANSACTION
+END
+
+/* trigger blokujacy wstawienie lub zaktualizowanie dwoch lub wiecej pracownikow na jeden numer pesel*/
+
