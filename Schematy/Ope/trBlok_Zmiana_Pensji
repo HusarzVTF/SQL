@@ -1,0 +1,35 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trBlok_Zmiana_Pensji') IS NOT NULL
+DROP TRIGGER Ope.trBlok_Zmiana_Pensji;
+
+GO
+
+CREATE TRIGGER Ope.trBlok_Zmiana_Pensji ON Ope.Pracownicy AFTER UPDATE 
+
+AS
+
+IF EXISTS ( 
+SELECT IDPracownika
+
+FROM Ope.Pracownicy AS P 
+JOIN Ope.Pensje_Zmiany AS PZ 
+ON P.IDPracownika = PZ.ID_pracownika 
+
+WHERE P.Pensja <> PZ.Pensja
+)
+
+BEGIN
+
+PRINT 'Pensja w tabeli Pracownicy nie moze byc inna niz w Pensje_Zmiany.'
+ROLLBACK TRANSACTION
+
+
+END
+
+/* trigger blokujacy zmiane pensji w tabeli pracownicy jesli nie ma tej zmiany w tabeli pensje_zmiany */
+
