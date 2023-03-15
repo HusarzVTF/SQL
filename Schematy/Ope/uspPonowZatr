@@ -23,9 +23,13 @@ IF EXISTS (SELECT IDPracownika FROM Ope.Pracownicy WHERE IDPracownika = @idprac 
 
 THROW 901002, 'Wskazano pracownika, ktory nigdy nie byl zwolniony.',1;
 
+INSERT INTO Ope.Pensje_Zmiany(ID_pracownika, Pensja, OD) 
+VALUES(@idprac, @pensja, Czas.PierwszydzienMiesiaca(@datazatrudnienia))
+
 
 UPDATE Ope.Pracownicy SET data_Zatrudnienia = @datazatrudnienia, Pensja = @pensja, data_Zwolnienia = NULL
 WHERE IDPracownika = @idprac AND data_Zatrudnienia IS NOT NULL
+
 
 /* procedura na ponowne zatrudnienie pracownika */
 
