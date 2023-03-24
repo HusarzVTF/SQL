@@ -32,36 +32,15 @@ SELECT ID FROM Ope.Pensje_Zmiany WHERE
 DO < OD 
 OR 
 DO NOT IN (SELECT Data FROM Czas.Kalendarz )
-OR
-DO <> EOMONTH(DO) 
+
 )
 BEGIN
-PRINT 'Bledna data do wzgledem od lub do nie moze byc spoza zakresu tabeli kalendarz ani przypadac w inny dzien niz ostatni dzien danego miesiaca.';
+PRINT 'Bledna data do wzgledem od lub do nie moze byc spoza zakresu tabeli kalendarz.';
 ROLLBACK TRANSACTION
 END
 
-GO
 
-IF OBJECT_ID('Ope.trkontrData') IS NOT NULL
-DROP TRIGGER Ope.trkontrData;
 
-GO
-
-CREATE TRIGGER Ope.trkontrData ON Ope.Pensje_Zmiany AFTER INSERT, UPDATE
-
-AS
-
-IF EXISTS( 
-SELECT ID FROM Ope.Pensje_Zmiany WHERE  
-OD NOT IN 
-(SELECT Czas.ufPierwszydzienMiesiaca(OD) 
-UNION 
-SELECT MIN(data) FROM Stacja_Paliw.Czas.Kalendarz)
-) 
-BEGIN
-PRINT 'Bledna data od. Nowa pensja musi wypadac od pierwszego dnia miesiaca lub w pierwszy dzien z tabeli kalendarz.';
-ROLLBACK TRANSACTION
-END
 
 /* triggery walidujace dane w tabeli pensje_zmiany */
 
