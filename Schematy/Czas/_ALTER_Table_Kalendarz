@@ -1,0 +1,32 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Stacja_Paliw.Czas.Kalendarz ADD Dzien_Swiat varchar(38) 
+
+CHECK 
+
+( Dzien_Swiat 
+
+IN(
+
+'Nowy Rok', 
+'Święto Trzech Króli',
+'Pierwszy dzień Wielkanocy',
+'Drugi dzień Wielkanocy',
+'Święto Państwowe',
+'Święto Narodowe Trzeciego Maja',
+'Zielone Świątki',
+'Boże Ciało',
+'Wniebowzięcie Najświętszej Maryi Panny',
+'Wszystkich Świętych',
+'Święto Niepodległości',
+'Pierwszy dzień Bożego Narodzenia',
+'Drugi dzień Bożego Narodzenia') 
+
+)
+
+/* dodanie do tabeli kalendarz kolumny z nazwa swieta wolnego od pracy z walidacja na mozliwe do wystapienia nazwy swiat */
+
