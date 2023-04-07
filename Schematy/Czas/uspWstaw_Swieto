@@ -1,0 +1,19 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Czas.uspWstaw_Swieto') IS NOT NULL
+DROP PROC Czas.uspWstaw_Swieto;
+
+GO
+
+CREATE PROC uspWstaw_Swieto (@data date, @swieto nvarchar(38))
+
+AS
+
+UPDATE Stacja_Paliw.Czas.Kalendarz SET Dzien_Swiat = @swieto WHERE Data = @data
+
+/* procedura wstawiajaca swieto w wskazanej dacie do tabeli kalendarz */
+
