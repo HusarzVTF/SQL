@@ -1,0 +1,37 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Czas.trDzienSw') IS NOT NULL
+DROP TRIGGER Czas.trDzienSw;
+
+GO
+
+CREATE TRIGGER trDzienSw ON Czas.Kalendarz AFTER UPDATE, INSERT 
+
+AS
+
+IF EXISTS 
+(
+
+SELECT
+
+Dzien_Swiat,
+IDRk,
+COUNT(ID) AS Ile 
+
+FROM Czas.Kalendarz 
+
+WHERE Dzien_Swiat IS NOT NULL
+GROUP BY Dzien_Swiat, IDRk 
+)
+
+BEGIN
+PRINT 'Kazde swieto moze wystepowac tylko raz w roku.';
+ROLLBACK TRANSACTION 
+END
+
+/* trigger blokujacy dubel na dane swieto w ujeciu rocznym*/
+
