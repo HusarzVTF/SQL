@@ -6,14 +6,24 @@ USE Stacja_Paliw
 GO
 
 
- IF OBJECT_ID('uspBEP_Kalkulator') IS NOT NULL
- DROP PROC uspBEP_Kalkulator;
+ IF OBJECT_ID('Ope.uspBEP_Kalkulator') IS NOT NULL
+ DROP PROC Ope.uspBEP_Kalkulator;
  
  GO
  
 
-CREATE PROC uspBEP_Kalkulator( @od date , @do date ,@typ varchar(7) ,@il real , @typ_1 varchar(7),@ks_pro float, @typ_2 varchar(7),@il_2 real ,@typ_3 varchar(7),
-@ks_pro_1 float)
+CREATE PROC Ope.uspBEP_Kalkulator( 
+@od date ,
+@do date ,
+@typ varchar(7) ,
+@il real ,
+@typ_1 varchar(7),
+@ks_pro float, 
+@typ_2 varchar(7),
+@il_2 real ,
+@typ_3 varchar(7),
+@ks_pro_1 float
+)
 
 AS
 
