@@ -1,0 +1,15 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 5, 1, 1, 50000, 'automatyczny', null, '2023-04-25', '2023-04-25'
+EXEC Ope.uspWstawFV_Sprzedaz 10, 1, 1, 11300, 'automatyczny', null, '2023-04-25', '2023-04-25'
+EXEC Ope.uspWstawFV_Sprzedaz 8, 1, 2, 27636.8, 'automatyczny', null, '2023-04-25', '2023-04-25'
+EXEC Ope.uspWstawFV_Sprzedaz 7, 1, 2, 2567.65, 'automatyczny', null, '2023-04-25', '2023-04-25'
+EXEC Ope.uspWstawFV_Sprzedaz 1, 1, 3, 150000, 'automatyczny', null, '2023-04-25', '2023-04-25'
+
+/*Fv sprzedazy wystawione w  kwietniu 2023 i oplacone*/
+
+
