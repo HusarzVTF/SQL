@@ -9,29 +9,29 @@ DROP TRIGGER Czas.trDzienSw;
 
 GO
 
-CREATE TRIGGER trDzienSw ON Czas.Kalendarz AFTER UPDATE, INSERT 
+CREATE TRIGGER Czas.trDzienSw ON Czas.Kalendarz AFTER UPDATE, INSERT 
 
 AS
 
-IF EXISTS 
-(
-
-SELECT
+IF EXISTS (
+SELECT 
 
 Dzien_Swiat,
-IDRk,
-COUNT(ID) AS Ile 
+IDRk, 
+COUNT(ID) AS Ile
 
 FROM Czas.Kalendarz 
+WHERE Dzien_Swiat IS NOT NULL  
 
-WHERE Dzien_Swiat IS NOT NULL
-GROUP BY Dzien_Swiat, IDRk 
+GROUP BY Dzien_Swiat,IDRk 
+HAVING COUNT(ID)>1
 )
 
 BEGIN
 PRINT 'Kazde swieto moze wystepowac tylko raz w roku.';
 ROLLBACK TRANSACTION 
 END
+
 
 /* trigger blokujacy dubel na dane swieto w ujeciu rocznym*/
 
