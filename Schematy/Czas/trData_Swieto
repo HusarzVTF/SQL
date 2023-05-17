@@ -1,0 +1,88 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+IF OBJECT_ID('Czas.trData_Swieto') IS NOT NULL
+DROP TRIGGER Czas.trData_Swieto;
+
+GO
+
+CREATE TRIGGER Czas.trData_Swieto ON Czas.Kalendarz AFTER UPDATE, INSERT 
+
+AS
+
+IF EXISTS (
+
+SELECT 
+Data
+
+FROM Czas.Kalendarz
+
+WHERE 
+
+(Dzien_Swiat = 'Nowy Rok' AND (MONTH(Data) <> 1  OR DAY(Data) <> 1))
+OR 
+(Dzien_Swiat = 'Święto Trzech Króli' AND (MONTH(Data) <> 1 OR DAY(Data) <> 6))
+OR
+(Dzien_Swiat = 'Pierwszy dzień Wielkanocy' 
+AND Data 
+NOT BETWEEN 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'03'),'22')
+AND 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'04'),'25')  
+AND 
+DATEPART(DW,Data) <> 1
+) 
+OR
+(Dzien_Swiat = 'Drugi dzień Wielkanocy' 
+AND
+Data 
+NOT BETWEEN 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'03'),'22')
+AND 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'04'),'25') 
+AND
+DATEPART(DW,Data) <> 2
+)
+OR
+(Dzien_Swiat = 'Święto Państwowe Pierwszego Maja' AND (MONTH(Data) <> 5 OR DAY(Data) <> 1))
+OR 
+(Dzien_Swiat = 'Święto Narodowe Trzeciego Maja' AND (MONTH(Data) <> 5 OR DAY(Data) <> 3))
+OR
+(Dzien_Swiat = 'Zielone Świątki'
+AND DATEPART(DW,Data) <> 1
+AND MONTH(Data) NOT IN(5,6)
+)
+OR
+(Dzien_Swiat = 'Boże Ciało' AND
+DATEPART(DW,Data) <> 5
+AND Data  
+NOT BETWEEN 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'05'),'21')
+AND 
+CONCAT (CONCAT (CAST(YEAR(data) AS char(4)),'06'),'24')
+)
+OR
+(Dzien_Swiat = 'Wniebowzięcie Najświętszej Maryi Panny' AND (MONTH(Data) <> 8 OR DAY(Data) <> 15))
+OR
+(Dzien_Swiat = 'Wszystkich Świętych' AND (MONTH(Data) <> 11 OR DAY(Data) <> 1))
+OR
+(Dzien_Swiat = 'Święto Niepodległości' AND (MONTH(Data) <> 11 OR DAY(Data) <> 11))
+OR
+(Dzien_Swiat = 'Pierwszy dzień Bożego Narodzenia' AND (MONTH(Data) <> 12 OR DAY(Data) <> 25))
+OR
+(Dzien_Swiat = 'Drugi dzień Bożego Narodzenia' AND (MONTH(Data) <> 12 OR DAY(Data) <> 26))
+)
+
+BEGIN
+PRINT
+'Blednie wstawiona lub zaktualizowana data swieta wypadajacego w konkretny dzien okreslonego miesiaca lub wstawione ruchome swieto w date spoza zakresu w ktory moze ono wypadac.'
+ROLLBACK TRANSACTION
+END
+
+/*  triger odrzuca ustawienie stalych swiat w bledne daty i ruchomych w spoza zakresu */
+
+
+
