@@ -1,0 +1,62 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Nowy Rok'
+WHERE MONTH(Data) = 1 AND DAY(Data) = 1
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Trzech Króli'
+WHERE MONTH(Data) = 1 AND DAY(Data) = 6
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Państwowe'
+WHERE MONTH(Data) = 5 AND DAY(Data) = 1
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Narodowe Trzeciego Maja'
+WHERE MONTH(Data)=5 AND DAY(Data)=3
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Wniebowzięcie Najświętszej Maryi Panny'
+WHERE MONTH(Data) = 8 AND DAY(Data) = 15
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Wszystkich Świętych'
+WHERE MONTH(Data) = 11 AND DAY(Data) = 1
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Niepodległości' 
+WHERE MONTH(Data) = 11 AND DAY(Data) = 11
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat =  'Pierwszy dzień Bożego Narodzenia'
+WHERE  MONTH(Data) = 12 AND DAY(Data) = 25
+
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Drugi dzień Bożego Narodzenia' 
+WHERE MONTH(Data) = 12 AND DAY(Data) = 26
+
+/*tu wyzej swieta stale*/
+
+EXEC Czas.uspWstaw_Swieto '2023-04-09','Pierwszy dzień Wielkanocy'
+EXEC Czas.uspWstaw_Swieto '2023-04-10','Drugi dzień Wielkanocy'
+
+EXEC Czas.uspWstaw_Swieto '2022-04-17','Pierwszy dzień Wielkanocy' 
+EXEC Czas.uspWstaw_Swieto '2022-04-18','Drugi dzień Wielkanocy'
+
+
+EXEC Czas.uspWstaw_Swieto '2021-04-04','Pierwszy dzień Wielkanocy' 
+EXEC Czas.uspWstaw_Swieto '2021-04-05','Drugi dzień Wielkanocy'
+
+EXEC Czas.uspWstaw_Swieto '2020-04-12','Pierwszy dzień Wielkanocy'
+EXEC Czas.uspWstaw_Swieto '2020-04-13','Drugi dzień Wielkanocy'
+
+EXEC Czas.uspWstaw_Swieto '2023-05-28','Zielone Świątki'
+EXEC Czas.uspWstaw_Swieto '2022-06-05','Zielone Świątki'
+EXEC Czas.uspWstaw_Swieto '2021-05-23','Zielone Świątki'
+EXEC Czas.uspWstaw_Swieto '2020-05-31','Zielone Świątki'
+
+EXEC Czas.uspWstaw_Swieto '2023-06-08','Boże Ciało'
+EXEC Czas.uspWstaw_Swieto '2022-06-16','Boże Ciało'
+EXEC Czas.uspWstaw_Swieto '2021-06-03','Boże Ciało'
+EXEC Czas.uspWstaw_Swieto '2020-06-11','Boże Ciało'
+
+/*tu swieta ruchome*/
+
+
+
