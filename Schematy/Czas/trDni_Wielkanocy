@@ -1,0 +1,59 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+IF OBJECT_ID('Czas.trDni_Wielkanocy') IS NOT NULL
+DROP TRIGGER Czas.trDni_Wielkanocy;
+
+GO
+
+CREATE TRIGGER Czas.trDni_Wielkanocy ON Czas.Kalendarz AFTER UPDATE, INSERT 
+
+AS
+
+SELECT  
+
+YEAR(Data) AS Rok, 
+MONTH(Data) AS Miesiac, 
+Data
+
+INTO #pierdzWielNoc
+FROM Czas.Kalendarz 
+WHERE Dzien_Swiat ='Pierwszy dzień Wielkanocy'
+
+SELECT 
+
+YEAR(Data) AS Rok, 
+MONTH(Data) AS Miesiac,
+Data  
+
+INTO #drugidzWielNoc
+FROM Czas.Kalendarz 
+WHERE Dzien_Swiat ='Drugi dzień Wielkanocy'
+
+IF EXISTS(
+
+SELECT 
+
+P.Data , 
+D.Data ,
+DATEDIFF(d,P.Data,D.Data) AS Roznica
+
+FROM #pierdzWielNoc AS P
+INNER JOIN #drugidzWielNoc AS D
+ON P.Rok = D.Rok 
+AND P.Miesiac = D.Miesiac
+
+WHERE DATEDIFF(d,P.Data,D.Data)<>1 )
+BEGIN
+PRINT 'Dni Wielkiejnocy musza wystepowac po sobie'
+ROLLBACK TRANSACTION
+END
+
+DROP TABLE #pierdzWielNoc, #drugidzWielNoc
+
+/* trigger blokuje wstawienie dni swiat wielkanocnych nie po sobie, bo zawsze dwa dni swiat wielkanocy sa dzien po dniu */
+
+
