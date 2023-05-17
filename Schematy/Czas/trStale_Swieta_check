@@ -1,0 +1,138 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+IF OBJECT_ID('Czas.trStale_Swieta_check') IS NOT NULL  
+DROP TRIGGER Czas.trStale_Swieta_check;
+
+GO
+
+CREATE TRIGGER Czas.trStale_Swieta_check ON Czas.Kalendarz AFTER UPDATE, INSERT 
+
+AS
+
+IF EXISTS( 
+
+SELECT
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 1 AND DAY(Data) = 1 AND Dzien_Swiat IS NULL)  
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Nowy Rok'
+WHERE MONTH(Data) = 1 AND DAY(Data) = 1
+END
+
+IF EXISTS( 
+
+SELECT
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 1 AND DAY(Data) = 6 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Trzech Króli'
+WHERE MONTH(Data) = 1 AND DAY(Data) = 6
+END
+
+IF EXISTS( 
+
+SELECT 
+
+ID
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 5 AND DAY(Data) = 1 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Państwowe'
+WHERE MONTH(Data) = 5 AND DAY(Data) = 1
+END
+
+IF EXISTS( 
+
+SELECT 
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data)=5 AND DAY(Data)=3 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Narodowe Trzeciego Maja'
+WHERE MONTH(Data)=5 AND DAY(Data)=3
+END
+
+IF EXISTS( 
+
+SELECT 
+
+ID 
+
+FROM Czas.Kalendarz
+WHERE MONTH(Data) = 8 AND DAY(Data) = 15 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Wniebowzięcie Najświętszej Maryi Panny'
+WHERE MONTH(Data) = 8 AND DAY(Data) = 15
+END
+
+IF EXISTS( 
+
+SELECT 
+
+ID
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 11 AND DAY(Data) = 1 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Wszystkich Świętych'
+WHERE MONTH(Data) = 11 AND DAY(Data) = 1
+END
+
+IF EXISTS( 
+
+SELECT 
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 11 AND DAY(Data) = 11 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Niepodległości' 
+WHERE MONTH(Data) = 11 AND DAY(Data) = 11
+END
+
+
+
+IF EXISTS( 
+
+SELECT 
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 12 AND DAY(Data) = 25 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat =  'Pierwszy dzień Bożego Narodzenia'
+WHERE  MONTH(Data) = 12 AND DAY(Data) = 25
+END
+
+IF EXISTS(
+
+SELECT
+
+ID 
+
+FROM Czas.Kalendarz 
+WHERE MONTH(Data) = 12 AND DAY(Data) = 26 AND Dzien_Swiat IS NULL)
+BEGIN
+UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Drugi dzień Bożego Narodzenia' 
+WHERE MONTH(Data) = 12 AND DAY(Data) = 26
+END
+
+/*mozna po updacie zaleglych dat swiat puscic - _UPDATE_Kalendarz-Dni_Swiat
+to przy generowaniu kalendarza na nowy rok jest konieczne by z automatu wstawil swieta stale
+trigger z automatu ustawi poprawny dzien swiat dla swiat stalych /
+
