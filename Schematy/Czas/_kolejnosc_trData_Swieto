@@ -1,0 +1,16 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+sp_settriggerorder @triggername = 'Czas.trData_Swieto', @order = 'last', @stmttype = 'INSERT' ;
+
+GO
+
+sp_settriggerorder @triggername = 'Czas.trData_Swieto', @order = 'last', @stmttype = 'UPDATE' ;
+
+/* ustawienie triggera sprawdzajacego poprawnosc wstawienia swiat na koncu kolejki po to by trigger 
+Swieta_stale_check mogl oprawic czesc blednych dat swiat */
+
+
