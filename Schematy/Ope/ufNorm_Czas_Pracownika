@@ -1,0 +1,36 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufNorm_Czas_Pracownika') IS NOT NULL
+DROP FUNCTION Ope.ufNorm_Czas_Pracownika;
+
+GO
+
+CREATE FUNCTION Ope.ufNorm_Czas_Pracownika( @idprac tinyint , @dat_od date, @dat_do date )
+
+
+RETURNS int
+WITH SCHEMABINDING 
+AS
+BEGIN 
+
+DECLARE @norm_prac_h_na_dz int = (SELECT Norma_H_Dzn_Prac FROM Ope.Pracownicy WHERE IDPracownika = @idprac)
+
+DECLARE @dnirobocze int =( 
+
+SELECT COUNT(ID) 
+
+FROM Czas.Kalendarz 
+
+WHERE Data BETWEEN @dat_od and @dat_do  
+AND DATEPART(DW,Data) NOT IN (1,7) AND Dzien_Swiat IS NULL)
+
+DECLARE @norma_czas_pracy int = @norm_prac_h_na_dz * @dnirobocze
+
+
+return @norma_czas_pracy;
+
+END;
