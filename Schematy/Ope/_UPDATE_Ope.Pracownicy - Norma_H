@@ -1,0 +1,10 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+UPDATE   Ope.Pracownicy SET Norma_H_Dzn_Prac = 8
+
+/* ustawienie normy godzin pracy dla wszystkich pracowikow na osiem godzin na dzienie */
+
