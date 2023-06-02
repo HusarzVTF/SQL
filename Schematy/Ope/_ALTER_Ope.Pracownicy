@@ -1,0 +1,12 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.Pracownicy ADD Norma_H_Dzn_Prac tinyint 
+CHECK (Norma_H_Dzn_Prac > 0 AND Norma_H_Dzn_Prac <= 8)
+
+/* dodanie kolumny z norma pracy dzienna godzinowa dla poszczegolnego pracownika */
+
+
