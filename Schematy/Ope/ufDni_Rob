@@ -1,0 +1,36 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufDni_Rob') IS NOT NULL
+DROP FUNCTION Ope.ufDni_Rob;
+
+GO
+
+CREATE FUNCTION Ope.ufDni_Rob(@dat_od date, @dat_do date )
+
+
+RETURNS int
+WITH SCHEMABINDING  
+AS
+BEGIN 
+
+DECLARE @dnirob int =( 
+
+SELECT COUNT(ID) 
+
+FROM Czas.Kalendarz 
+
+WHERE
+Data BETWEEN @dat_od and @dat_do  
+AND DATEPART(DW,Data) NOT IN (1,7) 
+AND Dzien_Swiat IS NULL)
+
+return @dnirob;
+
+END;
+
+/* funkcja liczaca dni robocze dla wskazanego zakresu dat */
+
