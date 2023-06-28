@@ -1,0 +1,38 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+DECLARE @startdat date = '2020-01-01'
+
+DECLARE @mindat date = (SELECT MIN(data) FROM Czas.Kalendarz)
+
+CREATE TABLE #braki_Kalendarz(data date, IDRk int, IDM tinyint)
+
+INSERT INTO #braki_Kalendarz(data, IDRk, IDM)
+
+SELECT @startdat,
+(SELECT ID FROM Czas.Rok WHERE Rok_Num = YEAR(@startdat)),
+(SELECT ID FROM Czas.Miesiac WHERE ID = MONTH(@startdat))
+
+WHILE (SELECT MAX(data) FROM #braki_Kalendarz) < DATEADD(d,-1,@mindat) 
+
+BEGIN
+
+INSERT INTO #braki_Kalendarz(data, IDRk, IDM)
+
+SELECT DATEADD(d,1,( SELECT MAX(data) FROM #braki_Kalendarz)),
+(SELECT ID FROM Czas.Rok WHERE Rok_Num = YEAR(DATEADD(d,1,( SELECT MAX(data) FROM #braki_Kalendarz)))),
+(SELECT ID FROM Czas.Miesiac WHERE ID = MONTH(DATEADD(d,1,( SELECT MAX(data) FROM #braki_Kalendarz))))
+
+
+END
+
+
+INSERT INTO Czas.Kalendarz (Data,IDRk,IDM)
+SELECT*FROM #braki_Kalendarz
+
+/* skrypt uzupelniajacy dane za 2020 rok mimo, ze firma zaczela dzialac pozniej dla kompletnosci danych warto miec caly rok */
+
+
