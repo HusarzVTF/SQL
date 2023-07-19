@@ -1,0 +1,55 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.Lista_Plac') IS NOT NULL
+DROP TABLE Ope.Lista_Plac;
+
+GO
+
+CREATE TABLE Ope.Lista_Plac (
+ID BIGINT IDENTITY PRIMARY KEY,
+ID_pracownika  TINYINT  FOREIGN KEY REFERENCES Ope.Pracownicy (IDPracownika), 
+Pierwszy_Dzien_Okres date FOREIGN KEY REFERENCES Czas.Kalendarz (Data),
+Ostatni_Dzien_Okres date  FOREIGN KEY REFERENCES Czas.Kalendarz (Data), 
+Rok AS YEAR(Ostatni_Dzien_Okres), 
+Miesiac AS MONTH(Ostatni_Dzien_Okres), 
+Dni_W_M AS DATEDIFF(d,Czas.PierwszydzienMiesiaca(Pierwszy_Dzien_Okres), EOMONTH(Ostatni_Dzien_Okres))+1, 
+Dni_Rob_W_Okres AS Ope.ufDni_Rob(Pierwszy_Dzien_Okres, Ostatni_Dzien_Okres),
+Std_Norm_Prac_H_W_Okres AS Ope.ufNormaCzasuPracy(Pierwszy_Dzien_Okres, Ostatni_Dzien_Okres),
+Norma_Pracow_H_W_Okres AS Ope.ufNorm_Czas_Pracownika(ID_pracownika, Pierwszy_Dzien_Okres, Ostatni_Dzien_Okres), 
+Uspr_Nieob_Dni_Platne int not null CHECK(Uspr_Nieob_Dni_Platne >= 0),
+Przepracowanych_Godz int not null CHECK(Przepracowanych_Godz >= 0),
+Przep_Nadgod_Dod_100_Proc float CHECK(Przep_Nadgod_Dod_100_Proc >= 0),
+Przep_Nadgod_Dod_50_Proc float CHECK(Przep_Nadgod_Dod_50_Proc >= 0), 
+Pensja real not null CHECK(Pensja > 0),
+Stawka_Godz AS 
+Pensja / 
+(Ope.ufNorm_Czas_Pracownika(ID_pracownika, Czas.PierwszydzienMiesiaca(Pierwszy_Dzien_Okres), EOMONTH(Ostatni_Dzien_Okres))),  
+
+Wyplata AS 
+
+ROUND( 
+
+ISNULL(Przepracowanych_Godz + Uspr_Nieob_Dni_Platne*8,0) * 
+( Pensja / 
+(Ope.ufNorm_Czas_Pracownika(ID_pracownika, Czas.PierwszydzienMiesiaca(Pierwszy_Dzien_Okres), EOMONTH(Ostatni_Dzien_Okres))))
+
++ 
+
+ISNULL(Przep_Nadgod_Dod_100_Proc,0) * 
+( Pensja / 
+(Ope.ufNorm_Czas_Pracownika(ID_pracownika, Czas.PierwszydzienMiesiaca(Pierwszy_Dzien_Okres), EOMONTH(Ostatni_Dzien_Okres)))) * 2
+
++
+ 
+ISNULL(Przep_Nadgod_Dod_50_Proc,0) * 
+( Pensja / 
+(Ope.ufNorm_Czas_Pracownika(ID_pracownika, Czas.PierwszydzienMiesiaca(Pierwszy_Dzien_Okres), EOMONTH(Ostatni_Dzien_Okres)))) * 1.5
+
+,2))
+
+/* tabela w ktorej gromadzone beda dane odnosie wyplat wynagrodzen dla pracownikow w poszczegolnych miesiacach i latach. 
+Jest zrodlem danych odnosnie kosztow pracy w firmie.   */
+
+
