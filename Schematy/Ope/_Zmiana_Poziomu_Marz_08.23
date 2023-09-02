@@ -1,0 +1,10 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Ropa', 0.3
+EXEC Ope.uspZmien_Marze 'Gaz', 0.4
+EXEC Ope.uspZmien_Marze 'Benzyna', 0.3
+
+/* Zmiana marz w firmie. Wzrost stawek podatkowych wymusza obnizenie marz by utrzymac ceny na akceptowlanym dla konsumentow poziomie */
+
