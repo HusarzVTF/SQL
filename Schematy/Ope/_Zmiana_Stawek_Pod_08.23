@@ -1,0 +1,12 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Podatek 'Ropa',1.65
+EXEC Ope.uspZmien_Podatek 'Benzyna',2.17
+EXEC Ope.uspZmien_Podatek 'Gaz',0.38
+
+/* nowe stawki podatkowe na paliwa */
+
