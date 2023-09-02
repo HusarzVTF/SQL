@@ -1,0 +1,60 @@
+USE Stacja_Paliw 
+
+GO
+
+EXEC	Ope.uspWstawFV_Zakup
+		@nrfv = N'103FV',
+		@pozfv = 1,
+		@id_d = 1995,
+		@iddost = 2,
+		@idprac = 5,
+		@idpal = 1,
+		@ilo = 668805,
+		@kwn =2006415,
+		@kwb = 2421074.1,
+		@term ='2023-10-05',
+		@podatek = 414659.1,
+		@tpl = 'przelew',
+		@czastr =  '2023-08-29',
+		@dataz = NULL,
+		@datakz = NULL
+
+		
+EXEC	Ope.uspWstawFV_Zakup
+		@nrfv = N'104F',
+		@pozfv = 1,
+		@id_d = 1995,
+		@iddost = 3,
+		@idprac = 5,
+		@idpal = 2,
+		@ilo = 583346,
+		@kwn = 875019,
+		@kwb =1061689.72 ,
+		@term ='2023-10-03',
+		@podatek = 186670.72,
+		@tpl = 'przelew',
+		@czastr =  '2023-08-29',
+		@dataz = NULL,
+		@datakz = NULL
+
+EXEC Ope.uspWstawFV_Zakup
+		@nrfv = N'F02',
+		@pozfv = 1,
+		@id_d =1995 ,
+		@iddost = 6,
+		@idprac = 5,
+		@idpal = 3,
+		@ilo =888874 ,
+		@kwn =2133297.6 ,
+		@kwb = 2631067.04,
+		@term = '2023-10-11',
+		@podatek = 497769.44,
+		@tpl = 'przelew',
+		@czastr = '2023-08-29',
+		@dataz = NULL,
+		@datakz = NULL
+
+/* FV za dostawy paliw */
+
+
+  
