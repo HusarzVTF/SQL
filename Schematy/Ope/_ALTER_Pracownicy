@@ -1,0 +1,8 @@
+USE Stacja_1
+
+GO
+
+ALTER TABLE Ope.Pracownicy ADD Pensja_OD date 
+
+/* dodanie kolumny Pensja_OD do tabeli pracownicy w ktorej bedzie informacja o od kiedy obowiazuje aktualna pensja*/
+
