@@ -1,0 +1,24 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.Lista_Obecnosci') IS NOT NULL
+DROP TABLE Ope.Lista_Obecnosci;
+
+CREATE TABLE Ope.Lista_Obecnosci 
+(ID BIGINT IDENTITY PRIMARY KEY,
+ ID_Prac TINYINT  FOREIGN KEY REFERENCES Ope.Pracownicy (IDPracownika),
+ Pensja real not null,
+ Rok AS Year(Data),
+ Miesiac AS Month(Data),
+ Data date FOREIGN KEY REFERENCES Czas.Kalendarz (Data),
+ Obecnosc varchar(11)  CHECK(Obecnosc IN('Obecny/a','Urlop.Bezp','Swieto','Weekend','Nieus.Nieob','Uspr.Nieob')),
+ Przepr_H float  CHECK(Przepr_H >= 0 AND Przepr_H <= 8),
+ Przep_Nadgod_Dod_100_Proc float CHECK(Przep_Nadgod_Dod_100_Proc >= 0),
+ Przep_Nadgod_Dod_50_Proc float CHECK(Przep_Nadgod_Dod_50_Proc >= 0)
+ )
+
+ /* tabela lista obecnosci na pdostawie ktorej bedzie naliczane nalezne wynagrodzenie */
+
