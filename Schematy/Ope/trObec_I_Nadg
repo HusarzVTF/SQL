@@ -1,0 +1,32 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trObec_I_Nadg') IS NOT NULL
+DROP TRIGGER Ope.trObec_I_Nadg; 
+
+GO
+
+CREATE TRIGGER Ope.trObec_I_Nadg ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
+
+
+AS
+
+IF EXISTS(
+SELECT ID 
+FROM Ope.Lista_Obecnosci 
+WHERE (Przepr_H > 0 OR Przep_Nadgod_Dod_100_Proc > 0 OR Przep_Nadgod_Dod_50_Proc > 0)
+AND (Obecnosc IN('Urlop.Bezp','Uspr.Nieob','Nieus.Nieob'))
+)
+
+
+
+BEGIN
+PRINT 'Jezeli pracownik byl nieobecny w pracy to nie mogl pracowac tym bardziej miec nadgodzin.';
+ROLLBACK TRANSACTION 
+END
+
+/* trigger blokuje mozliwosc wstawienia godzin pracy w dni nieobecne w pracy */
+
