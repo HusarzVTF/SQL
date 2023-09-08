@@ -1,0 +1,26 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trGodzinyPracy') IS NOT NULL
+DROP TRIGGER Ope.trGodzinyPracy; 
+
+GO
+
+CREATE TRIGGER trGodzinyPracy ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
+
+
+AS
+IF EXISTS (
+SELECT ID 
+FROM Ope.Lista_Obecnosci 
+WHERE Przep_Nadgod_Dod_50_Proc  +  Przep_Nadgod_Dod_100_Proc + Przepr_H >24)
+
+BEGIN
+PRINT 'Doba ma dwadziescia cztery godziny wiec nie mozna pracowac dluzej.';
+ROLLBACK TRANSACTION 
+END
+
+/* trigger blokujacy mozliwosc wstawienia lacznych godzin pracy wiekszych niz ma doba dla jednego dnia */
+
+
