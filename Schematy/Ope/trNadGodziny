@@ -1,0 +1,29 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trNadGodziny') IS NOT NULL
+DROP TRIGGER Ope.trNadGodziny;
+GO
+
+CREATE TRIGGER Ope.trNadGodziny ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
+
+AS
+
+IF EXISTS (
+SELECT ID 
+FROM Ope.Lista_Obecnosci 
+WHERE Przep_Nadgod_Dod_50_Proc > 0 AND Przep_Nadgod_Dod_100_Proc > 0)
+
+BEGIN
+PRINT 'Jednego dnia nie moze byc dwoch roznych rodzajow nadgodzin.';
+ROLLBACK TRANSACTION 
+END
+
+/* Uwaga ogolna: Nie okreslamy dokladnego systemu pracy dlatego triggery blokuja tylko oczywiste bledy
+ten trigger blokuje mozliwosc naliczania dwoch rodzajow nadgodzin dla jednego dnia jest to prawnie wykluczone */
+
+
+
