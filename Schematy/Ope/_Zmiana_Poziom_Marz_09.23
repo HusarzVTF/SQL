@@ -1,0 +1,5 @@
+USE Stacja_1
+GO
+EXEC Ope.uspZmien_Marze 'Ropa',0.24
+EXEC Ope.uspZmien_Marze 'Gaz',0.47
+EXEC Ope.uspZmien_Marze 'Benzyna',0.18
