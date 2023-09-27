@@ -1,0 +1,9 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Podatek 'Ropa',1.5
+EXEC Ope.uspZmien_Podatek 'Benzyna',2
+EXEC Ope.uspZmien_Podatek 'Gaz',0.38
+
