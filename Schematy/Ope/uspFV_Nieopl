@@ -1,0 +1,102 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspFV_Nieopl') IS NOT NULL
+DROP PROC Ope.uspFV_Nieopl;
+
+GO
+
+CREATE PROC Ope.uspFV_Nieopl (@ob varchar(8))
+
+AS
+
+BEGIN
+
+IF @ob NOT IN('Dostawy', 'Sprzedaz')
+
+BEGIN
+PRINT 'Wprowadzona nieprawidlowa nazwe, nieoplacone fv moga dotyczyc tylko obiektu Sprzedaz lub Dostawy.'
+END
+
+
+IF @ob = 'Dostawy' 
+
+BEGIN
+
+SELECT NRFV,PozycjaNAFV,D.IdDostawcy, NazwaDostawcy, IDPaliw,RodzajPaliwa,IloscPaliwa,KwotaBrutto,TerminZaplaty,
+
+DATEDIFF(d, TerminZaplaty,GETDATE()) AS Ile_D_Po_Term,
+
+'Obj' = 
+
+CASE 
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) = 0 THEN 'Dzis termin'
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) < 0 THEN 'Przed terminem'
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) > 0 THEN 'Po terminie'
+
+
+END
+
+
+FROM Ope.Dostawy AS D
+
+JOIN Ope.Dostawcy AS Ds
+
+ON D.IdDostawcy = Ds.IdDostawcy 
+
+JOIN Ope.Zbiorniki AS Z
+
+ON D.IDPaliw = Z.IDPaliwa
+ 
+WHERE DataZaplaty IS NULL
+
+END
+
+IF @ob='Sprzedaz' 
+
+BEGIN
+
+SELECT NRFV,PozycjaNAFV,S.IdKlienta,NazwaKlienta,S.IDPaliwa,RodzajPaliwa,IloscPaliwa,KwotaBrutto,TerminZaplaty,
+
+DATEDIFF(d, TerminZaplaty,GETDATE()) AS Ile_D_Po_Term,
+
+'Obj' = 
+
+CASE 
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) = 0 THEN 'Dzis termin'
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) < 0 THEN 'Przed terminem'
+
+WHEN DATEDIFF(d, TerminZaplaty,GETDATE()) > 0 THEN 'Po terminie'
+
+
+END
+
+
+FROM Ope.Sprzedaz AS S
+
+JOIN Ope.Klienci AS K
+
+ON K.IdKlienta = S.IdKlienta 
+
+JOIN Ope.Zbiorniki AS Z
+
+ON S.IDPaliwa = Z.IDPaliwa
+ 
+WHERE DataZaplaty IS NULL
+
+
+END
+  
+  
+END
+
+/* procedura zwracajaca nieoplacone fv: zobowiazania gdy to firma ma cos do oplacenia, naleznosci gdy to klienci maja firmie do zaplacenia */
+
