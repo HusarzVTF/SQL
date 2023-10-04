@@ -1,0 +1,9 @@
+
+
+USE Stacja_Paliw
+
+GO 
+
+EXEC  Ope.uspFV_Nieopl 'Dostawy'
+
+/* uruchomienie procedur pokazujacej zobowiazania za dostawy paliw */
