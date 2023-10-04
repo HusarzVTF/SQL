@@ -1,0 +1,15 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap 'Dostawy', 'FV00002', 5, '2023-10-03'
+
+EXEC Ope.uspDataZap 'Dostawy', '103FV', 2, '2023-10-03'
+
+EXEC Ope.uspDataZap 'Dostawy', '104F', 3, '2023-10-03'
+
+EXEC Ope.uspDataZap 'Dostawy', 'F02', 6, '2023-10-03'
+
+
