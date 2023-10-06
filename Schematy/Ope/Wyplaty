@@ -7,11 +7,11 @@ GO
 IF OBJECT_ID('Ope.Wyplaty') IS NOT NULL
 DROP TABLE Ope.Wyplaty;
 
-CREATE TABLE Ope.Wyplaty
-(ID BIGINT IDENTITY PRIMARY KEY,
- ID_Prac TINYINT  FOREIGN KEY REFERENCES Ope.Pracownicy (IDPracownika),
- Rok int FOREIGN KEY REFERENCES Czas.Rok (Rok_Num),
- Miesiac int not null CHECK(Miesiac BETWEEN 1 AND 12), 
+CREATE TABLE Ope.Wyplaty( 
+ID BIGINT IDENTITY PRIMARY KEY,
+ID_Prac TINYINT  FOREIGN KEY REFERENCES Ope.Pracownicy (IDPracownika),
+Rok int FOREIGN KEY REFERENCES Czas.Rok (Rok_Num),
+Miesiac int not null CHECK(Miesiac BETWEEN 1 AND 12), 
 Pierwszy_Dzien_Miesiaca AS
 CAST(
 CONCAT(
@@ -32,8 +32,30 @@ CAST(Rok AS char(4)) ,'-'),
 RIGHT(CONCAT('0',CAST(Miesiac AS varchar(3))),2)),
 '-'),
 '01') AS Date)),
- Do_Wyplaty real  CHECK (Do_Wyplaty >= 0)
+
+Do_Wyplaty AS 
+ 
+Ope.ufDoWyplaty (
+CAST(
+CONCAT(
+CONCAT(
+CONCAT(
+CONCAT(
+CAST(Rok AS char(4)) ,'-'),
+RIGHT(CONCAT('0',CAST(Miesiac AS varchar(3))),2)),
+'-'),
+'01') AS Date),
+EOMONTH(CAST(
+CONCAT(
+CONCAT(
+CONCAT(
+CONCAT(
+CAST(Rok AS char(4)) ,'-'),
+RIGHT(CONCAT('0',CAST(Miesiac AS varchar(3))),2)),
+'-'),
+'01') AS Date))
+,ID_Prac)
+  
  )
 
-/* tabela w ktorej beda przechowywane koszty plac w ujeciu miesiecznym dla kazdego pracownika */
-
+/* tabela zwaierajaca dane odnosnie kosztow plac */
