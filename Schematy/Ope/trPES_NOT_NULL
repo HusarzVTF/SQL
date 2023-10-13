@@ -1,0 +1,23 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trPES_NOT_NULL') IS NOT NULL
+DROP TRIGGER Ope.trPES_NOT_NULL;
+GO
+
+CREATE TRIGGER Ope.trPES_NOT_NULL ON Ope.Pracownicy AFTER UPDATE, INSERT
+
+AS
+
+
+IF EXISTS(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL IS NULL)
+
+BEGIN
+PRINT 'Proba wstawienia lub modyfikacji pustego numeru pesel.';
+ROLLBACK TRANSACTION 
+END
+
+/* trigger blokujacy wstawienie pracownika bez nr pesel */
