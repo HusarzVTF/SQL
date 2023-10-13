@@ -1,0 +1,45 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trNowy_Pracownik') IS NOT NULL
+DROP TRIGGER Ope.trNowy_Pracownik; 
+
+GO
+
+CREATE TRIGGER trNowy_Pracownik ON Ope.Pracownicy AFTER INSERT
+
+
+AS
+
+INSERT INTO Ope.Lista_Obecnosci (ID_Prac, Pensja, Data, Obecnosc)
+
+SELECT IDPracownika, Pensja, Data, 
+'Obecnosc' = 
+CASE WHEN Dzien_Swiat IS NOT NULL THEN 'Swieto' 
+WHEN DATEPART(DW,Data) IN (1,7) THEN 'Weekend'
+END
+
+FROM Ope.Pracownicy AS P
+CROSS JOIN Czas.Kalendarz 
+
+WHERE IDPracownika = (SELECT MAX(IDPracownika) FROM Ope.Pracownicy)
+AND 
+Data >= data_Zatrudnienia
+
+
+INSERT INTO Ope.Wyplaty(ID_Prac, Rok, Miesiac)
+
+SELECT P.IDPracownika, Year(Data), Month(Data) 
+
+FROM Ope.Pracownicy AS P CROSS JOIN Czas.Kalendarz AS K 
+
+WHERE Data = EOMONTH(Data)
+AND
+IDPracownika = (SELECT MAX(IDPracownika) FROM Ope.Pracownicy)
+AND 
+Data >= data_Zatrudnienia
+
+/* wygenerowanie rekordow dla nowego pracownika w tabli lista obecnosci i wyplaty */
