@@ -1,0 +1,32 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trLista_Duplikat') IS NOT NULL
+DROP TRIGGER Ope.trLista_Duplikat; 
+
+GO
+
+CREATE TRIGGER trLista_Duplikat ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
+
+
+AS
+
+IF EXISTS(
+
+SELECT ID_Prac, Data 
+FROM Ope.Lista_Obecnosci 
+GROUP BY ID_Prac, Data
+HAVING COUNT(ID) > 1
+
+)
+
+BEGIN
+PRINT 'Proba wstawienia lub utworzenia duplikatu w liscie obecnosci na poziomie pracownik, data  operacja zostala cofnieta.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+
