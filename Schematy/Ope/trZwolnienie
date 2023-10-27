@@ -1,0 +1,88 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trZwolnienie') IS NOT NULL
+DROP TRIGGER Ope.trZwolnienie; 
+
+GO
+
+CREATE TRIGGER trZwolnienie ON Ope.Pracownicy AFTER UPDATE
+
+
+AS
+
+IF EXISTS(
+SELECT IDPracownika
+FROM Ope.Pracownicy AS P 
+JOIN Ope.Lista_Obecnosci AS L 
+ON P.IDPracownika = L.ID_Prac
+WHERE data_Zwolnienia IS NOT NULL
+AND 
+Data > data_Zwolnienia
+) 
+
+
+
+BEGIN
+
+SELECT IDPracownika, data_Zwolnienia
+INTO #zwol
+FROM Ope.Pracownicy AS P
+JOIN Ope.Lista_Obecnosci AS L
+ON P.IDPracownika = L.ID_Prac
+WHERE data_Zwolnienia IS NOT NULL
+AND
+Data > data_Zwolnienia
+
+DELETE L
+FROM Ope.Lista_Obecnosci AS L
+JOIN #zwol AS Z
+ON L.ID_Prac = Z.IDPracownika
+WHERE Data > data_Zwolnienia
+
+DROP TABLE #zwol
+
+
+END
+
+
+
+IF EXISTS(
+SELECT IDPracownika
+FROM Ope.Pracownicy AS P 
+JOIN Ope.Wyplaty AS W 
+ON P.IDPracownika = W.ID_Prac
+WHERE data_Zwolnienia IS NOT NULL
+AND 
+Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+)
+
+BEGIN
+
+SELECT IDPracownika, data_Zwolnienia
+INTO #zwolwp
+FROM Ope.Pracownicy AS P
+JOIN Ope.Wyplaty AS W
+ON P.IDPracownika = W.ID_Prac
+WHERE data_Zwolnienia IS NOT NULL
+AND
+Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+
+
+DELETE W
+FROM Ope.Wyplaty AS W
+JOIN #zwolwp AS Z
+ON W.ID_Prac = Z.IDPracownika
+WHERE Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+
+DROP TABLE #zwolwp
+
+END
+
+/* trigger kasujacy liste obecnosci dla zwolnionych pracownikow od daty zwolnienia wzwyz 
+oraz pozyjce w liscie wyplat za miesiace i lata od daty zwolnienia wzwyz */
+
+
