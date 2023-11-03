@@ -1,0 +1,11 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+UPDATE Ope.Pracownicy SET Pensja_OD = data_Zatrudnienia
+
+/* atkualizcja atrybutu Pensja_OD do daty zatrudnienia dla wszystkich pracownikow */
+
+
