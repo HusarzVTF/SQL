@@ -1,0 +1,45 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trPensja_OD_Wstaw') IS NOT NULL
+DROP TRIGGER Ope.trPensja_OD_Wstaw; 
+
+GO
+
+CREATE TRIGGER trPensja_OD_Wstaw ON Ope.Pracownicy AFTER INSERT
+
+
+AS
+
+
+IF EXISTS(
+
+SELECT IDPracownika
+
+FROM Ope.Pracownicy
+
+WHERE
+
+Pensja_OD IS NULL
+
+OR
+
+Pensja_OD != data_Zatrudnienia 
+)
+
+BEGIN
+PRINT 'Pensja_OD dla nowego pracownika nie moze byc rozna od daty zatrudnienia.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* trigger blokujacy wstawienie pracownika bez daty dla atrybutu Pensja_OD lub z inna data niz data zatrudnienia. 
+Z racji tego, ze insert jest jednoznaczny z zatrudnieniem nowego pracownika to Pensja_OD nie moze byc inna niz data zatrudnienia */
+
+
+
+
+
