@@ -1,0 +1,46 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trZmianaPensji') IS NOT NULL
+DROP TRIGGER Ope.trZmianaPensji; 
+
+GO
+
+CREATE TRIGGER trZmianaPensji ON Ope.Pracownicy AFTER UPDATE
+
+
+AS
+
+IF EXISTS(
+
+SELECT IDPracownika 
+
+FROM Ope.Pracownicy AS P
+LEFT JOIN Ope.Lista_Obecnosci AS L ON P.IDPracownika = ID_Prac
+
+WHERE 
+Data > = Pensja_OD
+AND 
+P.Pensja <> L.Pensja
+
+)
+
+BEGIN
+
+UPDATE Ope.Lista_Obecnosci SET Pensja = P.Pensja
+
+FROM Ope.Lista_Obecnosci AS L
+JOIN  Ope.Pracownicy AS P ON ID_Prac = IDPracownika
+
+WHERE 
+Data > = Pensja_OD
+AND
+P.Pensja <> L.Pensja
+
+END
+
+/* trigger zaktualizuje pensje w liscie obecnosci jezeli bedzie ona nieaktualna wzgledem daty obowiazywania nowej pensji 
+w rekordach od ktorych obowiazuje nowa pensja */
