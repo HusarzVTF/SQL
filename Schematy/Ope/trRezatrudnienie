@@ -1,0 +1,112 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trRezatrudnienie') IS NOT NULL
+DROP TRIGGER Ope.trRezatrudnienie; 
+
+GO
+
+CREATE TRIGGER trRezatrudnienie ON Ope.Pracownicy AFTER UPDATE
+
+AS
+
+IF EXISTS (
+
+SELECT IDPracownika, K.Data 
+
+FROM Ope.Pracownicy AS P
+CROSS JOIN Czas.Kalendarz AS K
+
+WHERE
+P.data_Zwolnienia IS NULL
+AND
+Pensja_OD = data_Zatrudnienia
+AND
+K.Data >= data_Zatrudnienia
+
+
+EXCEPT
+
+SELECT ID_Prac, Data 
+FROM Ope.Lista_Obecnosci
+
+)
+
+BEGIN
+
+
+INSERT INTO Ope.Lista_Obecnosci (ID_Prac, Data, Pensja)
+
+SELECT IDPracownika, K.Data, Pensja
+
+FROM Ope.Pracownicy AS P
+CROSS JOIN Czas.Kalendarz AS K
+
+WHERE
+P.data_Zwolnienia IS NULL
+AND
+K.Data >= data_Zatrudnienia
+AND
+Pensja_OD = data_Zatrudnienia
+
+EXCEPT
+
+SELECT ID_Prac, Data, Pensja 
+FROM Ope.Lista_Obecnosci
+
+END
+
+IF EXISTS (
+SELECT IDPracownika, YEAR(Data) , MONTH(Data) 
+
+FROM Ope.Pracownicy AS P
+CROSS JOIN Czas.Kalendarz AS K
+
+WHERE
+P.data_Zwolnienia IS NULL
+AND
+K.Data >= data_Zatrudnienia
+AND
+Pensja_OD = data_Zatrudnienia
+
+GROUP BY IDPracownika,YEAR(Data), MONTH(Data)
+
+EXCEPT
+
+SELECT ID_Prac, Rok, Miesiac
+FROM Ope.Wyplaty
+
+)
+
+BEGIN
+
+INSERT INTO Ope.Wyplaty(ID_Prac, Rok, Miesiac)
+
+SELECT IDPracownika, YEAR(Data) , MONTH(Data) 
+
+FROM Ope.Pracownicy AS P
+CROSS JOIN Czas.Kalendarz AS K
+
+WHERE
+P.data_Zwolnienia IS NULL
+AND
+K.Data >= data_Zatrudnienia
+AND
+Pensja_OD = data_Zatrudnienia
+
+GROUP BY IDPracownika,YEAR(Data), MONTH(Data)
+
+EXCEPT
+
+SELECT ID_Prac, Rok, Miesiac
+FROM Ope.Wyplaty
+
+END
+
+/* trigger ktory w przypadku ponownego zatrudnienia pracownika sprawdzi czy brakuje dla niego danych w liscie obecnosci i wyplatach 
+i jesli tak to wstawi brakujace dane*/
+
+
