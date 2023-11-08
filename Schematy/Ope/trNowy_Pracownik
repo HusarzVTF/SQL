@@ -11,8 +11,11 @@ GO
 
 CREATE TRIGGER trNowy_Pracownik ON Ope.Pracownicy AFTER INSERT
 
-
 AS
+
+DECLARE @lastPrac tinyint = (SELECT MAX(IDPracownika) FROM Ope.Pracownicy)
+
+DECLARE @maxKal date = (SELECT MAX(Data) FROM Czas.Kalendarz)
 
 INSERT INTO Ope.Lista_Obecnosci (ID_Prac, Pensja, Data, Obecnosc)
 
@@ -25,9 +28,9 @@ END
 FROM Ope.Pracownicy AS P
 CROSS JOIN Czas.Kalendarz 
 
-WHERE IDPracownika = (SELECT MAX(IDPracownika) FROM Ope.Pracownicy)
+WHERE IDPracownika = @lastPrac
 AND 
-Data >= data_Zatrudnienia
+Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @maxKal)
 
 
 INSERT INTO Ope.Wyplaty(ID_Prac, Rok, Miesiac)
@@ -38,8 +41,10 @@ FROM Ope.Pracownicy AS P CROSS JOIN Czas.Kalendarz AS K
 
 WHERE Data = EOMONTH(Data)
 AND
-IDPracownika = (SELECT MAX(IDPracownika) FROM Ope.Pracownicy)
+IDPracownika = @lastPrac
 AND 
-Data >= data_Zatrudnienia
+Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @maxKal)
+
+
 
 /* wygenerowanie rekordow dla nowego pracownika w tabli lista obecnosci i wyplaty */
