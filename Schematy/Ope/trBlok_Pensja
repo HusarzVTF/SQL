@@ -1,0 +1,37 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trBlok_Pensja') IS NOT NULL
+DROP TRIGGER Ope.trBlok_Pensja; 
+
+GO
+
+CREATE TRIGGER trBlok_Pensja ON Ope.Lista_Obecnosci AFTER  UPDATE, INSERT 
+
+AS
+
+IF EXISTS(
+
+SELECT  ID_Prac
+
+FROM Ope.Lista_Obecnosci AS L
+JOIN Ope.Pracownicy AS P
+ON L.ID_Prac = P.IDPracownika
+
+WHERE
+L.Data >= Pensja_OD
+AND
+L.Pensja != P.Pensja
+
+)
+BEGIN
+PRINT 'Proba zmiany pensji na niezgodna z pensja w tabeli pracownicy. Operacja zostala cofnieta.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* trigger blokujacy zmiane pensji w liscie obecnosci na niezgodna z tabela pracownicy */
+
