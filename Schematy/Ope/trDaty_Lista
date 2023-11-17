@@ -1,0 +1,90 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trDaty_Lista') IS NOT NULL
+DROP TRIGGER Ope.trDaty_Lista; 
+
+GO
+
+CREATE TRIGGER Ope.trDaty_Lista ON Ope.Lista_Obecnosci AFTER INSERT, UPDATE, DELETE
+
+
+AS
+
+
+IF EXISTS(
+SELECT IDPracownika
+
+FROM Ope.Pracownicy AS P
+JOIN Ope.Lista_Obecnosci AS L
+ON P.IDPracownika = L.ID_Prac
+
+WHERE data_Zwolnienia IS NOT NULL
+AND Data > data_Zwolnienia
+)
+
+BEGIN 
+PRINT 'Proba wstawienia lub modyfikacji daty na liscie obecnosci na czas w ktorym pracownik byl juz zwolniony.'
+ROLLBACK TRANSACTION;
+RETURN
+END -- to kasuje daty po dacie zwolnienia
+
+IF EXISTS(
+SELECT IDPracownika
+
+FROM Ope.Pracownicy AS P
+JOIN Ope.Lista_Obecnosci AS L
+ON P.IDPracownika = L.ID_Prac
+
+WHERE data_Zwolnienia IS  NULL
+AND Data < data_Zatrudnienia
+)
+
+BEGIN 
+PRINT 'Proba wstawienia lub modyfikacji daty na liscie obecnosci na czas w ktorym pracownik jeszcze nie pracowal.'
+ROLLBACK TRANSACTION;
+RETURN
+END -- to kasuje daty przed data zatrudnienia
+
+
+DECLARE @mxdat_kal date = (SELECT MAX(Data) FROM Czas.Kalendarz)
+
+IF EXISTS(
+
+SELECT P.IDPracownika, K.Data
+
+FROM Czas.Kalendarz AS K
+CROSS JOIN Ope.Pracownicy AS P
+
+WHERE 
+
+K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @mxdat_kal)  
+ 
+
+EXCEPT
+
+SELECT ID_Prac, Data
+FROM Ope.Lista_Obecnosci
+
+) 
+BEGIN
+PRINT 'Proba modyfikacji danych w liscie obecnosci na takie, ktore sa niezgodne z datami w kalendarzu w powiazaniu z data zatrudnienia lub/i zwolnienia.'
+ROLLBACK TRANSACTION;
+RETURN
+END -- to kasuje dziury w datach wzlgedem tych jakie powinny byc wg kalendarza
+
+/* 
+trigger dziala tak, ze wpierw sprawdza czy sa daty przed data zatrudninia potem po dacie zwolnienia a na koncu dziury do kalendarza
+ta ostatnia wersja waliduje calosc i mozna by sie ograniczyc do niej, ale to zapytanie najbardziej obciaza zasoby i dlatego, jezeli
+mozna go uniknac to warto z tego skorzystac choc w najgorszym wariancie taka konstrukcja triggera doprowadzi do sprawdzenia wszystkich 
+warunkow. Tylko, ze nie kazdy przypadek bedzie tym najgroszym wariantem.
+*/
+
+
+
+
+
+
+
+
