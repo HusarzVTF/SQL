@@ -1,0 +1,29 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+INSERT Ope.Lista_Obecnosci (ID_Prac, Pensja, Data) 
+
+SELECT P.IDPracownika, Pensja, Data
+
+FROM Ope.Pracownicy AS P CROSS JOIN Czas.Kalendarz AS K 
+
+WHERE Data >= data_Zatrudnienia 
+ORDER BY P.IDPracownika, Data ASC
+
+
+INSERT Ope.Wyplaty(ID_Prac, Rok, Miesiac)
+
+SELECT L.ID_Prac,YEAR(Data),MONTH(Data)
+
+FROM Ope.Lista_Obecnosci AS L
+
+GROUP BY L.ID_Prac, YEAR(Data), MONTH(Data)
+ORDER BY  L.ID_Prac, YEAR(Data), MONTH(Data) ASC
+
+/* zapytanie , ktore wstawi zalegle dane do tabeli Lista_Obecnosci i wyplaty*/
+
+
+
