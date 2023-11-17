@@ -1,0 +1,33 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trWyplaty_Duplikat') IS NOT NULL
+DROP TRIGGER Ope.trWyplaty_Duplikat; 
+
+GO
+
+CREATE TRIGGER trWyplaty_Duplikat ON Ope.Wyplaty AFTER UPDATE, INSERT
+
+
+AS
+
+IF EXISTS(
+
+SELECT ID_Prac, Rok, Miesiac 
+
+FROM Ope.Wyplaty 
+
+GROUP BY ID_Prac, Rok, Miesiac
+HAVING COUNT(ID) > 1
+)
+BEGIN
+PRINT 'Proba wstawienia lub utworzenia duplikatu w tabeli wyplaty na poziomie pracownik, rok, miesiac operacja zostala cofnieta.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* trigger blokujacy powstanie duplikatu w tabeli Wyplaty */
+
