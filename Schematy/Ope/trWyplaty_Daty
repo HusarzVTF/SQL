@@ -1,0 +1,90 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trWyplaty_Daty') IS NOT NULL
+DROP TRIGGER Ope.trWyplaty_Daty; 
+
+GO
+
+CREATE TRIGGER Ope.trWyplaty_Daty ON Ope.Wyplaty AFTER INSERT, UPDATE, DELETE
+
+
+AS
+
+IF EXISTS(
+SELECT IDPracownika
+
+FROM Ope.Pracownicy AS P
+JOIN Ope.Wyplaty AS W
+ON P.IDPracownika = W.ID_Prac
+
+WHERE 
+data_Zwolnienia IS NOT NULL
+AND 
+Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+)
+
+BEGIN 
+PRINT 'Proba wstawienia lub modyfikacji danych w tabeli wyplaty na czas w ktorym pracownik byl juz zwolniony.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+IF EXISTS(
+SELECT IDPracownika
+
+FROM Ope.Pracownicy AS P
+JOIN Ope.Wyplaty AS W
+ON P.IDPracownika = W.ID_Prac
+
+WHERE 
+data_Zwolnienia IS  NULL
+AND 
+Ostatni_Dzien_Miesiaca < data_Zatrudnienia
+)
+
+BEGIN 
+PRINT 'Proba wstawienia lub modyfikacji danych w tabeli wyplaty na czas w ktorym pracownik jeszcze nie pracowal.'
+ROLLBACK TRANSACTION;
+RETURN
+END 
+
+
+DECLARE @maxdat_kal date = (SELECT MAX(Data) FROM Czas.Kalendarz)
+
+
+IF EXISTS(
+
+SELECT P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
+
+FROM Czas.Kalendarz AS K
+CROSS JOIN Ope.Pracownicy AS P
+
+WHERE 
+K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @maxdat_kal)
+
+GROUP BY   P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
+ 
+
+EXCEPT
+
+SELECT ID_Prac, Rok, Miesiac
+FROM Ope.Wyplaty
+
+) 
+BEGIN
+PRINT 'Proba modyfikacji danych w tabeli wyplaty na takie, ktore sa niezgodne z datami w kalendarzu w powiazaniu z data zatrudnienia lub/i zwolnienia.'
+ROLLBACK TRANSACTION;
+RETURN
+END 
+
+/* 
+trigger dziala tak, ze wpierw sprawdza czy sa daty przed data zatrudninia potem po dacie zwolnienia a na koncu dziury do kalendarza
+ta ostatnia wersja waliduje calosc i mozna by sie ograniczyc do niej, ale to zapytanie jest najciezsze 
+a wczesniejsze sa lzejsze i odetna juz dwie wersje, ktore moga sie odpalic jesli takie warianty sie trafia
+to zalezy od przypadku bledu jaki sie trafi a moga trafiac sie rozne nie zawsze beda trafiac sie bledy 
+w kalendarzu z zakresem dat od zatrudnienia do zwolnienia
+*/
