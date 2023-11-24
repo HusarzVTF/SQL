@@ -1,0 +1,46 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trNieobec_FV') IS NOT NULL
+DROP TRIGGER Ope.trNieobec_FV; 
+
+GO
+
+CREATE TRIGGER Ope.trNieobec_FV ON Ope.Lista_Obecnosci AFTER INSERT, UPDATE
+
+
+AS
+
+IF EXISTS(
+SELECT ID_Prac, Data
+
+FROM Ope.Lista_Obecnosci 
+
+WHERE (ISNULL(Przepr_H,0) + ISNULL(Przep_Nadgod_Dod_100_Proc,0) + ISNULL(Przep_Nadgod_Dod_50_Proc,0) = 0)
+OR
+Obecnosc IN ( 'Uspr.Nieob', 'Nieus.Nieob', 'Urlop.Bezp' )
+
+INTERSECT
+
+SELECT IdPracownika, CAST( CzasTransakcji AS date)
+
+FROM Ope.Sprzedaz
+
+UNION
+
+SELECT IdPracownika, CAST( CzasTransakcji AS date)
+
+FROM Ope.Dostawy
+)
+
+BEGIN 
+PRINT 'Proba wstawienia lub modyfikacji danych na liscie obecnosci w taki sposob, ze pracownik byl nieobecny kiedy wystawial fv. Operacja zostala cofnieta.'
+ROLLBACK TRANSACTION;
+RETURN
+END 
+
+/* trigger blokuje wstawienie nieobecnosci i/lub wyzerowanie godzin pracy w dniu w ktorym pracownik wystawial faktury */
+
