@@ -1,0 +1,11 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 5,7,1,10000,'automatyczny',null,'2023-11-28','2023-11-28'
+EXEC Ope.uspWstawFV_Sprzedaz 3,7,2,10000,'automatyczny',null,'2023-11-28','2023-11-28'
+EXEC Ope.uspWstawFV_Sprzedaz 2,7,3,10000,'automatyczny',null,'2023-11-28','2023-11-28'
+
+
+/* Fv sprzedazy za paliwa w listopadzie 2023 roku */ 
