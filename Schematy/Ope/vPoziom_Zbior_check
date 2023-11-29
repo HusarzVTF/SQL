@@ -1,0 +1,19 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.vPoziom_Zbior_check') IS NOT NULL
+DROP VIEW Ope.vPoziom_Zbior_check;
+
+GO
+
+CREATE VIEW Ope.vPoziom_Zbior_check 
+
+AS
+
+SELECT IDPaliwa, RodzajPaliwa, JM, Pojemnosc, StanZbiornika, ISNULL(ROUND(StanZbiornika / Pojemnosc ,2),0) AS Proc_Wyp_Zbior
+
+FROM Ope.Zbiorniki
+
+/* widok pokazujacy aktualny poziom wypelnienia zbiornikow na paliwa */
