@@ -1,0 +1,104 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspWstaw_Urlop') IS NOT NULL
+DROP PROC Ope.uspWstaw_Urlop; 
+
+GO
+
+CREATE PROC Ope.uspWstaw_Urlop (@idp tinyint, @poczatek date, @dniur int)
+
+AS
+
+IF @idp BETWEEN 1 AND 4 --I Tura pracownikow pracuje w wyznaczone na I Ture dni tygodnia
+
+BEGIN
+
+WITH CTE_Urlop_1 (Data, Tura_1, Dzien_Ur) AS 
+(
+SELECT Data, Tura_1, SUM(Tura_1) OVER(ORDER BY Data) AS Dzien_Ur
+FROM(
+SELECT Data,
+'Tura_1' = CASE 
+WHEN DATEPART(DW,Data) BETWEEN 1 AND 5   THEN 1 ELSE 0  
+END 
+FROM Czas.Kalendarz WHERE Data BETWEEN @poczatek AND DATEADD(d,@dniur*2,@poczatek)) AS U) 
+/* dla bepzieczenstwa bierzemy wiekszy zakres dat niz wynikajacy z urlopu, bo na tym etapie
+nie wiadomo ile bedzie dni wolnych z grafiku jak weekendy przy standardowym czasie pracy  */
+
+SELECT *
+INTO #urlop1 
+FROM CTE_Urlop_1
+ 
+
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Uspr.Nieob', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+FROM Ope.Lista_Obecnosci AS L
+JOIN #urlop1  AS UR_1
+ON L.Data=UR_1.Data 
+WHERE ID_Prac=@idp 
+AND L.Data=UR_1.Data
+AND UR_1.Dzien_Ur <= @dniur
+AND UR_1.Tura_1 = 1 --dla dni, ktore normalnie byly by pracujace
+
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Urlop.Bezp', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+FROM Ope.Lista_Obecnosci AS L
+JOIN #urlop1  AS UR_1
+ON L.Data=UR_1.Data 
+WHERE ID_Prac=@idp 
+AND L.Data=UR_1.Data 
+AND UR_1.Dzien_Ur <= @dniur 
+AND UR_1.Tura_1 = 0 --dla dni, ktore normalnie byly by wolne z grafiku jak w standardowym czasie pracy weekendy
+ 
+DROP TABLE #urlop1 
+
+END
+
+
+
+IF @idp BETWEEN 5 AND 8 --II Tura pracownikow pracuje w wyznaczone na II Ture dni tygodnia
+
+
+BEGIN 
+
+WITH CTE_Urlop_2 (Data, Tura_2, Dzien_Ur) AS 
+(
+SELECT Data, Tura_2, SUM(Tura_2) OVER(ORDER BY Data) AS Dzien_Ur
+FROM(
+SELECT Data,
+'Tura_2' = CASE 
+WHEN DATEPART(DW,Data) BETWEEN 3 AND 7  THEN 1 ELSE 0   
+END 
+FROM Czas.Kalendarz WHERE Data BETWEEN @poczatek AND DATEADD(d,@dniur*2,@poczatek)) AS U)
+/* dla bepzieczenstwa bierzemy wiekszy zakres dat niz wynikajacy z urlopu, bo na tym etapie
+nie wiadomo ile bedzie dni wolnych z grafiku jak weekendy przy standardowym czasie pracy  */
+
+SELECT *
+INTO #urlop2 
+FROM CTE_Urlop_2
+
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Uspr.Nieob', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+FROM Ope.Lista_Obecnosci AS L
+JOIN #urlop2  AS UR_2
+ON L.Data=UR_2.Data 
+WHERE ID_Prac=@idp 
+AND L.Data=UR_2.Data
+AND UR_2.Dzien_Ur <= @dniur
+AND UR_2.Tura_2 = 1 --dla dni, ktore normalnie byly by pracujace
+
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Urlop.Bezp', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+FROM Ope.Lista_Obecnosci AS L
+JOIN #urlop2  AS UR_2
+ON L.Data=UR_2.Data 
+WHERE ID_Prac=@idp 
+AND L.Data=UR_2.Data 
+AND UR_2.Dzien_Ur <= @dniur 
+AND UR_2.Tura_2 = 0 --dla dni, ktore normalnie byly by wolne z grafiku jak w standardowym czasie pracy weekendy
+
+DROP TABLE #urlop2
+
+END
+
+/* procedura wstawiajac urlop dla danego pracownika od wskazanego dnia na okreslona ilosc dni urlopu */
+
