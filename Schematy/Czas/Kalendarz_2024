@@ -1,0 +1,29 @@
+
+USE Stacja_Paliw
+
+GO
+
+DECLARE @naj date =(SELECT MAX(data) FROM Czas.Kalendarz) 
+
+WHILE  @naj<'2025-01-01' 
+
+BEGIN
+
+INSERT INTO Czas.Kalendarz(data,IDRk,IDM)
+
+SELECT DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz)),
+(SELECT ID FROM Czas.Rok WHERE Rok_Num=YEAR(DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz)))),
+(SELECT ID FROM Czas.Miesiac WHERE ID=MONTH(DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz))))
+  
+IF (SELECT MAX(data) FROM Czas.Kalendarz)='2024-12-31' 
+
+BREAK
+
+ELSE
+
+CONTINUE
+
+END;
+
+/* wstawienie danych na 2024 rok do tabeli kalendarz */
+
