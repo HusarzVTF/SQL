@@ -1,0 +1,10 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Ropa',0.35
+EXEC Ope.uspZmien_Marze 'Benzyna',0.25
+EXEC Ope.uspZmien_Marze 'Gaz',0.50
+
+/* zmiana poziomu marz na sprzedawane paliwa w styczniu 2024 roku */
