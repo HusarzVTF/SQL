@@ -1,0 +1,12 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 3,3,1,100000,'automatyczny',null,'2024-01-25','2024-01-25'
+EXEC Ope.uspWstawFV_Sprzedaz 4,3,2,100000,'automatyczny',null,'2024-01-25','2024-01-25'
+EXEC Ope.uspWstawFV_Sprzedaz 6,3,3,100000,'automatyczny',null,'2024-01-25','2024-01-25'
+EXEC Ope.uspWstawFV_Sprzedaz 5,3,1,650000,'automatyczny',null,'2024-01-25','2024-01-25'
+EXEC Ope.uspWstawFV_Sprzedaz 7,3,2,650000,'automatyczny',null,'2024-01-25','2024-01-25'
+EXEC Ope.uspWstawFV_Sprzedaz 9,3,3,650000,'automatyczny',null,'2024-01-25','2024-01-25'
+
+/* faktury sprzedazy w styczniu 2024 roku */
