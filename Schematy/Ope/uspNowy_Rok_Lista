@@ -1,0 +1,62 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspNowy_Rok_Lista') IS NOT NULL
+DROP PROC Ope.uspNowy_Rok_Lista; 
+
+GO
+
+CREATE PROC Ope.uspNowy_Rok_Lista 
+
+AS
+
+DECLARE @nowyrok int = (SELECT MAX(Rok_Num) FROM Czas.Rok)
+
+DECLARE @NowyR_Kalendarz int = (SELECT YEAR(MAX(Data)) FROM Czas.Kalendarz)
+
+DECLARE @pracujacy int = (SELECT COUNT(IDPracownika) FROM Ope.Pracownicy WHERE data_Zwolnienia IS  NULL)
+
+DECLARE @maxrok int = (SELECT MAX(Rok) FROM Ope.Lista_Obecnosci )
+
+
+IF @nowyrok <> @NowyR_Kalendarz
+
+THROW 1900000, 'Nowego roku nie ma w tabeli kalendarz. Najpierw nalezy wstawic nowy rok do tabeli kalendarz',1;
+
+IF @pracujacy = 0  
+
+THROW 1900001, 'Brak zatrudnionych. Nie ma dla kogo wygenerowac listy obecnosci.',1;
+
+IF @nowyrok = @maxrok
+
+THROW 1900002, 'Nowy rok jest juz w liscie obecnosci.',1;
+
+IF @pracujacy > 0 AND @nowyrok > @maxrok
+
+BEGIN
+
+INSERT INTO Ope.Lista_Obecnosci(ID_Prac, Pensja, Data) 
+
+SELECT 
+
+IDPracownika,  
+P.Pensja, 
+K.Data 
+
+FROM Czas.Kalendarz AS K 
+JOIN Czas.Rok  AS R
+ON K.IDRk=R.ID
+CROSS JOIN Ope.Pracownicy AS P 
+
+WHERE data_Zwolnienia IS NULL
+AND  R.Rok_Num = @nowyrok
+
+END
+
+/* procedura wstawiajaca dane do listy obecnosci na nowy rok */
+
+
+
