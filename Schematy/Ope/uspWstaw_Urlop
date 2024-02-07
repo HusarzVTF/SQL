@@ -42,7 +42,7 @@ AND L.Data=UR_1.Data
 AND UR_1.Dzien_Ur <= @dniur
 AND UR_1.Tura_1 = 1 --dla dni, ktore normalnie byly by pracujace
 
-UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Urlop.Bezp', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Weekend', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
 FROM Ope.Lista_Obecnosci AS L
 JOIN #urlop1  AS UR_1
 ON L.Data=UR_1.Data 
@@ -87,7 +87,7 @@ AND L.Data=UR_2.Data
 AND UR_2.Dzien_Ur <= @dniur
 AND UR_2.Tura_2 = 1 --dla dni, ktore normalnie byly by pracujace
 
-UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Urlop.Bezp', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
+UPDATE Ope.Lista_Obecnosci SET Obecnosc = 'Weekend', Przepr_H=0 , Przep_Nadgod_Dod_100_Proc=0, Przep_Nadgod_Dod_50_Proc=0 
 FROM Ope.Lista_Obecnosci AS L
 JOIN #urlop2  AS UR_2
 ON L.Data=UR_2.Data 
