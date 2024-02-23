@@ -1,0 +1,68 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+UPDATE Ope.Lista_Obecnosci 
+SET Obecnosc = 'Weekend', Przepr_H = 0, Przep_Nadgod_Dod_100_Proc = 0, Przep_Nadgod_Dod_50_Proc = 0
+WHERE ID_Prac BETWEEN 1 AND 4 AND DATEPART(DW,Data) BETWEEN 6 AND 7  
+/* wolne z grafiku jako odpowiednik weekendu dla pracownikow id 1-4 to DW 6-7 */
+
+UPDATE Ope.Lista_Obecnosci 
+SET Obecnosc = 'Weekend', Przepr_H = 0, Przep_Nadgod_Dod_100_Proc = 0, Przep_Nadgod_Dod_50_Proc = 0
+WHERE ID_Prac BETWEEN 5 AND 8 AND DATEPART(DW,Data) BETWEEN 1 AND 2 -- ta czesc jest ok
+/* wolne z grafiku jako odpowiednik weekendu dla pracownikow id 5-8 to DW 1-2 */
+
+
+EXEC Ope.uspWstaw_Urlop 1,'2020-04-01',26 
+EXEC Ope.uspWstaw_Urlop 1,'2021-01-01',26 
+EXEC Ope.uspWstaw_Urlop 1,'2022-05-01',26 
+EXEC Ope.uspWstaw_Urlop 1,'2023-06-01',26 
+
+EXEC Ope.uspWstaw_Urlop 2,'2020-06-01',26 
+EXEC Ope.uspWstaw_Urlop 2,'2021-02-01',26 
+EXEC Ope.uspWstaw_Urlop 2,'2022-01-01',26 
+EXEC Ope.uspWstaw_Urlop 2,'2023-01-01',26 
+
+EXEC Ope.uspWstaw_Urlop 3,'2020-04-01',26 
+EXEC Ope.uspWstaw_Urlop 3,'2021-03-01',26 
+EXEC Ope.uspWstaw_Urlop 3,'2022-05-01',26 
+EXEC Ope.uspWstaw_Urlop 3,'2023-07-01',26 
+
+EXEC Ope.uspWstaw_Urlop 4,'2020-04-01',26 
+EXEC Ope.uspWstaw_Urlop 4,'2021-04-01',26 
+EXEC Ope.uspWstaw_Urlop 4,'2022-07-01',26 
+EXEC Ope.uspWstaw_Urlop 4,'2023-08-01',26 
+
+
+EXEC Ope.uspWstaw_Urlop 5,'2020-05-01',26 
+EXEC Ope.uspWstaw_Urlop 5,'2021-01-01',26 
+EXEC Ope.uspWstaw_Urlop 5,'2022-01-01',26 
+EXEC Ope.uspWstaw_Urlop 5,'2023-03-01',26 
+
+EXEC Ope.uspWstaw_Urlop 6,'2020-06-01',26 
+EXEC Ope.uspWstaw_Urlop 6,'2021-01-01',26 
+EXEC Ope.uspWstaw_Urlop 6,'2022-01-01',26 
+EXEC Ope.uspWstaw_Urlop 6,'2023-01-01',26 
+
+
+EXEC Ope.uspWstaw_Urlop 7,'2020-07-01',26 
+EXEC Ope.uspWstaw_Urlop 7,'2021-08-01',26 
+EXEC Ope.uspWstaw_Urlop 7,'2022-08-01',26 
+EXEC Ope.uspWstaw_Urlop 7,'2023-09-01',26 
+
+
+EXEC Ope.uspWstaw_Urlop 8,'2020-08-01',26 
+EXEC Ope.uspWstaw_Urlop 8,'2021-08-01',26 
+EXEC Ope.uspWstaw_Urlop 8,'2022-08-01',26 
+EXEC Ope.uspWstaw_Urlop 8,'2023-08-01',26 
+
+--wstawienie urlopow
+
+UPDATE Ope.Lista_Obecnosci 
+SET Obecnosc = 'Obecny/a', Przepr_H = 8, Przep_Nadgod_Dod_100_Proc = 0, Przep_Nadgod_Dod_50_Proc = 0
+WHERE Obecnosc IS NULL AND Data < '2024-02-01'  
+
+/* dni przepracowane czyli wszystkie pozostale na ktore nie bylo urlopu i nieobecnosci i nie byl to weekend czyli wolne z grafiku */
+
