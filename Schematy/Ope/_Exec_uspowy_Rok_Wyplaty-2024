@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspNowy_Rok_Wyplaty
+
+/* uruchomienie procedury wstawiajacej lsite do wyplat na nowy rok */
+
