@@ -1,0 +1,56 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspNowy_Rok_Wyplaty') IS NOT NULL
+DROP PROC Ope.uspNowy_Rok_Wyplaty; 
+
+GO
+
+CREATE PROC Ope.uspNowy_Rok_Wyplaty 
+
+AS
+
+DECLARE @nyrok int = (SELECT MAX(Rok_Num) FROM Czas.Rok)
+
+DECLARE @NR_Kalendarz int = (SELECT YEAR(MAX(Data)) FROM Czas.Kalendarz)
+
+DECLARE @pracPrac int = (SELECT COUNT(IDPracownika) FROM Ope.Pracownicy WHERE data_Zwolnienia IS  NULL)
+
+DECLARE @mxrok int = (SELECT MAX(Rok) FROM Ope.Wyplaty)
+
+
+IF @nyrok <> @NR_Kalendarz
+
+THROW 2000000, 'Nowego roku nie ma w tabeli kalendarz. Najpierw nalezy wstawic nowy rok do tabeli kalendarz',1;
+
+IF @pracPrac = 0  
+
+THROW 2000001, 'Brak zatrudnionych. Nie ma dla kogo wygenerowac listy wyplat.',1;
+
+IF @nyrok = @mxrok
+
+THROW 2000002, 'Nowy rok jest juz na liscie wyplat.',1;
+
+
+IF @pracPrac > 0 AND @nyrok > @mxrok
+
+BEGIN
+
+INSERT INTO Ope.Wyplaty(ID_Prac, Rok, Miesiac) 
+
+SELECT IDPracownika, R.Rok_Num, K.IDM  
+FROM Czas.Kalendarz AS K 
+JOIN Czas.Rok  AS R
+ON K.IDRk=R.ID
+CROSS JOIN Ope.Pracownicy AS P 
+WHERE data_Zwolnienia IS NULL
+AND  R.Rok_Num = @nyrok
+GROUP BY IDPracownika, R.Rok_Num, K.IDM 
+ORDER BY IDPracownika, Rok_Num, IDM
+
+END
+
+/* procedura wstawiajaca liste do wyplat na nowy rok */
