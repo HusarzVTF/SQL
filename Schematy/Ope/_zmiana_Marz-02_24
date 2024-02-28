@@ -1,0 +1,7 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Ropa',0.37
+EXEC Ope.uspZmien_Marze 'Benzyna',0.28
