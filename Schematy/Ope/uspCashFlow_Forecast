@@ -1,0 +1,53 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspCashFlow_Forecast') IS NOT NULL
+DROP PROC Ope.uspCashFlow_Forecast;
+
+GO 
+
+
+
+CREATE PROC Ope.uspCashFlow_Forecast ( @od date , @do date, @Param_K_Plac real ) 
+
+/* daty musza byc z przyszlosci (za okresy nierozliczone) to jest prognozowany Cash flow */
+/* @Param_K_Plac parametr do zawyzania/zmniejszania szacowanych kosztow plac */
+
+AS
+
+IF @od IS  NULL OR @do IS  NULL OR @od>@do 
+
+
+THROW 701005, 'Nie podano zakresu dat dla, których ma byc policzony prognozowany cash flow lub jedna z dat wprowadzono niepoprawnie tudziez data od jest wieksza niz do', 1;
+
+DECLARE @CashFlow table(ID smallint PRIMARY KEY IDENTITY, Cash varchar(20) , Flow money);
+
+
+INSERT INTO @CashFlow (Cash) VALUES('Splata_Zobow'), ('Koszty_Plac'), ('Cash_Out'), ('Naleznosci'), ('Cash_Uwzg_Naleznosci')
+
+DECLARE @Zobow money = (SELECT ISNULL(SUM(KwotaNetto),0) FROM Dostawy
+WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NULL)
+
+
+/* koszt plac jako sredni za okres 3M wstecz  od  dnia poprzedniego wzgledem daty od pomnozony przez bufor w zmiennej @Param_K_Plac */
+
+DECLARE @K_Plac money = ((Ope.ufKsztWyplaty( DATEADD(m,-3, @od), DATEADD(d,-1,@od) ) / 3) * @Param_K_Plac)
+
+DECLARE @Nalez money = (SELECT ISNULL(SUM(KwotaNetto),0) FROM Sprzedaz
+WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NULL)
+
+UPDATE @CashFlow SET Flow = @Zobow*-1 WHERE Cash='Splata_Zobow'
+
+UPDATE @CashFlow SET Flow = @K_Plac*-1 WHERE Cash='Koszty_Plac'
+
+UPDATE @CashFlow SET Flow = (@Zobow + @K_Plac)*-1 WHERE Cash='Cash_Out'
+
+UPDATE @CashFlow SET Flow = @Nalez WHERE Cash='Naleznosci'
+
+UPDATE @CashFlow SET Flow = (@Zobow + @K_Plac)*-1 + @Nalez WHERE Cash = 'Cash_Uwzg_Naleznosci'
+
+SELECT*FROM @CashFlow
+
+/* pocedura zwracajaca prognozowany Cash flow za podany okres */
