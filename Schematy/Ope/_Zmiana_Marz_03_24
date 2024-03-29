@@ -1,0 +1,11 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Ropa',0.42
+EXEC Ope.uspZmien_Marze 'Benzyna',0.32
+EXEC Ope.uspZmien_Marze 'Gaz',0.44
+
+/* podniesienie poziomu marz na paliwa w marcu 2024 */
