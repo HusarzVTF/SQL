@@ -1,0 +1,13 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 3,3,1,20000,'automatyczny',null,'2024-03-28','2024-03-28'
+EXEC Ope.uspWstawFV_Sprzedaz 4,3,2,10000,'automatyczny',null,'2024-03-28','2024-03-28'
+EXEC Ope.uspWstawFV_Sprzedaz 6,3,3,20000,'automatyczny',null,'2024-03-28','2024-03-28'
+
+
+
+/* wystawienie fv sprzedazy paliw w marcu 2024 */ 
