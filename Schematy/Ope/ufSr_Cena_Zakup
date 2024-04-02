@@ -20,7 +20,7 @@ BEGIN
 DECLARE @cena money = (SELECT  
 ROUND(SUM(KwotaNetto) /  SUM(IloscPaliwa) ,2) AS Cena_Sr_Zakup
 
-FROM Ope.Dostawy AS D 
+FROM Ope.Dostawy 
 
 WHERE IDPaliw = @idpa AND YEAR(CzasTransakcji) = @rok
 
