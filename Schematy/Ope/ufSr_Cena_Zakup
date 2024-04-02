@@ -14,19 +14,20 @@ RETURNS money
 WITH SCHEMABINDING  
 
 AS
+
 BEGIN
 
-DECLARE @cena money = ( SELECT Cena_Sr_Zakup FROM (
-
-SELECT YEAR(CzasTransakcji) AS Rok , IDPaliw, SUM(IloscPaliwa) AS IloscPaliwa, SUM(KwotaNetto) AS Wartosc_Net, ROUND(SUM(KwotaNetto) /  SUM(IloscPaliwa) ,2) AS Cena_Sr_Zakup
+DECLARE @cena money = (SELECT  
+ROUND(SUM(KwotaNetto) /  SUM(IloscPaliwa) ,2) AS Cena_Sr_Zakup
 
 FROM Ope.Dostawy AS D 
 
-WHERE IDPaliw = @idpa AND YEAR(CzasTransakcji) = @rok  
+WHERE IDPaliw = @idpa AND YEAR(CzasTransakcji) = @rok
 
-GROUP BY YEAR(CzasTransakcji)  , IDPaliw ) AS A)
+)
 
 return @cena 
+
 
 END
 
