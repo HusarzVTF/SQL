@@ -1,0 +1,7 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.Sprzedaz ADD Podatek AS KwotaBrutto - KwotaNetto
+
+/* dodanie kolumny kalkulowanej z podatkiem jako roznicy miedzy kwota brutto i netto */
