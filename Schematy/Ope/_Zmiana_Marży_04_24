@@ -1,0 +1,6 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Benzyna',0.35
+
