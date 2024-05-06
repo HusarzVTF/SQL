@@ -1,0 +1,25 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trWyplaty_check') IS NOT NULL
+DROP TRIGGER Ope.trWyplaty_check; 
+
+GO
+
+CREATE TRIGGER Ope.trWyplaty_check ON Ope.Wyplaty AFTER  UPDATE, INSERT
+
+
+AS
+
+IF EXISTS(SELECT ID FROM Ope.Wyplaty WHERE Do_Wyplaty <> ope.ufDoWyplaty(Pierwszy_Dzien_Miesiaca, Ostatni_Dzien_Miesiaca, ID_Prac))
+
+BEGIN 
+PRINT 'Proba zmiana wartosci wyplaty na niegozdna z funkcja liczaca wyplaty. Operacja zostala cofnieta.'
+ROLLBACK TRANSACTION;
+RETURN
+END 
+
+/* trigger blokujacy wstawienie/zaktualizowanie wartosci wyplaty na niezgodna z funkcja liczaca wyplaty  */
