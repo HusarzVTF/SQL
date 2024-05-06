@@ -1,0 +1,19 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trLista_Wypl') IS NOT NULL
+DROP TRIGGER Ope.trLista_Wypl; 
+
+GO
+
+CREATE TRIGGER Ope.trLista_Wypl ON Ope.Lista_Obecnosci AFTER  UPDATE, INSERT
+
+
+AS
+
+UPDATE Ope.Wyplaty SET Do_Wyplaty = ope.ufDoWyplaty(Pierwszy_Dzien_Miesiaca, Ostatni_Dzien_Miesiaca, ID_Prac)
+
+/* trigger, ktory bedzie aktualizowal kolumne Do_Wyplaty po zmianie wyplaty w liscie obecnosci lub wstawieniu kolejnych danych */
