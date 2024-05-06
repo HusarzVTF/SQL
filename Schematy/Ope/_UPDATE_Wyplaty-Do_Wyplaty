@@ -1,0 +1,9 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+UPDATE Ope.Wyplaty SET Do_Wyplaty = ope.ufDoWyplaty(Pierwszy_Dzien_Miesiaca, Ostatni_Dzien_Miesiaca, ID_Prac)
+
+/* zaktualizownaie kolumny Do_Wyplaty */
