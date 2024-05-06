@@ -1,0 +1,41 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufKWyplProg') IS NOT NULL
+DROP FUNCTION Ope.ufKWyplProg;
+
+GO
+
+CREATE FUNCTION Ope.ufKWyplProg (@dniProg int)
+
+RETURNS money
+WITH SCHEMABINDING  
+AS
+
+BEGIN
+
+DECLARE @mxdatWyp date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty >0)
+
+DECLARE @Wypl money= (
+
+SELECT ROUND(SUM(Do_Wyplaty),2) 
+
+FROM Ope.Wyplaty 
+
+WHERE Do_Wyplaty > 0 AND Ostatni_Dzien_Miesiaca BETWEEN DATEADD(MONTH,-3,@mxdatWyp) AND @mxdatWyp)
+
+DECLARE @SRstawka money = ( ROUND(@Wypl / (DATEDIFF(d,DATEADD(MONTH,-3,@mxdatWyp),@mxdatWyp)),2))
+
+DECLARE @Prognoza money = ROUND(@SRstawka*@dniProg,2) 
+
+
+return @Prognoza
+
+END
+
+/* funkcja prognozujaca koszt wyplat na podana ilosc dni na bazie sredniego kosztu dziennego 
+za okres ostatnich trzech zamknietych miesiecy w ktorych koszy te wystepowaly */
+
