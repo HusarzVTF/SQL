@@ -1,0 +1,18 @@
+
+USE Stacja_Paliw
+
+GO
+
+/*ta funkcje jeszcze raz bedzie trzeba puscic*/
+
+DROP FUNCTION Ope.ufKsztWyplaty --trzeba bylo zdroppowac bo liczyla z computed column w Do_Wyplaty
+
+ALTER TABLE Ope.Wyplaty DROP COLUMN Do_Wyplaty
+
+ALTER TABLE Ope.Wyplaty ADD  Do_Wyplaty money CHECK (Do_Wyplaty>=0)
+
+--kolumna Do_Wyplaty dotychczas byla jako computed column i za dlugo liczyla 
+--po tych operacjach trzeba przywrocic funkcje  Ope.ufKsztWyplaty z linku:
+--https://github.com/HusarzVTF/SQL/blob/Stacja_Paliw/Schematy/Ope/ufKsztWyplaty
+
+
