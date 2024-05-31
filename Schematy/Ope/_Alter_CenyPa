@@ -1,0 +1,12 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.CenyPa
+ADD  J_Mar_Ope AS ROUND(CenaJedn - Koszt_Zakupu, 2)
+
+/* 
+dodanie do tabeli CenyPa z cenami i kosztami jednostkowymi kolumny obliczanej, 
+ktora liczy marze jednostkowa jako roznice miedzy cena a kosztami. Ulatwia to 
+wykonywanie obliczen m.in w procedurach skladowych.  
+*/
