@@ -165,7 +165,7 @@ When sales invoice is made function ![Ope.WSprz](./Schematy/Ope/Sprzedaz) calcul
 
 	
 ### Technologies
-Project is created IN:
+Project created in:
 * Microsoft SQL Server Express 2014 and 2022 
 
 ### Acknowledgements
