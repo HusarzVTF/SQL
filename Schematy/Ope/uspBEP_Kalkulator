@@ -1,0 +1,337 @@
+USE Stacja_Paliw;
+
+GO
+
+ IF OBJECT_ID('Ope.uspBEP_Kalkulator') IS NOT NULL
+ DROP PROC Ope.uspBEP_Kalkulator;
+
+ 
+ GO
+
+CREATE PROC Ope.uspBEP_Kalkulator 
+( @od date , @do date , @typ varchar(7) , @il real , @ks_pro float, @typ_1 varchar(7), @il_1 real , @ks_pro_1 float )
+ 
+ AS
+
+--walidacja podanych dat i typow paliwa w tabeli Zbiorniki, bo procedura przelicza dla trzech rodzajow paliwa
+
+DECLARE @Lcz_Pal int = (SELECT COUNT(RodzajPaliwa) FROM Ope.Zbiorniki)
+
+IF @Lcz_Pal > 3 
+
+THROW 701001, 'Kalkulator przelicza krzyzowo dla trzech rodzajow paliwa. 
+Jesli kolejne rodzaje paliwa sa na stale to trzeba rozwazyc modyfikacje procedury.',1;
+
+DECLARE @midatcal date = (SELECT MIN(Pierwszy_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty > 0)
+
+IF @od < @midatcal
+
+THROW 701002, 'Data od nie moze wypadac przed  pierwszym dniem pierwszego miesiaca z kosztami plac',1;
+
+
+IF @od IS  NULL OR @do IS  NULL OR @od > @do 
+
+
+THROW 701005, 'Nie podano zakresu dat dla, których ma byc policzony koszt staly lub jedna z dat wprowadzono niepoprawnie tudziez data od jest wieksza niz do', 1;
+
+
+IF @od != Czas.PierwszydzienMiesiaca(@od) OR @do != EOMONTH(@do) 
+
+THROW 701012,'Data od i do musi wypadac odpowiednio w pierwszy i ostatni dzien miesiaca',1;
+
+
+--walidacja typow paliwa
+
+IF  EXISTS 
+
+( SELECT RodzajPaliwa 
+	FROM Ope.Zbiorniki 
+	WHERE RodzajPaliwa = Ope.ufZduzej(@typ) ) 
+BEGIN
+DECLARE @idtyp tinyint = (SELECT IDPaliwa FROM Ope.Zbiorniki WHERE  RodzajPaliwa = Ope.ufZduzej(@typ))
+END
+ELSE
+THROW 69000,'Podano bledny typ paliwa, ktorego nie ma w tabeli Zbiorniki.',1;
+
+
+IF  EXISTS 
+
+( SELECT RodzajPaliwa 
+	FROM Ope.Zbiorniki 
+	WHERE RodzajPaliwa = Ope.ufZduzej(@typ_1) ) 
+BEGIN
+DECLARE @idtyp_1 tinyint = (SELECT IDPaliwa FROM Ope.Zbiorniki WHERE  RodzajPaliwa = Ope.ufZduzej(@typ_1))
+END
+ELSE
+THROW 69000,'Podano bledny typ paliwa, ktorego nie ma w tabeli Zbiorniki.',1;
+
+
+/* dalsza walidacja podanych typow paliwa ponizej */
+
+IF @idtyp = @idtyp_1   
+
+THROW 701004,'Paliwo dla którego została wskazana ilosc nie moze byc jednoczesnie paliwem stanowiacym 
+wskazany procent ks i/lub paliwem dla ktorego zostala wskazana druga ilosc lub/i drugi procent ks',1;
+
+
+IF @il <= 0 OR @il_1 <= 0 OR @ks_pro <= 0  OR @ks_pro_1 <= 0
+
+
+THROW 701003,'Podana ilosc paliwa i procent musza byc wieksze od zera.',1;
+
+--sekcja walidacji typ i il i kspro
+
+IF @typ IS NOT NULL AND @il IS NULL AND @ks_pro IS NULL
+
+
+THROW 701008, 'Wprowadzono typ paliwa, ale nie podano dla niego ilosci i procentu kosztow stalych do pokrycia', 1;
+
+
+IF @typ_1 IS NOT NULL AND @il_1 IS NULL AND @ks_pro_1 IS NULL
+
+
+THROW 701009, 'Wprowadzono drugi typ paliwa, ale nie podano dla niego ilosci i procentu kosztow stalych do pokrycia', 1;
+
+
+IF @typ IS NOT NULL AND @il IS NOT NULL AND @ks_pro IS NOT NULL
+
+THROW 701010, 'Dla pierwszego paliwa wprowadzono i procent kosztow stalych do pokrycia i ilosc. Dla kazdego typu paliwa musi byc podana albo ilosc albo procent kosztow stalych do pokrycia', 1;
+
+
+IF @typ_1 IS NOT NULL AND @il_1 IS NOT NULL AND @ks_pro_1 IS NOT NULL
+
+THROW 701011, 'Dla drugiego paliwa wprowadzono i procent kosztow stalych do pokrycia i ilosc. Dla kazdego typu paliwa musi byc podana albo ilosc albo procent kosztow stalych do pokrycia', 1;
+
+--koniec sekcji walidacji typ i il i kspro
+
+
+/*tu  ponizej koszty plac*/
+
+
+DECLARE @mxdatcal date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty > 0)
+
+
+DECLARE @ks money = 
+
+	CASE 
+
+	WHEN (@od  BETWEEN @midatcal AND @mxdatcal) AND (@do BETWEEN @midatcal AND @mxdatcal)  
+	
+	THEN ROUND(Ope.ufKsztWyplaty(@od, @do),2) --realne koszty plac poniesione w danym okresie, bo podany zakres dat to przeszlosc
+
+	WHEN @od > @mxdatcal  
+	
+	THEN ROUND(Ope.ufKWyplProg(DATEDIFF(d, @od, @do)),2) --prognozowany koszt wyplat, bo daty z przyszlosci
+
+	WHEN (@od BETWEEN @midatcal AND @mxdatcal) AND @do > @mxdatcal 
+	
+	THEN ROUND( ROUND(Ope.ufKsztWyplaty(@od, @mxdatcal),2) + ROUND(Ope.ufKWyplProg(DATEDIFF(d, @mxdatcal, @do)),2) ,2)
+  /* okres czesciowo z przeszlosci i przyslosci odpowiednio czesc jako realne koszty a pozostala czesc jako prognoza */
+	
+  END
+
+
+
+/*koniec plac*/
+
+--zmienne do wyliczen
+
+DECLARE @wartosc_il real = --warto z typ paliwa po ilosci
+
+ISNULL(((
+	SELECT CenaJedn 
+	FROM Ope.CenyPa AS C 
+	JOIN Ope.Zbiorniki AS Z ON C.IDPALIW = Z.IDPaliwa 
+	WHERE Z.IDPaliwa = @idtyp) * @il)
+,0)
+
+DECLARE @wart_il_ks real = --wart na koszty stale typ paliwa po ilosci
+
+ISNULL(((
+	SELECT J_Mar_Ope
+	FROM Ope.CenyPa AS C 
+	JOIN Ope.Zbiorniki AS Z ON C.IDPALIW = Z.IDPaliwa
+	WHERE Z.IDPaliwa = @idtyp) * @il)
+,0)
+
+DECLARE @wartosc_1_il real = --warto z typ1 paliwa po ilosci 
+
+ISNULL(((
+	SELECT CenaJedn 
+	FROM Ope.CenyPa AS C 
+	JOIN Ope.Zbiorniki AS Z ON C.IDPALIW = Z.IDPaliwa 
+	WHERE Z.IDPaliwa = @idtyp_1) * @il_1)
+,0)
+
+DECLARE @wart_1_il_ks real = --wart na koszty stale typ1 paliwa po ilosci
+
+ISNULL(((
+	SELECT J_Mar_Ope 
+	FROM Ope.CenyPa AS C 
+	JOIN Ope.Zbiorniki AS Z ON C.IDPALIW = Z.IDPaliwa
+	WHERE Z.IDPaliwa = @idtyp_1) * @il_1)
+,0)
+
+--koszty stale ponizej i ich walidacja
+
+DECLARE @war_ks real = ROUND(ISNULL(@ks * @ks_pro, 0) + @wart_il_ks, 2) --koszt staly dla typ paliwa
+
+DECLARE @war_ks_1 real = ROUND(ISNULL(@ks * @ks_pro_1, 0)  + @wart_1_il_ks, 2) --koszt staly dla typ paliwa
+
+DECLARE @poz_war real = ROUND(ISNULL( (@ks - (@war_ks + @war_ks_1  ) ), 0), 2)--koszt staly dla pozostalego paliwa
+
+IF (@ks_pro + @ks_pro_1 > 1)  OR (@war_ks + @war_ks_1  ) > @ks
+
+THROW 701012,'Podano nieprawidłowe ilosci lub/i procenty kosztow stalych. Za duze.',1;
+
+ELSE
+
+WITH final_CTE ( 
+ID_Paliw, Rodzaj_Paliwa, JM, Koszt_staly, Cena_Jedn, Koszt_Zmienny, J_Mr_Op, Stan_Zbiornika, BEP_Ilosciowy, Zapas, 
+Podana_Ilosc, Podany_Proc_Ks, K_staly_proc, BEP_wartosciowy, Kwota_na_Koszt_zmienny, Kwota_na_koszt_staly, Mar_proc )
+
+
+AS (
+
+	SELECT 
+
+	C.IDPALIW, Z.RodzajPaliwa, Z.JM , @ks as k_staly, CenaJedn, Koszt_Zakupu as k_zmienny, J_Mar_Ope as J_Mr_op,
+	Z.StanZbiornika, 
+	
+	ROUND( @war_ks / J_Mar_Ope, 2)    AS BEP_Ilosciowy, 
+
+	ROUND(Z.StanZbiornika - @war_ks / J_Mar_Ope, 2) AS Zapas, 
+
+	ISNULL(ROUND(@il, 2), 0) AS Podana_ilosc,
+
+	ISNULL(@ks_pro, 0) AS Podany_Proc_Ks,
+
+	ROUND( @war_ks / @ks, 2) AS K_staly_proc,
+
+	ROUND( @war_ks  / J_Mar_Ope, 2) * CenaJedn AS BEP_wartosciowy, 
+
+
+	ROUND( ROUND( @war_ks  / J_Mar_Ope, 2) * Koszt_Zakupu, 2) AS Kwota_na_Koszt_zmienny, 
+
+
+	@war_ks AS Kwota_na_koszt_staly, 
+		
+	Marza as Mar_proc
+	
+	FROM Stacja_Paliw.Ope.CenyPa AS C
+
+	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa = C.IDPALIW
+	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw = C.IDPALIW
+
+	WHERE Z.IDPaliwa = @idtyp 
+
+	GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM , CenaJedn, Z.StanZbiornika, Marza, Koszt_Zakupu, J_Mar_Ope
+
+UNION 
+
+	SELECT 
+
+	C.IDPALIW, Z.RodzajPaliwa, Z.JM , @ks as k_staly, CenaJedn, Koszt_Zakupu as k_zmienny,
+	J_Mar_Ope as J_Mr_op, 	Z.StanZbiornika,
+	
+	ROUND( @war_ks_1  / J_Mar_Ope, 2)    AS BEP_Ilosciowy, 
+	
+	ROUND(Z.StanZbiornika -  @war_ks_1 / J_Mar_Ope, 2) as Zapas, 
+	
+	ISNULL(ROUND(@il_1, 2), 0) AS Podana_ilosc,
+
+	ISNULL(@ks_pro_1, 0) AS Podany_Proc_Ks,
+
+	ROUND( @war_ks_1 / @ks, 2) AS K_staly_proc,
+
+	ROUND( @war_ks_1  / J_Mar_Ope, 2) * CenaJedn AS BEP_wartosciowy, 
+
+	ROUND( ROUND( @war_ks_1  / J_Mar_Ope, 2) * Koszt_Zakupu, 2) AS Kwota_na_Koszt_zmienny, 
+
+	@war_ks_1 AS Kwota_na_koszt_staly, 
+
+	Marza AS Mar_proc
+
+	FROM Stacja_Paliw.Ope.CenyPa AS C
+	
+	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa = C.IDPALIW
+	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw = C.IDPALIW
+	
+	WHERE  Z.IDPaliwa = @idtyp_1 
+	GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM, CenaJedn, Z.StanZbiornika, Marza, Koszt_Zakupu, J_Mar_Ope
+
+UNION
+
+	SELECT 
+
+	C.IDPALIW, Z.RodzajPaliwa, Z.JM , @ks as k_staly, CenaJedn, Koszt_Zakupu as k_zmienny,
+	J_Mar_Ope as J_Mr_op, 	Z.StanZbiornika,
+	
+	ROUND( @poz_war / J_Mar_Ope, 2)    AS BEP_Ilosciowy, 
+	
+	ROUND(Z.StanZbiornika -  @poz_war / J_Mar_Ope, 2) as Zapas, 
+
+	0 AS Podana_ilosc, 
+
+	0 AS Podany_Proc_Ks,
+
+	ROUND( @poz_war / @ks, 2) AS K_staly_proc,
+
+	ROUND( @poz_war  / J_Mar_Ope, 2) * CenaJedn AS BEP_wartosciowy, 
+
+	ROUND( ROUND( @poz_war  / J_Mar_Ope, 2) * Koszt_Zakupu, 2) AS Kwota_na_Koszt_zmienny, 
+
+	@poz_war AS Kwota_na_koszt_staly, 
+
+	Marza AS Mar_proc
+	
+	FROM Stacja_Paliw.Ope.CenyPa AS C
+
+	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
+	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
+
+	WHERE Z.IDPaliwa NOT IN (@idtyp, @idtyp_1)  
+	GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM , CenaJedn, Z.StanZbiornika, Marza, Koszt_Zakupu, J_Mar_Ope
+
+)
+
+SELECT 
+
+ID_Paliw, Rodzaj_Paliwa, JM, Podana_Ilosc, FORMAT(Podany_Proc_Ks, 'P') AS 'Podany%_Ks', 
+
+BEP_Ilosciowy, Stan_Zbiornika, Zapas ,   Koszt_Zmienny, FORMAT(Mar_proc, 'P')  AS 'M%_Akt_Zakup', J_Mr_Op, Cena_Jedn,
+
+'M%_Na_Sprzedazy' = CASE WHEN ISNULL(Cena_Jedn, 0) = 0 THEN FORMAT(0, 'P')   ELSE  FORMAT(J_Mr_Op / Cena_Jedn, 'P') END  ,
+
+ROUND(BEP_wartosciowy, 2) AS BEP_wartosciowy,
+
+ROUND(SUM( BEP_wartosciowy ) OVER ( ORDER BY ID_Paliw ), 2) AS BEP_Wart_Nar,
+
+Koszt_staly, Kwota_na_koszt_staly, 
+
+ROUND(SUM( Kwota_na_koszt_staly ) OVER ( ORDER BY ID_Paliw ), 2) AS Ks_Narastajaco , 
+
+FORMAT( K_staly_proc, 'P') AS '%Ksz_Staly',
+
+Kwota_na_Koszt_zmienny,
+
+SUM( Kwota_na_Koszt_zmienny ) OVER ( ORDER BY ID_Paliw ) AS KW_Zm_Kszt_Nar 
+ 
+
+
+FROM final_CTE 
+
+
+
+
+/*
+
+Procedura pozwalajaca na krzyzowe wyliczanie BEP w zaleznosci od wybranych rodzajow paliwa i podanych dla nich parametrow ilosciowych 
+i procentowych. Parametr ilosciowy odnosi sie do odpowiendiej jednostki danego paliwa czyli m3, litra. Nalezy wybrac dwa rodzaje paliwa 
+dla ktorych chce sie przeliczyc BEP krzyzowy, wynikajacy z przyjetego rozdzialu kosztow wedlug wskazanego procentu udzialu w kosztach 
+lub/i ilosci. Mozna wytypowac dowolne dwa rodzaje paliwa i podac dla nich procent kosztow stalych do pokrycia lub ilosci. Mozna tez 
+stworzyc dowolna kombinacje miedzy paliwami i procentami oraz iloscia. To znaczy mozna wprowadzic dla jednego paliwa procent kosztow 
+a dla drugiego ilosc. Trzecie paliwo kompensuje pozostala do rozliczenia czesc kosztow. Uzyte zaokraglenia sa do grosza, 
+milimetra szesciennego i mililitra na kazdym kroku obliczen.
+
+*/
