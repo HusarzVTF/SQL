@@ -210,16 +210,14 @@ AS (
 
 	ROUND( @war_ks  / J_Mar_Ope, 2) * CenaJedn AS BEP_wartosciowy, 
 
-
 	ROUND( ROUND( @war_ks  / J_Mar_Ope, 2) * Koszt_Zakupu, 2) AS Kwota_na_Koszt_zmienny, 
-
 
 	@war_ks AS Kwota_na_koszt_staly, 
 		
 	Marza as Mar_proc
 	
-	FROM Stacja_Paliw.Ope.CenyPa AS C
 
+	FROM Stacja_Paliw.Ope.CenyPa AS C
 	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa = C.IDPALIW
 	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw = C.IDPALIW
 
@@ -227,7 +225,7 @@ AS (
 
 	GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM , CenaJedn, Z.StanZbiornika, Marza, Koszt_Zakupu, J_Mar_Ope
 
-UNION 
+UNION ALL
 
 	SELECT 
 
@@ -253,14 +251,13 @@ UNION
 	Marza AS Mar_proc
 
 	FROM Stacja_Paliw.Ope.CenyPa AS C
-	
 	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa = C.IDPALIW
 	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw = C.IDPALIW
 	
 	WHERE  Z.IDPaliwa = @idtyp_1 
 	GROUP BY C.IDPALIW, Z.RodzajPaliwa, Z.JM, CenaJedn, Z.StanZbiornika, Marza, Koszt_Zakupu, J_Mar_Ope
 
-UNION
+UNION ALL
 
 	SELECT 
 
@@ -286,7 +283,6 @@ UNION
 	Marza AS Mar_proc
 	
 	FROM Stacja_Paliw.Ope.CenyPa AS C
-
 	INNER JOIN Stacja_Paliw.Ope.Zbiorniki AS Z ON Z.IDPaliwa=C.IDPALIW
 	INNER JOIN Stacja_Paliw.Ope.Dostawy AS D ON D.IDPaliw=C.IDPALIW
 
