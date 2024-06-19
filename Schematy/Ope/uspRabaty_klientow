@@ -1,0 +1,38 @@
+USE Stacja_Paliw;
+
+GO
+
+IF OBJECT_ID('Ope.uspRabaty_klientow') IS NOT NULL
+DROP PROC Ope.uspRabaty_klientow;
+
+GO
+
+
+CREATE PROC Ope.uspRabaty_klientow
+ 
+ AS
+
+ SELECT
+
+		   K.IdKlienta
+     , NazwaKlienta
+     , Miejscowosc
+     , DnidoZaplaty
+     , WarunkiPlatnosci
+     , Poziom_Rabatu
+	   , ROUND(SUM(KwotaNetto), 2) AS Obrot_Netto
+	   , ROUND(SUM(IloscPaliwa), 2) AS Ilosc
+	   , ROUND(ROUND(SUM(KwotaNetto), 2) / ROUND(SUM(IloscPaliwa), 2), 2) AS Sr_Cena
+	   , ROUND(SUM(Wartosc_Rabatu), 2) AS Wartosc_Rabatu 
+	   , FORMAT(ROUND(SUM(Wartosc_Rabatu), 2) / ROUND(SUM(KwotaNetto), 2), 'P') AS '%Rabatow_w_Obrocie'
+
+
+
+FROM Stacja_Paliw.Ope.Klienci AS K 
+LEFT JOIN Ope.Sprzedaz AS S ON K.IdKlienta = S.IdKlienta
+JOIN Lokacje.Miejscowosc AS M ON K.IDMiejscowosc = M.IDMiej 	 
+
+GROUP BY K.IdKlienta, NazwaKlienta, Miejscowosc, DnidoZaplaty, WarunkiPlatnosci, Poziom_Rabatu
+ORDER BY SUM(KwotaNetto) DESC
+
+/* procedura pokazujca obroty netto klientow wraz z wartoscia udzielonych im upustow wynik posortowany od klienta o najwiekszym obrocie do tego o najmniejszym  */
