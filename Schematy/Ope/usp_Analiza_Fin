@@ -1,5 +1,3 @@
-
-
 USE Stacja_Paliw
 
 GO
@@ -23,7 +21,7 @@ IF (@od IS NOT NULL AND @do IS  NULL) OR (@do IS NOT NULL AND @od IS NULL)
 THROW 801001,'Jesli zostala podana jedna data musi zostac podana tez druga',1
 
 
-IF @do<@od 
+IF @do < @od 
 
 THROW 801002, 'Data do nie moze byc wczesniejsza niz od',1
 
@@ -36,34 +34,46 @@ DECLARE @sprzedaz  money = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Sprzedaz WHER
 
 /* do wskaznikow rotacji potrzebne sa przecietne stany naleznosci, zobowiazan liczone jako: stan poczatkowy plus koncowy dzielony na dwa */
 
-DECLARE @nale_pocz money = ISNULL((SELECT SUM(KwotaNetto)
-  FROM Ope.Sprzedaz WHERE (DataZaplaty > @od OR DataZaplaty IS NULL) AND CzasTransakcji =< @od),0 )
+
+DECLARE @nale_pocz money = ISNULL((
+                                   SELECT SUM(KwotaNetto)
+                                   FROM Ope.Sprzedaz 
+                                   WHERE (DataZaplaty > @od OR DataZaplaty IS NULL) AND CzasTransakcji <= @od), 0 )
 
 
-DECLARE @nale_kon money = ISNULL((SELECT SUM(KwotaNetto)
-  FROM Ope.Sprzedaz WHERE (DataZaplaty > @do OR DataZaplaty IS NULL) AND CzasTransakcji =< @do),0 )
+DECLARE @nale_kon money = ISNULL((
+                                  SELECT SUM(KwotaNetto)
+                                  FROM Ope.Sprzedaz 
+                                  WHERE (DataZaplaty > @do OR DataZaplaty IS NULL) AND CzasTransakcji <= @do), 0 )
 
 
 DECLARE @naleznosci money = (@nale_pocz + @nale_kon ) / 2 --przecietny stan naleznosci w okresie
 
 
 
-DECLARE @zob_pocz money = ISNULL((SELECT SUM(KwotaNetto)
-  FROM Ope.Dostawy WHERE (DataZaplaty > @od OR DataZaplaty IS NULL) AND CzasTransakcji =< @od),0 )
+DECLARE @zob_pocz money = ISNULL((
+                                  SELECT SUM(KwotaNetto)
+                                  FROM Ope.Dostawy 
+                                  WHERE (DataZaplaty > @od OR DataZaplaty IS NULL) AND CzasTransakcji <= @od), 0 )
 
 
-DECLARE @zob_kon money = ISNULL((SELECT SUM(KwotaNetto)
-  FROM Ope.Dostawy WHERE (DataZaplaty > @do OR DataZaplaty IS NULL) AND CzasTransakcji =< @do),0 )
+DECLARE @zob_kon money = ISNULL((
+                                 SELECT SUM(KwotaNetto)
+                                 FROM Ope.Dostawy 
+                                 WHERE (DataZaplaty > @do OR DataZaplaty IS NULL) AND CzasTransakcji <= @do), 0 )
 
 
 DECLARE @zobowo_krotk money = (@zob_pocz + @zob_kon) / 2 
 
 
-DECLARE @k_paliwa money = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Dostawy WHERE Czastransakcji Between @od and @do),0)
+/*sredni stan zapasow i naleznosci to stan na koniec + na poczatek okresu / 2 one w ujeciu rocznym i w dniach tez 360*/
 
-DECLARE @k_wyn money = ISNULL(Ope.ufKsztWyplaty(@od, @do),0) 
 
-DECLARE @EBITDA money = (@sprzedaz - (@k_paliwa + @k_wyn))
+DECLARE @k_paliwa money = ISNULL((SELECT SUM(KwotaNetto) FROM Ope.Dostawy WHERE Czastransakcji Between @od and @do), 0)
+
+DECLARE @k_wyn money = ISNULL(Ope.ufKsztWyplaty(@od, @do), 0) 
+
+DECLARE @EBITDA money = ( @sprzedaz-(@k_paliwa + @k_wyn) ) 
 
 DECLARE @Dlug_Ebitda money = CASE WHEN @EBITDA <= 0 THEN 0 ELSE @zobowo_krotk / @EBITDA END 
 
@@ -72,112 +82,116 @@ DECLARE @okres_w_dniach int = DATEDIFF(d, @od, @do)
 
 /* wskazniki plynnosci sa wg stanu na dany dzien */
 
-
 DECLARE @Plynn_Szyb real = CASE WHEN @zobowo_krotk = 0 THEN 0 ELSE ROUND(@naleznosci / @zobowo_krotk, 2) END 
 
+DECLARE @CRot_Nal_dni real = CASE WHEN @sprzedaz = 0 OR  @naleznosci = 0 THEN 0 
+                             ELSE ROUND(@okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) END
 
-DECLARE @CRot_Nal_dni real = CASE WHEN @sprzedaz = 0 OR  @naleznosci = 0 THEN 0 ELSE ROUND(@okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) END
-
-DECLARE @CRot_Zob_Kr_dni real = CASE WHEN @sprzedaz = 0 OR  @zobowo_krotk = 0 THEN 0 ELSE ROUND(@okres_w_dniach / ROUND(@sprzedaz / @zobowo_krotk, 2),2) END
+DECLARE @CRot_Zob_Kr_dni real = CASE WHEN @sprzedaz = 0 OR  @zobowo_krotk = 0 THEN 0 
+                                ELSE ROUND(@okres_w_dniach / ROUND(@sprzedaz / @zobowo_krotk, 2), 2) END
 
 
 DECLARE @splata real = ROUND(@Dlug_Ebitda * @okres_w_dniach, 2)
 
 
-DECLARE @tabela table  (Wskaznik nvarchar(100), Wynik real, Interpretacja nvarchar(1000) )
-
-
-INSERT INTO @tabela
-
-SELECT 'Okres_Analizy_W_dniach', @okres_w_dniach,
-'Okres w latach wynosi ' + CAST(ROUND(@okres_w_dniach/360,2)  AS Nvarchar(100))
-
-
-
-
-INSERT INTO @tabela 
-
-
-
 SELECT 
-'Rentownosc_EBITDA', 
-CASE WHEN @sprzedaz = 0 THEN 0 ELSE ROUND(@EBITDA / @sprzedaz, 2) END,
+
+'Okres_Analizy_W_dniach' AS 'Wskaznik', 
+@okres_w_dniach AS 'Wynik',
+'Okres w latach wynosi ' + CAST(ROUND(@okres_w_dniach/360,2)  AS Nvarchar(100)) AS 'Interpretacja'
+
+UNION ALL
+ 
+SELECT 
+
+'Rentownosc%_EBITDA', 
+CASE WHEN @sprzedaz = 0 THEN 0 ELSE ROUND(@EBITDA / @sprzedaz *100, 2) END, 
 'Interpretacja'= CASE
-WHEN @EBITDA <= 0 OR @sprzedaz <= 0 THEN 'Biznes nie jest rentowny.'
-WHEN ROUND(@EBITDA / @sprzedaz, 2) > 0 THEN 'Biznes jest rentowny. Dokładna ocena rentowności wymaga porównania wyniku firmy ze średnim dla rynku.'
-END
+                 WHEN @EBITDA <= 0 OR @sprzedaz <= 0 THEN 'Biznes nie jest rentowny.'
+                 WHEN ROUND(@EBITDA / @sprzedaz, 2) > 0 
+                 THEN 'Biznes jest rentowny. Dokładna ocena rentowności wymaga porównania wyniku firmy ze średnim dla rynku.'
+                 END
 
-INSERT INTO @tabela
+UNION ALL
 
 SELECT 
+
 'Dźwignia operacyjna',
 CASE WHEN (@sprzedaz - @k_paliwa - @k_wyn) <= 0  OR  (@sprzedaz - @k_paliwa) <= 0 THEN 0 
 ELSE ROUND((@sprzedaz - @k_paliwa) / (@sprzedaz - @k_paliwa - @k_wyn), 2) END, 
 'Im większa wartość wskaźnika tym większa zdolność firmy do generowania większego zysku przy wzroście przychodów.'
 
  
-INSERT INTO @tabela
+UNION ALL
 
-SELECT 'Plynnosci_szybkiej',
+SELECT 
+
+'Plynnosci_szybkiej',
 @Plynn_Szyb, 
 'Interpretacja'= CASE  
-WHEN @Plynn_Szyb = 0 THEN 'Bez interpretacji. Naleznosci lub/i zobowiazania krotkoterminowe nie wystepuja.' 
-WHEN @Plynn_Szyb > 0 AND @Plynn_Szyb < 1 THEN 'Istnieje ryzyko utraty zdolności do terminowego regulowania zobowiazań.' ELSE 'OK' END
+                 WHEN @Plynn_Szyb = 0 THEN 'Bez interpretacji. Naleznosci lub/i zobowiazania krotkoterminowe nie wystepuja.' 
+                 WHEN @Plynn_Szyb > 0 AND @Plynn_Szyb < 1 THEN 'Istnieje ryzyko utraty zdolności do terminowego regulowania zobowiazań.' 
+                 ELSE 'OK' 
+                 END
 
-
-
-INSERT INTO @tabela 
+UNION ALL 
  
-SELECT 'Rotacja_naleznosci',
-CASE WHEN @naleznosci = 0 THEN 0 ELSE ROUND(@sprzedaz / @naleznosci, 2) END,
+SELECT 
+
+'Rotacja_naleznosci',
+CASE WHEN @naleznosci = 0 THEN 0 ELSE ROUND(@sprzedaz/@naleznosci,2) END,
 'Interpretacja'= CASE  
-WHEN ROUND(@sprzedaz / @naleznosci, 2) < 7 THEN 'Firma kredytuje swoich klientów przez co zamraża na długi czas pieniadze w należnościach.' 
-ELSE 'Firma nie posiada nadmiernych naleznosci' END
+                 WHEN ROUND(@sprzedaz / @naleznosci,2) < 7 
+                 THEN 'Firma kredytuje swoich klientów przez co zamraża na długi czas pieniadze w należnościach.' 
+                 ELSE 'Firma nie posiada nadmiernych naleznosci' 
+                 END
  
+UNION ALL
 
+SELECT 
 
-INSERT INTO @tabela
-
-SELECT 'Rotacja_zobowiazan_krotk',
+'Rotacja_zobowiazan_krotk',
 CASE WHEN @zobowo_krotk = 0 THEN 0 ELSE ROUND(@sprzedaz / @zobowo_krotk, 2) END,
 'Odniesienie w interpretacji wskaznika Cyklu zobowiazań krótkoterminowych w dniach.'
 
+UNION ALL
 
-INSERT INTO @tabela
+SELECT 
 
-SELECT 'Cyklu_naleznosci_w_dniach',
-CASE WHEN @sprzedaz = 0 OR @naleznosci=0 THEN 0 ELSE ROUND( @okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) END,
+'Cyklu_naleznosci_w_dniach',
+CASE WHEN @sprzedaz = 0 OR @naleznosci = 0 THEN 0 ELSE ROUND( @okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) END,
 'Interpretacja'= CASE
-WHEN ROUND( @okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) > 60 
-THEN 'Istnieje ryzyko zatorów płatniczych.' ELSE 'Nie ma ryzyka zatorow platniczych.' END
+                 WHEN ROUND( @okres_w_dniach / ROUND(@sprzedaz / @naleznosci, 2), 2) > 60 
+                 THEN 'Istnieje ryzyko zatorów płatniczych.' 
+                 ELSE 'Nie ma ryzyka zatorow platniczych.' 
+                 END
 
+UNION ALL
 
+SELECT 
 
-INSERT INTO @tabela
-
-SELECT 'Cyklu_zobow_krotk_w_dniach',
+'Cyklu_zobow_krotk_w_dniach',
 CASE WHEN @zobowo_krotk = 0 OR  @sprzedaz = 0 THEN 0 ELSE @CRot_Zob_Kr_dni END,
-CASE WHEN @CRot_Zob_Kr_dni <= 0 THEN 'Brak danych do wyliczenia wskaznika.' ELSE
-'Firma reguluje swoje zobowiazania handlowe średnio co '+CAST(@CRot_Zob_Kr_dni AS nvarchar(1000))+' dni.'
-END
+CASE WHEN @CRot_Zob_Kr_dni <= 0 THEN 'Brak danych do wyliczenia wskaznika.' 
+     ELSE
+     'Firma reguluje swoje zobowiazania handlowe średnio co '+CAST(@CRot_Zob_Kr_dni as nvarchar(1000))+' dni.'
+     END
 
 
-INSERT INTO @tabela
+UNION ALL
 
-SELECT 'Jak szybko można spłacić dług EBITDĄ?' ,ROUND(@Dlug_Ebitda, 2),
+SELECT 
+
+'Jak szybko można spłacić dług EBITDĄ?' , ROUND(@Dlug_Ebitda, 2),
 'Interpretacja'= CASE 
-WHEN @Ebitda <= 0  THEN 'Długu nie uda się spłacić przy obecnym poziomie EBITDY, bo jest ona ujemna albo zerowa.'
-WHEN  @zobowo_krotk = 0 THEN 'Brak zobowiazan krotkoterminowych. Dlatego nie ma czego splacac.'
-WHEN @Dlug_Ebitda > 0    
-THEN
-'Dług można spłacić utrzymujac obecny poziom EBITDA i przy przekazaniu jej w całości na pokrycie zobowiazań krótkoterminowych w przeciagu ' 
-+ CAST(@splata AS nvarchar(1000)) +' dni.'
-
-END
-
-SELECT * FROM @tabela
+                 WHEN @Ebitda <= 0  THEN 'Długu nie uda się spłacić przy obecnym poziomie EBITDY, bo jest ona ujemna albo zerowa.'
+                 WHEN  @zobowo_krotk = 0 THEN 'Brak zobowiazan krotkoterminowych. Dlatego nie ma czego splacac.'
+                 WHEN @Dlug_Ebitda > 0    
+                 THEN
+                'Dług można spłacić utrzymujac obecny poziom EBITDA i przy przekazaniu jej w całości na pokrycie zobowiazań krótkoterminowych w przeciagu ' 
+                 + CAST(@splata as nvarchar(1000)) +' dni.'
+                 END
 
 END
 
 /* procedura zwracaja wybrane wskazniki finansowe policzone za wskazany okres, policzone w sposob uproszczony wraz z ich interpretacja, ktora sluzy jako ocena sytuacji finansowej stacji */
-
