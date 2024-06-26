@@ -3,8 +3,6 @@ USE Stacja_Paliw;
 GO
 
 
-/* analiza zapasow wg rotacji w razach i dniach liczonych odnoszac wartosc sprzedazy po cenach sprzedazy do wartosci zapasu w cenach zakupu  dla skonczonych okresow rozliczeniowych w latach */
-
 IF OBJECT_ID('Ope.uspAnaliza_Zapasow') IS NOT NULL
 DROP PROC Ope.uspAnaliza_Zapasow;
 
@@ -12,62 +10,95 @@ GO
 
 CREATE PROC Ope.uspAnaliza_Zapasow
 
+/* analiza zapasow wg rotacji w razach i dniach liczonych odnoszac wartosc sprzedazy liczona po cenach sprzedazy 
+do wartosci zapasu w cenach zakupu dla skonczonych okresow rozliczeniowych w latach */
+
+
 AS
 
 DECLARE @pierRok int = (SELECT  MIN(DISTINCT Year(CzasTransakcji)) FROM Ope.Dostawy) --od roku w ktorym byla pierwsza dostawa paliwa
 
 DECLARE @dzis date = GETDATE()
 
-/* ostatni rok uwzgledniany w analizie tak by zawsze byl to skonczony rok, nawet gdy dzis jest ostatni dzien w roku to moze sie jeszcze trafic jakas sprzedaz lub dostawa, 
-ktora ma wplywa na wyliczenia */
+/* ostatni rok uwzgledniany w analizie tak by zawsze byl to skonczony rok, nawet gdy dzis jest ostatni dzien w roku to moze sie jeszcze 
+trafic jakas sprzedaz lub dostawa, ktora ma wplywa na wyliczenia */
 
-DECLARE @ostaRok int =  YEAR(@dzis)-1   
+DECLARE @ostaRok int =  YEAR(@dzis) - 1;
+
+WITH 
+CTE_Zak (Rok, IDPaliwa) AS (
+  SELECT Rok_Num AS ROk, IDPaliwa
+  FROM Czas.Rok 
+  CROSS JOIN Ope.Zbiorniki
+  WHERE Rok_Num BETWEEN @pierRok AND @ostaRok),
 
 
-SELECT  IDPaliwa, YEAR(CzasTransakcji) AS Rok, ROUND(SUM(IloscPaliwa),2) AS Ilosc,CAST( ROUND(SUM(KwotaNetto), 2) AS money) AS Sprzed_Netto  
-INTO #sprzedaz
-FROM Ope.Sprzedaz
-WHERE YEAR(CzasTransakcji) BETWEEN @pierRok AND @ostaRok
-GROUP BY IDPaliwa, YEAR(CzasTransakcji)
+CTE_Sp (IDPaliwa, Rok, Ilo_Sprz) AS (
+  SELECT IDPaliwa, YEAR(CzasTransakcji) AS Rok, ROUND(SUM(IloscPaliwa), 2) AS Ilo_Sprz
+  FROM Ope.Sprzedaz AS S
+  GROUP BY YEAR(CzasTransakcji), IDPaliwa),
 
-
-SELECT IDPaliwa, Rok, SUM(Ilosc) OVER(PARTITION BY IDPaliwa ORDER BY Rok) AS Sprz_ILo_Nar
-INTO #sprzeNar
-FROM #sprzedaz
 
 /* srednia cena zakupu jako srednia cena za jednsotke danego paliwa w calym roku */
 
-SELECT IDPaliw, Rok, SUM(Ilosc) OVER(PARTITION BY   IDPaliw ORDER BY Rok) AS Zakup_ILo_Nar, Cena_Sr_Zakup
-INTO #zakup
-FROM(
-SELECT  IDPaliw, YEAR(CzasTransakcji) AS Rok, ROUND(SUM(IloscPaliwa), 2) AS Ilosc, CAST( ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa), 2) AS money) AS Cena_Sr_Zakup
-FROM Ope.Dostawy 
-WHERE YEAR(CzasTransakcji) BETWEEN @pierRok AND @ostaRok
-GROUP BY IDPaliw, YEAR(CzasTransakcji) ) AS A
+CTE_Zakup (IDPaliwa, Rok, Ilo_Zak, Cena_Sr_Zakupu) AS (
+  SELECT 
+  
+  IDPaliw, YEAR(CzasTransakcji) AS Rok, ROUND(SUM(IloscPaliwa), 2) AS Ilo_Zak, 
+  ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa), 2) AS Cena_Sr_Zakupu
+  
+  FROM Ope.Dostawy AS D
+  GROUP BY YEAR(CzasTransakcji), IDPaliw),
 
 
-SELECT Z.IDPaliw, Z.Rok, Zakup_ILo_Nar, Sprz_ILo_Nar, Zakup_ILo_Nar - Sprz_ILo_Nar AS Stan_Ilo, Cena_Sr_Zakup, ROUND((Zakup_ILo_Nar - Sprz_ILo_Nar)*Cena_Sr_Zakup,2) AS Zapas_Wart 
-INTO #zapasy
-FROM #zakup AS Z
-JOIN #sprzeNar AS S 
-ON Z.IDPaliw=S.IDPaliwa AND Z.Rok=S.Rok
+CTE_Zapasy (IDPaliwa, Rok, Ilo_Zak_Nar, Ilo_Sprz_Nar, Last_Cena, Cena_Sr_Zakupu) AS 
+(
+
+  SELECT 
+
+  Z.IDPaliwa, 
+  Z.Rok, 
+  SUM(Ilo_Zak) OVER(PARTITION BY Z.IDPaliwa ORDER BY Z.Rok) AS Ilo_Zak_Nar,
+  SUM(Ilo_Sprz) OVER(PARTITION BY Z.IDPaliwa ORDER BY Z.Rok) AS Ilo_Sprz_Nar,
+  LAG(Cena_Sr_Zakupu) OVER (PARTITION BY Z.IDPaliwa ORDER BY Z.Rok) AS Last_Cena, 
+  Cena_Sr_Zakupu
+
+  FROM CTE_Zak AS Z
+  LEFT JOIN CTE_Zakup AS Zakup 
+  ON Z.IDPaliwa = Zakup.IDPaliwa AND Z.Rok = Zakup.Rok
+  LEFT JOIN CTE_Sp AS S 
+  ON Z.IDPaliwa = S.IDPaliwa AND Z.Rok = S.Rok )
 
 
-DROP TABLE #sprzeNar
-DROP TABLE #zakup
 
-
-SELECT Rok, CAST(SUM(Zapas_Wart) AS money) AS Wartosc_Zapasu_Koniec
+SELECT Rok, ROUND(SUM(Zapas_Wart), 2)  AS Wartosc_Zapasu_Koniec 
 INTO #zapasy_Wart
-FROM #zapasy GROUP BY Rok
+FROM (
 
+  SELECT 
+  
+  IDPaliwa, 
+  Rok, 
+  Ilo_Zak_Nar - Ilo_Sprz_Nar AS Stan_Ilosciowy, 
 
-/* stan zapasu na poczatek okresu n to stan koncowy zapasu na rok n-1 czyli poprzpedni */
+/* cena zakupu powinna byc brana z danego roku jednak jesli nie bylo zakupow paliwa w danym roku oznacza to, 
+ze zapas paliwa jest z lat ubieglych po cenie i wartosci z tamtych lat, przy czym moze to byc cena z roku poprzedniego 
+jednak jesli w roku poprzednim rowniez nie bylo zakupow paliwa to trzeba sie cofac dalej az do roku w ktorym byl zakup.
+Dlatego Cena_Zakup w pierwszej kolejnosci bierze cene zakupu w danym roku jesli jej nie bylo bedzie ona miala wartosc NULL,
+wowczas brana jest cena z roku ubieglego jako Last_Cena a gdyby i tej nie bylo trzeba sie cofnac do lat ubieglych co zrobi
+funkcja ufPoprz_Cena_Zakupu */
+
+  COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu( Rok - 2, IDPaliwa) ) AS Cena_Zakup, 
+  ROUND((Ilo_Zak_Nar - Ilo_Sprz_Nar) * COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu(Rok - 2, IDPaliwa)), 2) AS Zapas_Wart
+  FROM CTE_Zapasy ) AS C_Z
+GROUP BY Rok
+
+/* Zalozenie: Stan zapasu na poczatek okresu n to stan koncowy zapasu na rok n-1 czyli poprzpedni */
 
 DECLARE @zapasy_poczatek table(Rok int, Stan_Poczatek money)
 
 INSERT INTO @zapasy_poczatek(Rok, Stan_Poczatek )
-SELECT  MIN(Rok),0
+SELECT  MIN(Rok), 0
 FROM #zapasy_Wart
 
 DECLARE @rok int = (SELECT  MIN(Rok) FROM @zapasy_poczatek)
@@ -75,11 +106,12 @@ DECLARE @rok int = (SELECT  MIN(Rok) FROM @zapasy_poczatek)
 DECLARE @maxrok int = (SELECT  MAX(Rok) FROM #zapasy_Wart)
 
 
-WHILE (SELECT ISNULL(MAX(Rok),0) FROM @zapasy_poczatek) <= @maxrok 
+WHILE (SELECT ISNULL(MAX(Rok), 0) FROM @zapasy_poczatek) <= @maxrok 
 
 BEGIN
 
 INSERT INTO @zapasy_poczatek (Rok, Stan_Poczatek)
+
 SELECT Rok + 1, ISNULL(Wartosc_Zapasu_Koniec, 0)
 FROM #zapasy_Wart 
 WHERE Rok = @rok 
@@ -88,57 +120,77 @@ IF @rok > @maxrok
 BREAK
 ELSE
 CONTINUE
-END
+END;
+
+WITH CTE_Sprz( Rok,  Sprzed_Netto ) AS (
+  SELECT YEAR(CzasTransakcji ) AS Rok, ROUND(SUM(KwotaNetto), 2) AS Sprzed_Netto
+  FROM Ope.Sprzedaz 
+  WHERE YEAR(CzasTransakcji) BETWEEN @pierRok AND @ostaRok 
+  GROUP BY YEAR(CzasTransakcji ) )
 
 
-SELECT P.Rok, Stan_Poczatek, Wartosc_Zapasu_Koniec, ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec)/2,2) AS Przecietny_Zapas, SUM(S.Sprzed_Netto) AS Sprzed_Netto,
+/* 
+do wyliczenia wskaznikow rotacji zapasow jest potrzebny przecietny stan zapasow w danym roku. 
+A Ten stan to stan poczatkowy dla danego roku plus stan na koniec dzielony na dwa. Tak policzony
+stan zapasow mozna uwzglednic do wskaznikow rotacji zapasow. Ktore wyrazaja sie wzorami:
+Wskaznik rotacji zapasow w razach : Sprzedaz / przecietny stan zapasow 
+Wskaznik rotacji zapasow w dniach : 
+360 (liczba dni przyjeta za adekwatna w danym okresie rozliczeniowym tutaj rok) / Wskaznik rotacji zapasow w razach
+*/
 
-'Rotacji_W_Razach' = CASE WHEN (Stan_Poczatek + Wartosc_Zapasu_Koniec) = 0 THEN 0 ELSE
-ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec)/2,2),2) END ,
+SELECT P.Rok, Stan_Poczatek, Wartosc_Zapasu_Koniec, ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec)/2 ,2) AS Przecietny_Zapas, Sprzed_Netto ,
 
-'Rotacji_W_Dniach' = CASE WHEN (Stan_Poczatek + Wartosc_Zapasu_Koniec) = 0 THEN 0 ELSE
-ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) END,
+'Rotacji_W_Razach' = 
+  CASE WHEN (Stan_Poczatek + Wartosc_Zapasu_Koniec) = 0 THEN 0 
+  ELSE
+  ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) END ,
 
-'Interpretacja' = CASE WHEN ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) < 7 
-AND ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) <= 360 
-THEN 
-'Nadmierne zapasy. Firma odnawiala swoje zapasy w ciagu roku ' + CAST(ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
-+ ' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
-CAST(ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
+'Rotacji_W_Dniach' = 
+  CASE WHEN (Stan_Poczatek + Wartosc_Zapasu_Koniec) = 0 THEN 0 
+  ELSE
+  ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) END,
 
-WHEN ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) < 7 
-AND ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) > 360 
-THEN 
-'Nadmierne zapasy. Firma odnawiala swoje zapasy w ciagu roku ' + CAST(ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
-+ ' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
-CAST(ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + 
-' dni. Co stanowi wiecej dni niz ma przyjeta norma dni na rok i wynika z tego, ze przecietna wartosc zapasow byla wieksza niz sprzedaz w danym okresie.'
+'Interpretacja' = 
+  CASE 
+
+  WHEN ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) < 7 
+  AND 
+  ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) <= 360 
+  THEN 'Nadmierne zapasy. Firma odnawiala swoje zapasy w ciagu roku ' + 
+  CAST(ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
+  +' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
+  CAST(ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
+
+  WHEN ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) < 7 
+  AND 
+  ROUND(360 / ROUND(Sprzed_Netto/ ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) > 360 
+  THEN 'Nadmierne zapasy. Firma odnawiala swoje zapasy w ciagu roku ' + 
+  CAST(ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
+  +' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
+  CAST(ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + 
+  ' dni. Co stanowi wiecej dni niz ma przyjeta norma dni na rok i wynika z tego, ze przecietna wartosc zapasow byla wieksza niz sprzedaz w danym okresie.'
 
 
-WHEN ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) BETWEEN 7 AND 10
-THEN 
-'Optymalny poziom zapasow. Firma odnawiala swoje zapasy w ciagu roku ' + CAST(ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
-+' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
-CAST(ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + 
-Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
+  WHEN ROUND(Sprzed_Netto/ ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) BETWEEN 7 AND 10
+  THEN 'Optymalny poziom zapasow. Firma odnawiala swoje zapasy w ciagu roku ' +
+  CAST(ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
+  +' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
+  CAST(ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
 
-WHEN ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) > 10
-THEN 
-'Poziom zapasow moze byc zbyt niski. Firma odnawiala swoje zapasy w ciagu roku ' +
-CAST(ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
-+' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
-CAST(ROUND(360 / ROUND(SUM(S.Sprzed_Netto) / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
-END
+  WHEN ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) > 10
+  THEN 'Poziom zapasow moze byc zbyt niski. Firma odnawiala swoje zapasy w ciagu roku ' +
+  CAST(ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2) AS nvarchar(10))
+  +' razy/a. ' + 'Gotowka byla zatrzymywana w formie zapasow przez ' + 
+  CAST(ROUND(360 / ROUND(Sprzed_Netto / ROUND((Stan_Poczatek + Wartosc_Zapasu_Koniec) / 2, 2), 2), 2) AS nvarchar(10)) + ' dni.'
+  END
 
 FROM @zapasy_poczatek AS P
 JOIN #zapasy_Wart AS W
 ON P.Rok = W.Rok
-LEFT JOIN #sprzedaz AS S
-ON P.Rok = S.Rok
-GROUP BY P.Rok, Stan_Poczatek, Wartosc_Zapasu_Koniec
+LEFT JOIN CTE_Sprz AS Sprz 
+ON P.Rok = Sprz.Rok
+GROUP BY P.Rok, Stan_Poczatek, Wartosc_Zapasu_Koniec, Sprzed_Netto
 
-DROP TABLE #zapasy
 DROP TABLE #zapasy_Wart
-DROP TABLE #sprzedaz
 
 /* procedura zwracaja analize stanu zapasow w latach od roku pierwszej dostawy do ostatniego zamknietego roku */
