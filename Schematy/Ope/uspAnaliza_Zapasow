@@ -88,8 +88,8 @@ Dlatego Cena_Zakup w pierwszej kolejnosci bierze cene zakupu w danym roku jesli 
 wowczas brana jest cena z roku ubieglego jako Last_Cena a gdyby i tej nie bylo trzeba sie cofnac do lat ubieglych co zrobi
 funkcja ufPoprz_Cena_Zakupu */
 
-  COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu( Rok - 2, IDPaliwa) ) AS Cena_Zakup, 
-  ROUND((Ilo_Zak_Nar - Ilo_Sprz_Nar) * COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu(Rok - 2, IDPaliwa)), 2) AS Zapas_Wart
+  COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu( Rok - 1, IDPaliwa) ) AS Cena_Zakup, 
+  ROUND((Ilo_Zak_Nar - Ilo_Sprz_Nar) * COALESCE( Cena_Sr_Zakupu, Last_Cena, Ope.ufPoprz_Cena_Zakupu(Rok - 1, IDPaliwa)), 2) AS Zapas_Wart
   FROM CTE_Zapasy ) AS C_Z
 GROUP BY Rok
 
