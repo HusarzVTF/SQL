@@ -1,0 +1,48 @@
+
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufPoprz_Cena_Zakupu') IS NOT NULL
+DROP FUNCTION Ope.ufPoprz_Cena_Zakupu;
+
+GO
+
+CREATE FUNCTION Ope.ufPoprz_Cena_Zakupu (@rok  int, @id tinyint)
+
+RETURNS money
+WITH SCHEMABINDING  
+AS
+
+BEGIN
+
+
+DECLARE @cena TABLE (IDPaliw tinyint, Rok int,  Cena_Sr_Zakupu money)
+
+INSERT INTO @cena 
+
+--do zmiennej tablicowej wstawiamy srednia wazona cene zakupu dla podanego paliwa oraz dla lat poprzednich wzgledem podanego, bo szukamy ceny z lat poprzednich
+
+SELECT IDPaliw, YEAR(CzasTransakcji) As Rok, ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa), 2) AS Cena_Sr_Zakupu
+FROM Ope.Dostawy AS D
+WHERE IDPaliw = @id
+GROUP BY YEAR(CzasTransakcji), IDPaliw
+HAVING YEAR(CzasTransakcji) < @rok 
+
+DECLARE @maxRok int = (SELECT MAX(Rok) FROM @cena) --szukamy ceny z roku najwczesniejszego wzgledem podanego np. jeśli podnay byl 2022 to wczesniejszy jemu jest 2021 przed 2020 
+
+DECLARE @PopCena money = (
+SELECT C.Cena_Sr_Zakupu
+FROM @cena AS C
+WHERE C.Rok = @maxRok
+)
+
+return @PopCena
+
+END
+
+/* funkcja zwracaja srednia wazona cene zakupu z roku poprzedniego o ile byl zakup paliwa w tym roku. 
+Gdy go nie bylo funkcja wezmie z roku poprzedniego - 1 a potem -2.. az dotrze do pierwszego roku w ktorym 
+byl zakup paliwa */
+
