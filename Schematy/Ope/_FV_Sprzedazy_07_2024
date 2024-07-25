@@ -1,0 +1,12 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 2, 1, 1, 1200, 'automatyczny', null, '2024-07-25', '2024-07-25'
+EXEC Ope.uspWstawFV_Sprzedaz 1, 1, 2, 100000, 'automatyczny', null, '2024-07-25', '2024-07-25'
+EXEC Ope.uspWstawFV_Sprzedaz 3, 1, 3, 1915, 'automatyczny', null, '2024-07-25', '2024-07-25'
+
+
+/* FV sprzedazy 07 2024 (lipiec) */
+
