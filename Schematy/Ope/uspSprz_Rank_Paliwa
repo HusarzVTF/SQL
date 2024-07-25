@@ -1,4 +1,7 @@
 
+USE Stacja_Paliw
+
+GO
 
  IF OBJECT_ID('Ope.uspPaliwa_SprzRanking') IS NOT NULL
  DROP PROC Ope.uspPaliwa_SprzRanking;
