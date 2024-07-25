@@ -1,0 +1,23 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC	Ope.uspWstawFV_Zakup
+		@nrfv = N'105F',
+		@pozfv = 1,
+		@id_d = 2406,
+		@iddost = 3,
+		@idprac = 7,
+		@idpal = 2,
+		@ilo = 500000,
+		@kwn = 750000,
+		@kwb = 922500,
+		@term ='2024-09-30',
+		@podatek =172500 ,
+		@tpl = 'przelew',
+		@czastr =  '2024-07-25',
+		@dataz = NULL,
+		@datakz = NULL
+
+/* zakup gazu LPG na 500 000 m3 */
