@@ -1,0 +1,57 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.uspCashFlow') IS NOT NULL
+DROP PROC Ope.uspCashFlow
+
+GO
+
+CREATE PROC Ope.uspCashflow ( @od date , @do date )
+
+AS 
+
+/* sekcja check*/
+
+IF @od IS  NULL OR @do IS  NULL OR @od > @do 
+
+
+THROW 1701000, 'Nie podano zakresu dat dla, których ma byc policzony koszt staly lub jedna z dat wprowadzono niepoprawnie tudziez data od jest wieksza niz do', 1;
+
+
+DECLARE @datamax date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty  WHERE Do_Wyplaty > 0)
+
+IF @od > @datamax OR @do > @datamax
+
+THROW 1701001, 'To jest realny cash flow za zamkniety okres w przeszlosci. Dlatego daty musza miescic sie w zakresie dat dla ktorych zostaly naliczone koszty plac',1;
+
+/*koniec sekcji check*/
+
+
+DECLARE @CashFlow table (ID smallint PRIMARY KEY IDENTITY, Cash varchar(7) , Flow money);
+
+INSERT INTO @CashFlow (Cash) VALUES('INCOME'), ('OUTCOME'), ('RESULT')
+
+DECLARE @inc money = ( 
+                      SELECT ISNULL(SUM(KwotaBrutto), 0) 
+                      FROM Sprzedaz
+                      WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NOT NULL)
+
+DECLARE @out money = ( 
+                      SELECT ISNULL(SUM(KwotaBrutto), 0) + Ope.ufKsztWyplaty(@od, @do) 
+                      FROM Dostawy 
+                      WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NOT NULL)  
+
+
+UPDATE @CashFlow SET Flow = @inc  WHERE Cash = 'INCOME';
+
+UPDATE @CashFlow SET Flow = @out WHERE Cash = 'OUTCOME';
+
+UPDATE @CashFlow SET Flow = @inc - @out WHERE Cash='RESULT';
+
+
+
+SELECT * FROM @CashFlow ORDER BY  ID;
+
+
+--Procedura zwracająca Cash flow --
