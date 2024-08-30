@@ -1,0 +1,8 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspDataZap 'Dostawy', '105F' , 3, '2024-08-27'
+
+/* oplacenie fv za zakup gazu */
