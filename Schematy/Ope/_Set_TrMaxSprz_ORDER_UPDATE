@@ -1,0 +1,2 @@
+
+sp_settriggerorder @triggername = 'Ope.trMaxSprz', @order = 'last', @stmttype = 'UPDATE' ;
