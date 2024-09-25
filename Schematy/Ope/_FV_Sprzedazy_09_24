@@ -1,0 +1,11 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 3, 3, 2, 1812.40, 'automatyczny', null, '2024-09-24', '2024-09-24'
+EXEC Ope.uspWstawFV_Sprzedaz 5, 3, 3, 9999.98, 'automatyczny', null, '2024-09-24', '2024-09-24'
+EXEC Ope.uspWstawFV_Sprzedaz 7, 3, 2, 10000.01, 'automatyczny', null, '2024-09-24', '2024-09-24'
+EXEC Ope.uspWstawFV_Sprzedaz 8, 3, 3, 9999.96, 'automatyczny', null, '2024-09-24', '2024-09-24'
+
+/* fv sprzedazy za wrzesien 2024 */
