@@ -25,4 +25,5 @@ ROLLBACK TRANSACTION;
 RETURN
 END;
 
---Trigger sprawdzajacy czy kwota brutto jest poprawna. Zmiana jest powodowana tym, ze kod w tej postaci w pelni odpowiada metodyce liczenia kwoty brutto--
+/* Trigger sprawdzajacy czy kwota brutto jest poprawna. Zmiana jest powodowana tym, ze kod w tej postaci w pelni odpowiada metodyce 
+liczenia kwoty brutto */ 
