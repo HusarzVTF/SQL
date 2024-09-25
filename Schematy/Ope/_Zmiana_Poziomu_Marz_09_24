@@ -1,0 +1,9 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Benzyna',0.17
+EXEC Ope.uspZmien_Marze 'Ropa',0.23
+
+/* zmiana poziomu marz by byly bardziej rynkowe */
