@@ -16,7 +16,7 @@ DECLARE @kwB money = (SELECT  ROUND(Ope.ufSpKWBrutto(IDPaliwa, ROUND(IloscPaliwa
  
 DECLARE @roznica money = ROUND(@kwB - @MaxKWB, 2)
 
-IF @roznica > 0.01
+IF ABS(@roznica) > 0.01
 
 BEGIN
 PRINT 'Nieprawidlowa kwota brutto. Operacja zostala cofnieta roznica wynosi ' + CAST(@roznica as varchar) + ' kwota z funkcji wynosi ' 
