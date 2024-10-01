@@ -1,0 +1,44 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trCena_Netto_check') IS NOT NULL
+DROP TRIGGER Ope.trCena_Netto_check;
+
+GO
+
+CREATE TRIGGER Ope.trCena_Netto_check ON Ope.Sprzedaz
+
+AFTER INSERT 
+
+AS  
+
+DECLARE @maxID bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+
+
+DECLARE @MaxKWN money = (SELECT ROUND(KwotaNetto, 2) FROM Ope.Sprzedaz WHERE ID = @maxID) 
+
+DECLARE @maxklient tinyint = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxID) 
+
+DECLARE @maxpaliwo tinyint = (SELECT IDPaliwa FROM Ope.Sprzedaz WHERE ID = @maxID)
+
+DECLARE @maxilosc real = (SELECT IloscPaliwa FROM Ope.Sprzedaz WHERE ID = @maxID)
+
+DECLARE @kwN money = (SELECT  ROUND(Ope.CenaSprz(@maxpaliwo, @maxklient) * ROUND(@maxilosc, 2), 2) FROM Ope.Sprzedaz WHERE ID = @maxID)
+
+ 
+DECLARE @roznicaN money = ROUND(@kwN - @MaxKWN, 2)
+
+
+IF ABS(@roznicaN) > 0.01
+
+BEGIN
+PRINT 'Nieprawidlowa kwota netto. Operacja zostala cofnieta roznica wynosi ' + CAST(@roznicaN as varchar)+' kwota w tabeli Sprzedaz wynosi ' 
++ CAST(@MaxKWN as varchar)+' kwota z triggera wynosi ' + CAST(@kwN as varchar)
+ROLLBACK TRANSACTION;
+RETURN
+END;
+
+
+-- konieczne bylo wprowadzenie tego tr, bo stary kwotabrutto walidowal netto przy okazji a nowy nie--
+--Trigger sprawdzajcy czy kwota netto jest poprawna--
