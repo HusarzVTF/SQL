@@ -1,0 +1,26 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TRIGGER Ope.trRab_Sprz_Ilo ON Ope.Sprzedaz AFTER INSERT 
+ 
+AS
+
+IF EXISTS(
+
+
+SELECT  Wartosc_Rabatu FROM Ope.Sprzedaz  WHERE Wartosc_Rabatu <> CAST( ROUND( ROUND(Rabat_Jedn, 2) * ROUND(IloscPaliwa, 2), 2)  AS real)
+
+ 
+
+)
+
+ 
+
+BEGIN
+PRINT 'Niepoprawna wartosc rabatu. Wartosc rabatu musi sie rownac ilosci sprzedanego paliwa pomnozonej przez rabat jednostkowy.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* poprzednia wersja triggera  trRab_Sprz_Ilo nie walidowala poprawnie niektorych przypadkow */
