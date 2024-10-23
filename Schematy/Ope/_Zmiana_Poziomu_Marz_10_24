@@ -1,0 +1,8 @@
+
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Gaz',0.53
+
+
