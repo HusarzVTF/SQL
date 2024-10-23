@@ -1,0 +1,21 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmianaPensji 1, '2024-02-01', 3000
+
+EXEC Ope.uspZmianaPensji 2, '2024-02-01', 3000
+
+EXEC Ope.uspZmianaPensji 3, '2024-02-01', 3500
+
+EXEC Ope.uspZmianaPensji 4, '2024-02-01', 3600
+
+EXEC Ope.uspZmianaPensji 5, '2024-02-01', 3000
+
+EXEC Ope.uspZmianaPensji 6, '2024-02-01', 3000
+
+EXEC Ope.uspZmianaPensji 7, '2024-02-01', 3100
+
+EXEC Ope.uspZmianaPensji 8, '2024-02-01', 3200
+
+
