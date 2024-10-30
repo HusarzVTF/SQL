@@ -1,0 +1,30 @@
+
+USE Stacja_Paliw
+
+GO
+
+
+EXEC Ope.uspWstaw_Urlop 1, '2024-01-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 2, '2024-03-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 3, '2024-04-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 4, '2024-02-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 5, '2024-05-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 6, '2024-06-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 7, '2024-09-01', 26 
+
+
+EXEC Ope.uspWstaw_Urlop 8, '2024-07-01', 26 
+
+/* uzupelnienie urlopow za 2024 rok*/
