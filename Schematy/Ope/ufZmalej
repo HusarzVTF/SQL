@@ -1,6 +1,6 @@
 USE Stacja_Paliw
-GO
 
+GO
 
  IF OBJECT_ID('Ope.ufZmalej') IS NOT NULL
  DROP FUNCTION Ope.ufZmalej;
@@ -16,12 +16,12 @@ WITH SCHEMABINDING
 AS
 BEGIN
 
-DECLARE @wyn nvarchar(1000)=(SELECT CONCAT (LOWER (LEFT(@wyr,1)),SUBSTRING(@wyr,2,LEN(@wyr)-1) ) )
+DECLARE @wyn nvarchar(1000) = (SELECT CONCAT (LOWER (LEFT(@wyr, 1)), SUBSTRING(@wyr, 2, LEN(@wyr)-1) ) )
 
 RETURN @wyn;
 
 END;
 
---Funkcja zwracajaca wyraz podany jako argument funkcji napisany z malej litery: argument - Podany , wynik - podany. --
+--Funkcja zwracajaca wyraz podany jako argument funkcji napisany z malej litery--
 
 
