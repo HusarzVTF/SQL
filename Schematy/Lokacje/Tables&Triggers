@@ -16,7 +16,7 @@ GO
 
 CREATE TABLE Lokacje.Wojewodztwa
 (IdWoj int IDENTITY, 
-Wojewodztwo varchar(50) not null UNIQUE CHECK(LEN(Wojewodztwo)>=7), 
+Wojewodztwo varchar(50) not null UNIQUE CHECK(LEN(Wojewodztwo) >= 7), 
 CONSTRAINT PK_Woj PRIMARY KEY(IdWoj));
 
 --Tworzenie tabeli słownikowej Wojewodztwa--
@@ -31,7 +31,7 @@ GO
 CREATE TABLE Lokacje.Powiat
 (IdPowiatu int  IDENTITY,
 IdWOJ int CONSTRAINT PK_PowWoj FOREIGN KEY REFERENCES Lokacje.Wojewodztwa(IdWoj),
-Powiat varchar(50) not null CHECK(LEN(Powiat)>=4),
+Powiat varchar(50) not null CHECK(LEN(Powiat) >= 4),
 CONSTRAINT PK_Pow PRIMARY KEY(IdPowiatu) );
 
 --Tworzenie tabeli słownikowej Powiat--
@@ -47,9 +47,9 @@ CREATE TRIGGER Lokacje.trPow ON Lokacje.Powiat
 AFTER INSERT, UPDATE 
 AS
 IF EXISTS(
-SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu<(SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu < (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
 INTERSECT
-SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu=(SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu = (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Powiat, operacja została cofnięta.'
@@ -74,7 +74,7 @@ GO
 CREATE TABLE Lokacje.Gmina(
 IdGminy int IDENTITY,
 IdPowiatu int CONSTRAINT PK_GmiPow FOREIGN KEY REFERENCES Lokacje.Powiat(IdPowiatu),
-Gmina varchar(50) not null  CHECK(LEN(Gmina)>=4),
+Gmina varchar(50) not null  CHECK(LEN(Gmina) >= 4),
 CONSTRAINT PK_Gmi PRIMARY KEY (IdGminy) );
 
 --Tworzenie tabeli słownikowej Gmina--
@@ -98,7 +98,7 @@ AS
 
 IF EXISTS
 (
-SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy=(SELECT MAX(IdGminy) FROM Gmina)
+SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy = (SELECT MAX(IdGminy) FROM Gmina)
 INTERSECT
 SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Gmina)
 )
@@ -127,7 +127,7 @@ GO
 CREATE TABLE Lokacje.Miejscowosc(
 IDMiej int  IDENTITY,
 IDGminy int CONSTRAINT PK_GmiMi FOREIGN KEY REFERENCES Lokacje.Gmina(IdGminy), 
-Miejscowosc varchar(50) not null CHECK(LEN(Miejscowosc)>=4), 
+Miejscowosc varchar(50) not null CHECK(LEN(Miejscowosc) >= 4), 
 CONSTRAINT PK_Miej PRIMARY KEY (IDMiej) );
 
 
@@ -150,7 +150,7 @@ AS
 
 IF EXISTS
 (
-SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej=(SELECT MAX(IDMiej ) FROM Miejscowosc) 
+SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej = (SELECT MAX(IDMiej ) FROM Miejscowosc) 
 INTERSECT
 SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Miejscowosc)
 )
