@@ -59,10 +59,10 @@ SELECT
 ID 
 
 FROM Czas.Kalendarz 
-WHERE MONTH(Data)=5 AND DAY(Data)=3 AND Dzien_Swiat IS NULL)
+WHERE MONTH(Data) = 5 AND DAY(Data) = 3 AND Dzien_Swiat IS NULL)
 BEGIN
 UPDATE Czas.Kalendarz SET Dzien_Swiat = 'Święto Narodowe Trzeciego Maja'
-WHERE MONTH(Data)=5 AND DAY(Data)=3
+WHERE MONTH(Data) = 5 AND DAY(Data) = 3
 END
 
 IF EXISTS( 
