@@ -37,9 +37,9 @@ INSERT INTO Lokacje.Miejscowosc(IdGminy,Miejscowosc) VALUES
 --wstawienie miast do tabeli Miejscowosc--
 
 SELECT W.Wojewodztwo, P.Powiat, G.Gmina, M.Miejscowosc FROM  Lokacje.Wojewodztwa AS W 
-LEFT JOIN Lokacje.Powiat AS P ON W.IdWoj=P.IdWoj 
-LEFT JOIN Lokacje.Gmina AS G ON P.IdPowiatu=G.IdPowiatu 
-LEFT JOIN Lokacje.Miejscowosc AS M ON G.IdGminy=M.IdGminy;
+LEFT JOIN Lokacje.Powiat AS P ON W.IdWoj = P.IdWoj 
+LEFT JOIN Lokacje.Gmina AS G ON P.IdPowiatu = G.IdPowiatu 
+LEFT JOIN Lokacje.Miejscowosc AS M ON G.IdGminy = M.IdGminy;
 
 --Zapytanie pokazujace czy dane w tabelach slownikowych sa kompletne i poprawne--
 
