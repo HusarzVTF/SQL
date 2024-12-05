@@ -21,7 +21,7 @@ Data
 
 INTO #pierdzWielNoc
 FROM Czas.Kalendarz 
-WHERE Dzien_Swiat ='Pierwszy dzień Wielkanocy'
+WHERE Dzien_Swiat = 'Pierwszy dzień Wielkanocy'
 
 SELECT 
 
@@ -31,7 +31,7 @@ Data
 
 INTO #drugidzWielNoc
 FROM Czas.Kalendarz 
-WHERE Dzien_Swiat ='Drugi dzień Wielkanocy'
+WHERE Dzien_Swiat = 'Drugi dzień Wielkanocy'
 
 IF EXISTS(
 
