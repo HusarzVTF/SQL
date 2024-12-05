@@ -9,7 +9,7 @@ WHILE  @naj < '2025-01-01'
 
 BEGIN
 
-INSERT INTO Czas.Kalendarz(data,IDRk,IDM)
+INSERT INTO Czas.Kalendarz(data, IDRk, IDM)
 
 SELECT DATEADD(d,1,(SELECT MAX(data) FROM Czas.Kalendarz)),
 (SELECT ID FROM Czas.Rok WHERE Rok_Num = YEAR(DATEADD(d,1,(SELECT MAX(data) FROM Czas.Kalendarz)))),
