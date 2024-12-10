@@ -18,7 +18,7 @@ ISNULL(ROUND(SUM(IloscPaliwa),2),0) AS IloscPaliwa,
 ISNULL(ROUND(SUM(KwotaNetto),2),0) AS WartoscNettoPaliwa,
 ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) AS Wart_Rab,
 'Udz_Proc_Rab' = CASE WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0) = 0 THEN 0
-WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0)>0 THEN
+WHEN  ISNULL(ROUND(SUM(KwotaNetto),2),0) > 0 THEN
 ROUND(ISNULL(ROUND(SUM(Wartosc_Rabatu),2),0) / ISNULL(ROUND(SUM(KwotaNetto),2),0),2) END , 
 ISNULL(ROUND(SUM(KwotaBrutto) - SUM(KwotaNetto),2),0) AS  Podatek,
 ISNULL(ROUND(SUM(KwotaBrutto),2),0) AS WartoscBruttoPaliwa,  
@@ -31,8 +31,8 @@ WHEN SUM(IloscPaliwa) = 0 THEN 0
 ELSE 
 ISNULL(ROUND(SUM(KwotaBrutto)/SUM(IloscPaliwa),2),0) END  
 
-FROM Ope.Sprzedaz AS S RIGHT JOIN Ope.Klienci AS K ON K.IdKlienta=S.IdKlienta  
-LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
+FROM Ope.Sprzedaz AS S RIGHT JOIN Ope.Klienci AS K ON K.IdKlienta = S.IdKlienta  
+LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa = S.IDPaliwa
 GROUP BY K.IdKlienta, K.NazwaKlienta, Z.JM, Z.RodzajPaliwa, Typ_rabatu ORDER BY K.IdKlienta, Z.RodzajPaliwa  ASC
 
 END;
