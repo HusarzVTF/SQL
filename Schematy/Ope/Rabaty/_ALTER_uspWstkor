@@ -10,7 +10,7 @@ AS
 
 BEGIN
 
-IF @obiekt= 'Dostawy' 
+IF @obiekt = 'Dostawy' 
 
 BEGIN
 
