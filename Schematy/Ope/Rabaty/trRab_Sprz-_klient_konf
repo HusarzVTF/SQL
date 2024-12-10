@@ -19,13 +19,13 @@ IF EXISTS(
 
 SELECT Rabat_Jedn  FROM Ope.Sprzedaz AS S 
 
-JOIN Ope.Klienci  AS K ON S.IdKlienta=K.IdKlienta
+JOIN Ope.Klienci  AS K ON S.IdKlienta = K.IdKlienta
 
 JOIN Ope.Rabaty AS R ON R.ID_Paliwa = S.IDPaliwa AND K.Poziom_Rabatu = R.Poziom_Rab
 
-WHERE R.Jedn_war_Rab>0 
+WHERE R.Jedn_war_Rab > 0 
 
-AND S.Typ_rabatu='reczny' 
+AND S.Typ_rabatu = 'reczny' 
  
 
 )
