@@ -15,15 +15,15 @@ DECLARE @cena real =
 
 (SELECT
  
- ROUND(CenaJedn-Jedn_war_Rab,2)
+ ROUND(CenaJedn - Jedn_war_Rab,2)
  
  FROM Ope.CenyPa As CP
  
- JOIN Ope.Rabaty  AS R ON CP.IDPALIW=R.ID_Paliwa
+ JOIN Ope.Rabaty  AS R ON CP.IDPALIW = R.ID_Paliwa
 
- JOIN Ope.Klienci AS K ON R.Poziom_Rab=K.Poziom_Rabatu
+ JOIN Ope.Klienci AS K ON R.Poziom_Rab = K.Poziom_Rabatu
  
- WHERE IDPALIW=@IDPaliwa AND K.IdKlienta=@idklienta);
+ WHERE IDPALIW = @IDPaliwa AND K.IdKlienta = @idklienta);
 
 RETURN @cena;
 
