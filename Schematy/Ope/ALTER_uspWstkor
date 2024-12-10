@@ -4,13 +4,13 @@ USE Stacja_Paliw
 
 GO
 
-ALTER PROC Ope.uspWstkor (@obiekt varchar(8) ,@fv varchar(100), @poz smallint, @pesel char(11),@iddos int = NULL) 
+ALTER PROC Ope.uspWstkor (@obiekt varchar(8) , @fv varchar(100), @poz smallint, @pesel char(11), @iddos int = NULL) 
 
 AS
 
 BEGIN
 
-IF @obiekt= 'Dostawy' 
+IF @obiekt = 'Dostawy' 
 
 BEGIN
 
@@ -23,7 +23,7 @@ NRFV,
 PozycjaNAFV*-1,
 ID_Dat,
 IdDostawcy,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
 IDPaliw,
 IloscPaliwa*-1,
 KwotaNetto*-1,
@@ -53,7 +53,7 @@ NRFV,
 PozycjaNAFV*-1,
 Czas.uIdDaty(CAST(GETDATE() AS Date)),
 IdKlienta,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
 IDPaliwa,
 IloscPaliwa*-1,
 KwotaNetto*-1,
@@ -68,7 +68,7 @@ Rabat_Jedn,
 -Wartosc_Rabatu
 
 FROM Ope.Sprzedaz
-WHERE NRFV=@fv AND PozycjaNAFV=@poz;
+WHERE NRFV = @fv AND PozycjaNAFV = @poz;
 
 END;
 
