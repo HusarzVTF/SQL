@@ -8,7 +8,7 @@ DROP TRIGGER Ope.trRab
 
 GO
 
-CREATE TRIGGER Ope.trRab ON Ope.Rabaty AFTER INSERT,UPDATE
+CREATE TRIGGER Ope.trRab ON Ope.Rabaty AFTER INSERT, UPDATE
 
 AS
 
@@ -20,7 +20,7 @@ SELECT Poziom_Rab,
 ID_Paliwa, 
 CONCAT(CAST(Poziom_Rab AS varchar),CAST(ID_Paliwa AS varchar)) AS chk FROM Ope.Rabaty) as sub
 GROUP BY chk
-HAVING  COUNT(chk)>1
+HAVING  COUNT(chk) > 1
 ) 
 BEGIN
 PRINT 'Proba wstawienia duplikatu na poziomie rabatu i paliwa'
