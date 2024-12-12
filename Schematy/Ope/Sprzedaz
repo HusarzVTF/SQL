@@ -38,15 +38,15 @@ DROP TABLE Ope.Sprzedaz;
 GO
 CREATE TABLE Ope.Sprzedaz (
 ID bigint IDENTITY PRIMARY KEY,
-NRFV bigint not null CHECK (NRFV>0), 
+NRFV bigint not null CHECK (NRFV > 0), 
 PozycjaNaFV smallint CONSTRAINT FK_Pozycja FOREIGN KEY REFERENCES Ope.Pozycja(ID),
 ID_Dat int CONSTRAINT FK_DatSprz FOREIGN KEY REFERENCES Czas.Kalendarz(ID), 
 IdKlienta int CONSTRAINT FK_Kli FOREIGN KEY REFERENCES Ope.Klienci (IdKlienta),
 IdPracownika tinyint  CONSTRAINT FK_Prac FOREIGN KEY REFERENCES Ope.Pracownicy(IDPracownika),
 IDPaliwa tinyint CONSTRAINT FK_Zbio FOREIGN KEY REFERENCES Ope.Zbiorniki(IDPaliwa),
-IloscPaliwa real not null CHECK(IloscPaliwa<>0),
-KwotaNetto real not null CHECK(KwotaNetto<>0),
-KwotaBrutto real not null CHECK(KwotaBrutto<>0),
+IloscPaliwa real not null CHECK(IloscPaliwa <> 0),
+KwotaNetto real not null CHECK(KwotaNetto <> 0),
+KwotaBrutto real not null CHECK(KwotaBrutto <> 0),
 CzasTransakcji datetime not null,
 TerminZaplaty date not null, 
 DataZaplaty date,
@@ -74,9 +74,10 @@ CREATE TRIGGER Ope.trCzSprz ON Ope.Sprzedaz AFTER INSERT,UPDATE
 AS
 
 IF EXISTS(
-SELECT TerminZaplaty,CzasTransakcji,DataZaplaty FROM Ope.Sprzedaz 
-WHERE DataZaplaty<CAST(CzasTransakcji AS date) 
-OR TerminZaplaty<CAST(CzasTransakcji AS date)
+SELECT TerminZaplaty,CzasTransakcji,DataZaplaty 
+FROM Ope.Sprzedaz 
+WHERE DataZaplaty < CAST(CzasTransakcji AS date) 
+OR TerminZaplaty < CAST(CzasTransakcji AS date)
 )
 BEGIN
 PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji.
@@ -99,11 +100,12 @@ AFTER INSERT,UPDATE
 AS
 
 IF EXISTS(
-SELECT*FROM Ope.Sprzedaz WHERE
+SELECT*FROM Ope.Sprzedaz 
+WHERE
 EXISTS( SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
 FROM Ope.Sprzedaz 
-WHERE  ( PozycjaNAFV>0 AND IloscPaliwa<0 )
-OR (PozycjaNAFV<0 AND IloscPaliwa>0 )))
+WHERE  ( PozycjaNAFV > 0 AND IloscPaliwa < 0 )
+OR (PozycjaNAFV < 0 AND IloscPaliwa > 0 )))
 BEGIN
 PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -139,8 +141,8 @@ WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
 AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV>0
 EXCEPT
 SELECT NRFV,ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty,CzasTransakcji FROM Ope.Sprzedaz WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV>0)
+DataAktuZaplaty,CzasTransakcji FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0)
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -156,14 +158,16 @@ END;
 IF @liczSp>1 AND @PozSp<0
 BEGIN
 IF EXISTS (SELECT NRFV, ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty FROM Ope.Sprzedaz 
+DataAktuZaplaty 
+FROM Ope.Sprzedaz 
 WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
 AND IdKlienta = @idkl  AND NRFV = @FVSp AND PozycjaNAFV<0
 EXCEPT
 SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty FROM Ope.Sprzedaz 
-WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV<0)
+DataAktuZaplaty 
+FROM Ope.Sprzedaz 
+WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV < 0)
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -177,18 +181,17 @@ ktory wystawil prawidlowa fv */
 
 
  
-IF @liczSp>1 AND @sumaSp<>0  AND @PozSp>0 
+IF @liczSp > 1 AND @sumaSp <> 0  AND @PozSp > 0 
 
 BEGIN
 
 SELECT DISTINCT CzasTransakcji
 INTO #CzasChkSp
-FROM Ope.Sprzedaz WHERE ID<(SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND NRFV = (SELECT NRFV FROM Ope.Sprzedaz
-WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)) 
-AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz
-WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
-
+FROM Ope.Sprzedaz 
+WHERE 
+ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)) 
+AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
 
 
 
@@ -227,21 +230,21 @@ AS
 
 DECLARE @maxID bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
 
-DECLARE @maxIDPa tinyint = (SELECT IDPaliwa FROM Ope.Sprzedaz WHERE ID=@maxID)
+DECLARE @maxIDPa tinyint = (SELECT IDPaliwa FROM Ope.Sprzedaz WHERE ID = @maxID)
 
-DECLARE @akcyza real = (SELECT ROUND(Stawka,2) FROM Ope.StPodat WHERE ID=@maxIDPa) 
+DECLARE @akcyza real = (SELECT ROUND(Stawka,2) FROM Ope.StPodat WHERE ID = @maxIDPa) 
 
-DECLARE @Ilo real = (SELECT ROUND(IloscPaliwa,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+DECLARE @Ilo real = (SELECT ROUND(IloscPaliwa,2) FROM Ope.Sprzedaz WHERE ID = @maxID)
 
-DECLARE @kwN real = (SELECT ROUND(KwotaNetto,2) FROM Ope.Sprzedaz WHERE ID=@maxID)
+DECLARE @kwN real = (SELECT ROUND(KwotaNetto,2) FROM Ope.Sprzedaz WHERE ID = @maxID)
 
-DECLARE @kwB real = ROUND((@Ilo*@akcyza)+@kwN,2) 
+DECLARE @kwB real = ROUND((@Ilo*@akcyza) + @kwN,2) 
 
-DECLARE @MaxKWB real = ROUND((SELECT ROUND(KwotaBrutto,2) FROM Ope.Sprzedaz WHERE ID=@maxID),2)
+DECLARE @MaxKWB real = ROUND((SELECT ROUND(KwotaBrutto,2) FROM Ope.Sprzedaz WHERE ID = @maxID),2)
 
-DECLARE @roznica real = ROUND(@kwB-@MaxKWB,2)
+DECLARE @roznica real = ROUND(@kwB - @MaxKWB,2)
 
-IF ROUND(@kwB,2)<>ROUND(@MaxKWB,2)
+IF ROUND(@kwB,2) <> ROUND(@MaxKWB,2)
 
 
 BEGIN
@@ -280,17 +283,16 @@ DECLARE @licznik int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @NRFV 
 
 DECLARE @liczKore int = (SELECT COUNT(*) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND  IdKlienta = @idKl AND PozycjaNAFV = @FVPoz*-1)
 
-DECLARE @liczPo int = (SELECT COUNT(*) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND  IdKlienta = @idKl 
-AND PozycjaNAFV>0 AND PozycjaNAFV = @FVPoz)
+DECLARE @liczPo int = (SELECT COUNT(*) FROM Ope.Sprzedaz WHERE NRFV = @NRFV AND  IdKlienta = @idKl AND PozycjaNAFV > 0 AND PozycjaNAFV = @FVPoz)
 
-IF @licznik>1   
+IF @licznik > 1   
 
 BEGIN
 
-IF @FVPoz<0
+IF @FVPoz < 0
 BEGIN
 
-IF @liczKore>@liczPo
+IF @liczKore > @liczPo
 BEGIN
 PRINT 'Istnieje juz Fv korekta do podanej, prosze wprowadzic prawidlowa.'
 ROLLBACK TRANSACTION;
@@ -299,14 +301,14 @@ END
 END;
 
 
-IF @FVPoz>0
+IF @FVPoz > 0
 
 BEGIN
 
-IF @liczKore+1<@liczPo
+IF @liczKore + 1 < @liczPo
 
 BEGIN
-PRINT 'Nie mozna wstawic po raz kolejny na '+@NRFV+' pozycji '+CAST(@FVPoz AS nvarchar) +
+PRINT 'Nie mozna wstawic po raz kolejny na ' + @NRFV +  ' pozycji ' + CAST(@FVPoz AS nvarchar) +
 ' ,poniewaz dotychczas wprowadzone nie zostaly wyzerowane.'
 ROLLBACK TRANSACTION;
 RETURN
@@ -335,16 +337,14 @@ DECLARE @maxSprz bigint = (SELECT MAX(ID) FROM Ope.Sprzedaz)
 
 DECLARE @idklSprz smallint = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxSprz)
 
-DECLARE @FVSprz varchar(100) = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSprz)
-AND IdKlienta = @idklSprz )
+DECLARE @FVSprz varchar(100) = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxSprz) AND IdKlienta = @idklSprz )
 
-DECLARE @PozSprz smallint = (SELECT PozycjaNAFV FROM Ope.Sprzedaz WHERE  ID = @maxSprz
-AND IdKlienta = @idklSprz  )
+DECLARE @PozSprz smallint = (SELECT PozycjaNAFV FROM Ope.Sprzedaz WHERE  ID = @maxSprz AND IdKlienta = @idklSprz )
 
 DECLARE @liczSprz int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @FVSprz  AND IdKlienta = @idklSprz)
 
 
-IF  @PozSprz<0  
+IF  @PozSprz < 0  
 
 BEGIN
 
@@ -385,14 +385,13 @@ DECLARE @maxIdkl int = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = @maxId)
 
 DECLARE @licznik int = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE NRFV = @maxFvKl AND IdKlienta = @maxIdkl)
 
-DECLARE @PozSp smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxId)
-AND IdKlienta = @maxIdkl)
+DECLARE @PozSp smallint = (SELECT MAX(PozycjaNAFV) FROM Ope.Sprzedaz WHERE NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = @maxId) AND IdKlienta = @maxIdkl)
 
-IF @licznik>1
+IF @licznik > 1
 
 BEGIN
 
-IF EXISTS (SELECT NRFV FROM Ope.Sprzedaz WHERE PozycjaNAFV<0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl)
+IF EXISTS (SELECT NRFV FROM Ope.Sprzedaz WHERE PozycjaNAFV < 0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl)
 
 BEGIN
 
@@ -403,21 +402,23 @@ TermZap date not null, TypPl varchar(7) not null, DataZap date, DataAktDatZap da
 INSERT INTO @check
 SELECT NRFV,IDPaliwa,PozycjaNAFV,IdKlienta,IdPracownika,IloscPaliwa,KwotaNetto,KwotaBrutto,TerminZaplaty,
 TypPlatnosci,DataZaplaty,DataAktuZaplaty
-FROM Ope.Sprzedaz WHERE PozycjaNAFV<0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl
+FROM Ope.Sprzedaz 
+WHERE PozycjaNAFV<0 AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl
 
 END
 
-IF @licznik = 1 AND @PozSp>0 AND @PozSp<>1
+IF @licznik = 1 AND @PozSp > 0 AND @PozSp <> 1
 BEGIN
 PRINT'Pierwsza pozycja na FV musi byc zawsze jeden jesli nie jest to fv korekta.'
 ROLLBACK TRANSACTION;
 RETURN
 
-IF @licznik>1 AND @PozSp>1
+IF @licznik > 1 AND @PozSp > 1
 BEGIN
 SELECT  NRFV,MAX(PozycjaNAFV) AS PozycjaNaFV,IdKlienta
 INTO #taP
-FROM Ope.Sprzedaz WHERE ID<@maxId AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl  
+FROM Ope.Sprzedaz 
+WHERE ID < @maxId AND NRFV = @maxFvKl AND IdKlienta = @maxIdkl  
 GROUP BY NRFV,IdKlienta
 
 DECLARE @mxfvSp smallint = (SELECT MAX(PozycjaNAFV) FROM #taP)
@@ -425,10 +426,10 @@ DECLARE @mxfvSp smallint = (SELECT MAX(PozycjaNAFV) FROM #taP)
 
 
 
-IF @mxfvSp+1<>@PozSp 
+IF @mxfvSp + 1 <> @PozSp 
 
 BEGIN
-PRINT 'Nieprawidlowa pozycja na fakturze '+@maxFvKl
+PRINT 'Nieprawidlowa pozycja na fakturze ' + @maxFvKl
 ROLLBACK TRANSACTION;
 RETURN
 END
@@ -474,7 +475,7 @@ DECLARE @akc real = (SELECT ROUND(stawka,2) FROM Ope.StPodat WHERE ID = @IdPaliw
 
 DECLARE @cena real = (SELECT ROUND(CenaJedn,2) FROM Ope.CenyPa WHERE IDPALIW = @idpaliwa)
 
-DECLARE @KWB real = ROUND((@akc+@cena)*@Ilosc,2)
+DECLARE @KWB real = ROUND((@akc + @cena)*@Ilosc,2)
 
 
 RETURN @KWB
@@ -551,9 +552,12 @@ INSERT INTO Ope.Sprzedaz(NRFV,PozycjaNAFV,ID_Dat,IdKlienta,IdPracownika,IDPaliwa
 KwotaBrutto,TerminZaplaty,TypPlatnosci,CzasTransakcji,DataZaplaty,DataAktuZaplaty)
 
 SELECT  NRFV,PozycjaNAFV*-1,Czas.uIdDaty(CAST(GETDATE() AS Date)),IdKlienta,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+(SELECT IDPracownika 
+FROM Ope.Pracownicy 
+WHERE PESEL = @pesel),
 IDPaliwa, IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,TypPlatnosci,GETDATE(),DataZaplaty,DataAktuZaplaty
-FROM Ope.Sprzedaz WHERE NRFV=@fv AND PozycjaNAFV=@poz;
+FROM Ope.Sprzedaz 
+WHERE NRFV = @fv AND PozycjaNAFV = @poz;
 
 
 /*Procedura na wystawienie Fv korekty korygujcej sprzedaz.*/
@@ -568,7 +572,7 @@ RETURNS date
 WITH SCHEMABINDING
 AS
 BEGIN
-DECLARE @data date=DATEADD(d,(SELECT DnidoZaplaty FROM Ope.Klienci WHERE IdKlienta = @idkl),CAST(@czas AS date))
+DECLARE @data date = DATEADD(d,(SELECT DnidoZaplaty FROM Ope.Klienci WHERE IdKlienta = @idkl),CAST(@czas AS date))
 RETURN @data
 END;
 GO
@@ -627,12 +631,12 @@ DECLARE @nrfkolej bigint = (SELECT NRFV FROM Ope.Sprzedaz WHERE IdKlienta = @idk
 
 SELECT @maxidnrfv = CASE
 WHEN @maxidnrfv IS NULL  THEN 0 
-WHEN @maxidnrfv>=1 THEN  @maxidnrfv
+WHEN @maxidnrfv >= 1 THEN  @maxidnrfv
 END
 
 SELECT @nrfkolej = CASE
-WHEN @nrfkolej IS NULL OR @nrfkolej = 0  THEN @maxidnrfv+1
-WHEN @nrfkolej IS NOT NULL OR @nrfkolej>0 THEN @nrfkolej
+WHEN @nrfkolej IS NULL OR @nrfkolej = 0  THEN @maxidnrfv + 1
+WHEN @nrfkolej IS NOT NULL OR @nrfkolej > 0 THEN @nrfkolej
 END
 RETURN  @nrfkolej
 END
