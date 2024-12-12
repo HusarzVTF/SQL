@@ -10,17 +10,17 @@ GO
 
 CREATE TABLE Ope.Klienci(
 IdKlienta int  IDENTITY, 
-NazwaKlienta varchar(100) not null UNIQUE CHECK(LEN(NazwaKlienta)>=4), 
+NazwaKlienta varchar(100) not null UNIQUE CHECK(LEN(NazwaKlienta) >= 4), 
 IDMiejscowosc int  CONSTRAINT PK_KLMie FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
-DnidoZaplaty int not null CHECK ((DniDoZaplaty)>=0), 
-WarunkiPlatnosci varchar(7) not null CHECK(WarunkiPlatnosci IN('Gotowka','Przelew','Karta')),
-KODPocztowy char(6) CHECK(Len(KODPocztowy)=6),
+DnidoZaplaty int not null CHECK ((DniDoZaplaty) >= 0), 
+WarunkiPlatnosci varchar(7) not null CHECK(WarunkiPlatnosci IN ('Gotowka','Przelew','Karta')),
+KODPocztowy char(6) CHECK(Len(KODPocztowy) = 6),
 Ulica varchar(100) not null, 
 NrDomu int not null,
 NrLokalu int not null,
 AdresSpecj varchar(10),
-NIP bigint UNIQUE CHECK (LEN(NIP)=11), 
-TEL int UNIQUE CHECK(LEN(TEL)=9),
+NIP bigint UNIQUE CHECK (LEN(NIP) = 11), 
+TEL int UNIQUE CHECK(LEN(TEL) = 9),
 CONSTRAINT PK_Kl PRIMARY KEY (IdKlienta));
 
 /*
@@ -51,10 +51,12 @@ AFTER UPDATE,INSERT
 AS
 
 IF EXISTS
-(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Klienci 
+(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
+FROM Klienci 
 WHERE IdKlienta NOT IN (SELECT MAX(IdKlienta) FROM Klienci)
 INTERSECT 
-SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Klienci 
+SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
+FROM Klienci 
 WHERE IdKlienta IN (SELECT MAX(IdKlienta) FROM Klienci))
 BEGIN
 PRINT'Próbowano wstawić  klienta z błędnym adresem lub zmienić adres na błędny 
@@ -76,9 +78,11 @@ AFTER INSERT,UPDATE
 AS
 DECLARE @Tab table(IdKlienta int)
 INSERT INTO @Tab
-SELECT IdKlienta FROM Klienci WHERE (NIP IS NULL OR NazwaKlienta  LIKE '%Paragon%' OR 
+SELECT IdKlienta 
+FROM Klienci 
+WHERE (NIP IS NULL OR NazwaKlienta  LIKE '%Paragon%' OR 
 NazwaKlienta LIKE '%Paragon' OR NazwaKlienta LIKE 'Paragon%' OR NazwaKlienta LIKE 'Paragon')
-IF (SELECT COUNT(IdKlienta) FROM @Tab)>1
+IF (SELECT COUNT(IdKlienta) FROM @Tab) > 1
 BEGIN 
 PRINT'Próbowano wstawić kolejnego klienta bez NIPU-u lub kupującego na paragon, żadne dane w tabeli klienci nie zostały zmienione.'
 ROLLBACK TRANSACTION;  
@@ -125,11 +129,11 @@ GO
 
 CREATE TABLE Ope.Dostawcy(
 IdDostawcy int  IDENTITY, 
-NazwaDostawcy varchar(100) not null UNIQUE CHECK(LEN(NazwaDostawcy)>=4),
+NazwaDostawcy varchar(100) not null UNIQUE CHECK(LEN(NazwaDostawcy) >= 4),
 IDMiejscowosc int  CONSTRAINT FK_Miej FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
-DniDoZaplaty int not null CHECK ((DniDoZaplaty)>=0), 
-WarunkiPlatnosci varchar(7) not null CHECK(WarunkiPlatnosci IN('Gotowka','Przelew','Karta')),
-KODPocztowy char(6) CHECK(Len(KODPocztowy)=6),
+DniDoZaplaty int not null CHECK ((DniDoZaplaty) >= 0), 
+WarunkiPlatnosci varchar(7) not null CHECK(WarunkiPlatnosci IN ('Gotowka','Przelew','Karta')),
+KODPocztowy char(6) CHECK(Len(KODPocztowy) = 6),
 Ulica varchar(100) not null,
 NrDomu int not null, 
 NrLokalu int not null,
@@ -156,10 +160,12 @@ AFTER UPDATE,INSERT
 AS
 
 IF EXISTS
-(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Dostawcy 
+(SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
+FROM Dostawcy 
 WHERE IdDostawcy NOT IN (SELECT MAX(IdDostawcy) FROM Dostawcy)
 INTERSECT 
-SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc FROM Dostawcy 
+SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
+FROM Dostawcy 
 WHERE IdDostawcy IN (SELECT MAX(IdDostawcy) FROM Dostawcy))
 BEGIN
 PRINT 'Próbowano wstawić dostawcę z błędnym adresem (pod wprowadzanym adresem jest już wprowadzony inny dostawca). 
