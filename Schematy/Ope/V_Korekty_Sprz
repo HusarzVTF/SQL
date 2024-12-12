@@ -36,17 +36,19 @@ KwotaBrutto,
 CzasTransakcji,
 TerminZaplaty,
 DataZaplaty,
-TypPlatnosci FROM Ope.Sprzedaz AS S
+TypPlatnosci 
+
+FROM Ope.Sprzedaz AS S
 	  
-	  INNER JOIN Czas.Kalendarz ON S.ID_Dat=Czas.Kalendarz.ID
+INNER JOIN Czas.Kalendarz ON S.ID_Dat = Czas.Kalendarz.ID
 
-	  INNER JOIN Ope.Klienci ON S.IdKlienta=Ope.Klienci.IdKlienta 
+INNER JOIN Ope.Klienci ON S.IdKlienta = Ope.Klienci.IdKlienta 
 
-	  INNER JOIN Ope.Zbiorniki ON S.IDPaliwa=Ope.Zbiorniki.IDPaliwa
+INNER JOIN Ope.Zbiorniki ON S.IDPaliwa = Ope.Zbiorniki.IDPaliwa
 
-	  INNER JOIN Ope.Pracownicy ON S.IdPracownika=Ope.Pracownicy.IDPracownika
+INNER JOIN Ope.Pracownicy ON S.IdPracownika = Ope.Pracownicy.IDPracownika
 
-	  WHERE PozycjaNaFV<0
+WHERE PozycjaNaFV < 0
     
  /*widok pokazujacy korekty sprzedazy*/
  
