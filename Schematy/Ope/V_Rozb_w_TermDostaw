@@ -12,11 +12,15 @@ GO
 
 CREATE VIEW Ope.vChTermDost AS
 
-SELECT NRFV,NazwaDostawcy AS Dostawca, RodzajPaliwa AS Paliwo,Data,TerminZaplaty,Dateadd(D,DniDoZaplaty,Data) AS TerZapWgWar, 
+SELECT 
+
+NRFV,NazwaDostawcy AS Dostawca, RodzajPaliwa AS Paliwo,Data,TerminZaplaty,Dateadd(D,DniDoZaplaty,Data) AS TerZapWgWar, 
 DateDiff(D,Dateadd(D,DniDoZaplaty,Data),TerminZaplaty )  AS RozWTerZapl,KwotaBrutto, Podatek
-FROM Ope.Dostawy AS Dst INNER JOIN Ope.Dostawcy AS Dos ON Dst.IdDostawcy=Dos.IdDostawcy
-INNER JOIN Ope.Zbiorniki AS Z ON Dst.IDPaliw=Z.IDPaliwa INNER JOIN Czas.Kalendarz AS K ON K.ID=Dst.ID_Dat 
-WHERE DateDiff(D,Dateadd(D,DniDoZaplaty,Data),TerminZaplaty)<>0;
+
+FROM Ope.Dostawy AS Dst 
+INNER JOIN Ope.Dostawcy AS Dos ON Dst.IdDostawcy = Dos.IdDostawcy
+INNER JOIN Ope.Zbiorniki AS Z ON Dst.IDPaliw = Z.IDPaliwa INNER JOIN Czas.Kalendarz AS K ON K.ID = Dst.ID_Dat 
+WHERE DateDiff(D,Dateadd(D,DniDoZaplaty,Data),TerminZaplaty) <> 0;
   
 
 /* Tworzenie widoku sprawdzającego czy uzgodnione z dostawcami terminy płatności mają pokrycie w fakturach.
