@@ -27,7 +27,7 @@ GO
 IF OBJECT_ID('Ope.Wyksztalcenie') IS NOT NULL
 DROP TABLE Ope.Wyksztalcenie;
 
-CREATE TABLE Ope.Wyksztalcenie (ID tinyint PRIMARY KEY IDENTITY, Typ_Wyk varchar(20) not null CHECK (LEN(Typ_Wyk)>=6) UNIQUE);
+CREATE TABLE Ope.Wyksztalcenie (ID tinyint PRIMARY KEY IDENTITY, Typ_Wyk varchar(20) not null CHECK (LEN(Typ_Wyk) >= 6) UNIQUE);
 
 /*Sprawdzenie czy istnieje tabela Wykształcenie i likwidowanie jej, bo jeśli istnieje zakładamy, 
 że przez pomyłkę nastepnie tworzenie tabeli słownikowej Wykształcenie*/
@@ -42,7 +42,7 @@ GO
 IF OBJECT_ID('Ope.Rdz_Zatrudnienia') IS NOT NULL
 DROP TABLE Ope.Rdz_Zatrudnienia; 
 
-CREATE TABLE Ope.Rdz_Zatrudnienia (ID tinyint PRIMARY KEY IDENTITY, Typ_Umowy varchar(35) not null CHECK (LEN(Typ_umowy)>=9) UNIQUE);
+CREATE TABLE Ope.Rdz_Zatrudnienia (ID tinyint PRIMARY KEY IDENTITY, Typ_Umowy varchar(35) not null CHECK (LEN(Typ_umowy) >= 9) UNIQUE);
 
 /*Sprawdzenie czy istnieje tabela Rdz_Zatrudnienia i likwidowanie jej, bo jeśli istnieje zakładamy, że przez pomyłkę
 nastepnie tworzenie tabeli słownikowej Rdz_Zatrudnienia*/
@@ -63,17 +63,17 @@ GO
 CREATE TABLE Ope.Pracownicy(
 IDPracownika tinyint IDENTITY,
 IDMiejscowosc int CONSTRAINT FK_LokMie FOREIGN KEY REFERENCES Lokacje.Miejscowosc(IDMiej), 
-Imie varchar(35) not null CHECK(LEN(Imie)>=2), 
-Nazwisko varchar(35) not null CHECK(LEN(Nazwisko)>=2),
-PESEL char(11) UNIQUE CHECK(LEN(PESEL)=11),
+Imie varchar(35) not null CHECK(LEN(Imie) >= 2), 
+Nazwisko varchar(35) not null CHECK(LEN(Nazwisko) >= 2),
+PESEL char(11) UNIQUE CHECK(LEN(PESEL) = 11),
 RokUrodzenia int not null CHECK(RokUrodzenia BETWEEN 1900 AND YEAR(GETDATE())-18),
 MiesiacUrodzenia AS CAST(SUBSTRING(PESEL,3,2) AS tinyint),
 DzienUrodzenia AS CAST(SUBSTRING(PESEL,5,2) AS tinyint),
 ID_datyZatr int CONSTRAINT FK_DataZa FOREIGN KEY REFERENCES Czas.Kalendarz(ID),
 ID_Umowy tinyint CONSTRAINT FK_Zatr FOREIGN KEY REFERENCES Ope.Rdz_Zatrudnienia(ID), 
-Wiek AS YEAR(Getdate()) -RokUrodzenia,
+Wiek AS YEAR(Getdate()) - RokUrodzenia,
 ID_Wyksztalcenie tinyint CONSTRAINT FK_Wyk FOREIGN KEY REFERENCES Ope.Wyksztalcenie(ID),
-KierunekStudiow varchar(50) CHECK(LEN(kierunekStudiow)>=4),
+KierunekStudiow varchar(50) CHECK(LEN(kierunekStudiow) >= 4),
 ID_Stanowisko tinyint CONSTRAINT FK_St FOREIGN KEY REFERENCES Ope.Stanowisko(ID_St),
 Pensja real not null,
 KODPocztowy char(6)  not null,
