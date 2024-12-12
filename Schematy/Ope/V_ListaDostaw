@@ -12,6 +12,7 @@ GO
 CREATE VIEW Ope.vListaDOSTAW AS
 
 SELECT
+
 NRFV, 
 PozycjaNaFV, 
 NazwaDostawcy,
@@ -27,13 +28,13 @@ TerminZaplaty,
 DataZaplaty,
 TypPlatnosci 
 
-FROM Ope.Dostawy AS  D INNER JOIN Ope.Dostawcy  AS DS ON DS.IdDostawcy=D.IdDostawcy
+FROM Ope.Dostawy AS  D INNER JOIN Ope.Dostawcy  AS DS ON DS.IdDostawcy = D.IdDostawcy
 
-INNER JOIN Ope.Pracownicy  AS P ON P.IDPracownika=D.IdPracownika
+INNER JOIN Ope.Pracownicy  AS P ON P.IDPracownika = D.IdPracownika
 
-INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=D.IDPaliw
+INNER JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa = D.IDPaliw
 
-INNER JOIN Czas.Kalendarz AS K ON K.ID=D.ID_Dat;
+INNER JOIN Czas.Kalendarz AS K ON K.ID = D.ID_Dat;
 
 -- Widok pokazujący raport zakupów paliwa prezentuje wszystkie transkacje zakupu paliwa--
 
