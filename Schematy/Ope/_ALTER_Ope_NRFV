@@ -20,12 +20,12 @@ DECLARE @nrfkolej bigint = (SELECT DISTINCT NRFV FROM Ope.Sprzedaz WHERE IdKlien
 
 SELECT @maxidnrfv = CASE
 WHEN @maxidnrfv IS NULL  THEN 0 
-WHEN @maxidnrfv>=1 THEN  @maxidnrfv
+WHEN @maxidnrfv >= 1 THEN  @maxidnrfv
 END
 
 SELECT @nrfkolej = CASE
-WHEN @nrfkolej IS NULL OR @nrfkolej=0  THEN @maxidnrfv+1
-WHEN @nrfkolej IS NOT NULL OR @nrfkolej>0 THEN @nrfkolej
+WHEN @nrfkolej IS NULL OR @nrfkolej = 0  THEN @maxidnrfv + 1
+WHEN @nrfkolej IS NOT NULL OR @nrfkolej > 0 THEN @nrfkolej
 END
 RETURN  @nrfkolej
 END
