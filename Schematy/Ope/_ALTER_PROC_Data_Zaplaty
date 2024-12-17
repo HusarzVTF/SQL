@@ -1,4 +1,4 @@
-USE [Stacja_Paliw]
+USE Stacja_Paliw
 GO
 
 ALTER PROC [Ope].[uspDataZap](@obiekt varchar(8) ,@NRFV varchar(100) , @idkon int, @data date)
@@ -13,18 +13,18 @@ BEGIN
 PRINT 'Wprowadzona nieprawidlowa nazwe, mozna wstawic date zaplaty dla Dostawy lub Sprzedaz'
 END
 
-IF @obiekt='Dostawy' 
+IF @obiekt = 'Dostawy' 
 
 BEGIN
-UPDATE Ope.Dostawy SET DataZaplaty=@data, DataAktuDatZap=GETDATE() WHERE NRFV=@NRFV AND IdDostawcy=@idkon
+UPDATE Ope.Dostawy SET DataZaplaty = @data, DataAktuDatZap = GETDATE() WHERE NRFV = @NRFV AND IdDostawcy = @idkon
 END
 
 
 
-IF @obiekt='Sprzedaz' 
+IF @obiekt = 'Sprzedaz' 
 
 BEGIN
-UPDATE Ope.Sprzedaz SET DataZaplaty=@data, DataAktuZaplaty=GETDATE() WHERE NRFV=@NRFV AND IdKlienta=@idkon
+UPDATE Ope.Sprzedaz SET DataZaplaty = @data, DataAktuZaplaty = GETDATE() WHERE NRFV = @NRFV AND IdKlienta = @idkon
 END
 
 END;
