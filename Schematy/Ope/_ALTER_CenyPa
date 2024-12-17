@@ -7,7 +7,7 @@ USE Stacja_Paliw
 SELECT
 
 IDPaliw,
-ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2) AS K_Z 
+ROUND(SUM(KwotaNetto) / SUM(IloscPaliwa), 2) AS K_Z 
 
 INTO #k
 
@@ -19,7 +19,7 @@ FROM  Ope.CenyPa INNER JOIN #k
 
 ON
 
-Ope.CenyPa.IDPALIW=#k.IDPaliw
+Ope.CenyPa.IDPALIW = #k.IDPaliw
 
 DROP TABLE #k
 
