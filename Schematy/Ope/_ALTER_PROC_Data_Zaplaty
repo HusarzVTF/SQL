@@ -1,7 +1,7 @@
 USE Stacja_Paliw
 GO
 
-ALTER PROC [Ope].[uspDataZap](@obiekt varchar(8) ,@NRFV varchar(100) , @idkon int, @data date)
+ALTER PROC Ope.uspDataZap(@obiekt varchar(8) ,@NRFV varchar(100) , @idkon int, @data date)
 
 AS
 
