@@ -55,10 +55,8 @@ AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
 
 DECLARE @sumaSp real = (SELECT SUM(IloscPaliwa) FROM Ope.Sprzedaz WHERE NRFV = @FVSp AND IdKlienta = @idkl)
 
--- SELECT @liczSp AS Licznik, @PozSp AS Pozycja --
 
-
-IF @liczSp>1 AND @PozSp>0
+IF @liczSp > 1 AND @PozSp > 0
 BEGIN
 IF EXISTS (
 
@@ -108,18 +106,23 @@ END;
 
 -- Walidacja danych na pozycjach tej samej fv nie korekty--
 
---SELECT @liczSp AS Licznik, @PozSp AS Pozycja--
 
+IF @liczSp > 1 AND @PozSp < 0 
 
-IF @liczSp>1 AND @PozSp<0
 BEGIN
-IF EXISTS (SELECT NRFV,ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty FROM Ope.Sprzedaz WHERE ID<(SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta=@idkl  AND NRFV=@FVSp AND PozycjaNAFV<0
+
+IF EXISTS (
+SELECT NRFV,ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty, DataAktuZaplaty 
+FROM Ope.Sprzedaz 
+WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl  AND NRFV = @FVSp AND PozycjaNAFV < 0
+
 EXCEPT
-SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty FROM Ope.Sprzedaz WHERE ID=(SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta=@idkl AND NRFV=@FVSp AND PozycjaNAFV<0)
+
+SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty, DataAktuZaplaty 
+FROM Ope.Sprzedaz 
+WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV < 0)
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -129,10 +132,10 @@ END;
 
 -- Walidacja danych na pozycjach tej samej fv  korekty. Przy warunku, ze korekte moze wystawic tylko ten sam pracownik, ktory wystawil prawidlowa fv--
 
---SELECT @liczSp AS Licznik, @sumaSp AS IloscSuma--
+
 
  
-IF @liczSp>1 AND @sumaSp<>0  AND @PozSp>0 
+IF @liczSp > 1 AND @sumaSp <> 0  AND @PozSp > 0 
 
 BEGIN
 
@@ -143,7 +146,7 @@ AND NRFV = (SELECT NRFV FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sp
 AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz))
 
 
---SELECT *FROM #CzasChkSp--
+
 
 IF NOT EXISTS (
 
