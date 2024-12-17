@@ -13,13 +13,13 @@ GO
 
 CREATE TABLE Ope.Zbiorniki(
 IDPaliwa tinyint IDENTITY, 
-RodzajPaliwa varchar(7) UNIQUE  NOT NULL CHECK((RodzajPaliwa) IN ('Benzyna','Gaz','Ropa')),
-JM varchar(4) NOT NULL CHECK(JM IN('M3','Litr')), 
+RodzajPaliwa varchar(7) UNIQUE  NOT NULL CHECK( (RodzajPaliwa) IN ('Benzyna','Gaz','Ropa')),
+JM varchar(4) NOT NULL CHECK( JM IN('M3','Litr')), 
 Pojemnosc real NOT NULL, 
-INCOMEtoZbiornik real CHECK((INCOMEtoZbiornik)>=0), 
-OUTCOMEfromZbiornik real CHECK((OUTCOMEfromZbiornik)>=0),
-StanZbiornika  AS INCOMEtoZbiornik-OUTCOMEfromZbiornik PERSISTED,
-Marza decimal(5,4) not null CHECK(Marza BETWEEN 0 AND 0.99 )
+INCOMEtoZbiornik real CHECK( (INCOMEtoZbiornik) >= 0), 
+OUTCOMEfromZbiornik real CHECK( (OUTCOMEfromZbiornik) >= 0),
+StanZbiornika  AS INCOMEtoZbiornik - OUTCOMEfromZbiornik PERSISTED,
+Marza decimal(5,4) not null CHECK( Marza BETWEEN 0 AND 0.99 )
 CONSTRAINT PK_Pali  PRIMARY KEY (IDPaliwa));
 
 GO
@@ -29,8 +29,8 @@ GO
 
 
 
-INSERT INTO Ope.Zbiorniki(RodzajPaliwa,JM,Pojemnosc,Marza)
-VALUES('Benzyna','Litr',1000000,0.05),('Gaz','M3',1000000,0.15),('Ropa','Litr',1000000,0.08);
+INSERT INTO Ope.Zbiorniki(RodzajPaliwa, JM, Pojemnosc, Marza)
+VALUES('Benzyna', 'Litr', 1000000, 0.05), ('Gaz', 'M3', 1000000, 0.15), ('Ropa', 'Litr', 1000000, 0.08);
 
 --Wstawienie  danych do tabeli zbiorniki--
 
@@ -50,28 +50,28 @@ AFTER INSERT, UPDATE, DELETE
 AS
 
 
-DECLARE @StanZbioBEN real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Benzyna')
+DECLARE @StanZbioBEN real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Benzyna')
 
-IF @StanZbioBEN<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Benzyna')
+IF @StanZbioBEN < 0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa = 'Benzyna')
 BEGIN
-DECLARE @erromessage varchar(500)=('Niski poziom zbiorników benzyny wynosi obecnie '+CAST(@StanZbioBEN AS varchar(400))+' Litrów');
+DECLARE @erromessage varchar(500) = ('Niski poziom zbiorników benzyny wynosi obecnie '+ CAST(@StanZbioBEN AS varchar(400)) + ' Litrów');
 PRINT @erromessage; 
 END;
   
 
-DECLARE @StanZbioROP real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Ropa')
+DECLARE @StanZbioROP real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Ropa')
 
-IF @StanZbioROP<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Ropa')
+IF @StanZbioROP < 0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa = 'Ropa')
 BEGIN 
-DECLARE @erromessageOne varchar(500)=('Niski poziom zbiorników ropy wynosi obecnie '+CAST(@StanZbioROP AS varchar(400))+' Litrów');
+DECLARE @erromessageOne varchar(500) = ('Niski poziom zbiorników ropy wynosi obecnie ' + CAST(@StanZbioROP AS varchar(400)) + ' Litrów');
 PRINT @erromessageOne; 
 END;
 
-DECLARE @StanZbioGAZ real=(SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
+DECLARE @StanZbioGAZ real = (SELECT StanZbiornika FROM Zbiorniki WHERE RodzajPaliwa = 'Gaz')
 
-IF @StanZbioGAZ<0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa='Gaz')
+IF @StanZbioGAZ < 0.3*(SELECT INCOMEtoZbiornik FROM Zbiorniki WHERE RodzajPaliwa = 'Gaz')
 BEGIN 
-DECLARE @erromessageTwo varchar(500)=('Niski poziom zbiorników gazu '+CAST(@StanZbioGAZ AS varchar(400))+' M3');
+DECLARE @erromessageTwo varchar(500) = ('Niski poziom zbiorników gazu ' + CAST(@StanZbioGAZ AS varchar(400)) + ' M3');
 PRINT @erromessageTwo; 
 END;
 
@@ -89,7 +89,7 @@ DROP TABLE Ope.CenyPa;
 GO
 
 CREATE TABLE Ope.CenyPa
-(ID tinyint IDENTITY PRIMARY KEY, IDPALIW tinyint CONSTRAINT FK_IDCenP REFERENCES Ope.Zbiorniki(IDPaliwa),CenaJedn real )
+(ID tinyint IDENTITY PRIMARY KEY, IDPALIW tinyint CONSTRAINT FK_IDCenP REFERENCES Ope.Zbiorniki(IDPaliwa), CenaJedn real )
 
 --Tworzenie tabeli z cenami paliw--
 
@@ -113,8 +113,12 @@ GO
 CREATE TRIGGER Ope.trNEWCenPaliwa ON Ope.Zbiorniki
 AFTER INSERT
 AS
-IF EXISTS(SELECT IDPaliwa FROM Ope.Zbiorniki
-EXCEPT SELECT IDPALIW FROM Ope.CenyPa)
+IF EXISTS(
+  SELECT IDPaliwa 
+  FROM Ope.Zbiorniki
+  EXCEPT 
+  SELECT IDPALIW 
+  FROM Ope.CenyPa)
 BEGIN
 INSERT INTO Ope.CenyPa(IDPALIW)
 SELECT IDPaliwa FROM Ope.Zbiorniki
