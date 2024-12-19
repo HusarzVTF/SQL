@@ -12,15 +12,21 @@ INSERT INTO @WynikOperacyjny(Kategoria)
 VALUES ('Przychody'), ('WydPaliwa'), ('WydWyn'), ('Wynik'), ('%M_operacyjnej') 
 
 
-DECLARE @Przychody money = (ISNULL((SELECT ROUND(SUM(KwotaNetto),2) FROM Ope.Sprzedaz AS S 
-INNER JOIN Czas.Kalendarz AS K ON S.ID_Dat=K.ID 
-WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO 
-AND DataZaplaty IS NOT NULL),0))
+DECLARE @Przychody money = (
+  ISNULL((  
+          SELECT ROUND(SUM(KwotaNetto),2) 
+          FROM Ope.Sprzedaz AS S 
+          INNER JOIN Czas.Kalendarz AS K ON S.ID_Dat = K.ID 
+          WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO 
+          AND DataZaplaty IS NOT NULL),0))
 
-DECLARE @K_paliwa money = ISNULL((SELECT ROUND(SUM(KwotaNetto),2) FROM Ope.Dostawy  AS D 
-INNER JOIN Czas.Kalendarz AS K ON D.ID_Dat=K.ID  
-WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO
-AND DataZaplaty IS NOT NULL),0)
+DECLARE @K_paliwa money = 
+  ISNULL((
+          SELECT ROUND(SUM(KwotaNetto),2) 
+          FROM Ope.Dostawy  AS D 
+          INNER JOIN Czas.Kalendarz AS K ON D.ID_Dat = K.ID  
+          WHERE TerminZaplaty BETWEEN @czasOD AND @czasDO
+          AND DataZaplaty IS NOT NULL),0)
 
 DECLARE @K_wynagrodzenia money = ISNULL(ROUND(Ope.ufKsztWyplaty(@czasOD, @czasDO),2),0)
 
@@ -33,16 +39,16 @@ UPDATE @WynikOperacyjny SET Kwota = @K_paliwa
 WHERE Kategoria = 'WydPaliwa';
 
 UPDATE @WynikOperacyjny SET Kwota = @K_wynagrodzenia
-WHERE Kategoria='WydWyn';
+WHERE Kategoria = 'WydWyn';
 
 UPDATE @WynikOperacyjny SET Kwota = @Wynik
-WHERE Kategoria='Wynik'
+WHERE Kategoria = 'Wynik'
 
-UPDATE @WynikOperacyjny SET Kwota = (SELECT '%' = CASE 
-WHEN @Przychody = 0 THEN 0
-WHEN @Przychody > 0 THEN ROUND( @wynik / @Przychody,2)
-END)
-WHERE Kategoria='%M_operacyjnej'
+UPDATE @WynikOperacyjny SET Kwota = (
+        SELECT '%' = CASE WHEN @Przychody = 0 THEN 0
+        WHEN @Przychody > 0 THEN ROUND( @wynik / @Przychody,2)
+        END)
+WHERE Kategoria = '%M_operacyjnej'
 
 
 SELECT*FROM @WynikOperacyjny
