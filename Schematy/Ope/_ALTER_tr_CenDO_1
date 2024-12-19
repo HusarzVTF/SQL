@@ -10,7 +10,7 @@ AS
 
 CREATE TABLE #zbio  (Id tinyint, Marza real);
 
-INSERT INTO #zbio(Id,Marza)
+INSERT INTO #zbio(Id, Marza)
 
 SELECT
 
@@ -28,39 +28,39 @@ INSERT INTO #tab (Id, Koszt_zmienny)
 SELECT
 
 IDPaliw,
-ROUND(SUM(D.KwotaNetto)/SUM(D.IloscPaliwa),2) AS Koszt_zmienny
+ROUND( SUM(D.KwotaNetto) / SUM(D.IloscPaliwa), 2) AS Koszt_zmienny
 
 FROM Ope.Dostawy AS D 
 
 INNER JOIN Ope.Zbiorniki 
 
-AS Z ON D.IDPaliw=Z.IDPaliwa
+AS Z ON D.IDPaliw = Z.IDPaliwa
 
 INNER JOIN #zbio AS Zb 
 
-ON Zb.Id=D.IDPaliw
+ON Zb.Id = D.IDPaliw
 
 GROUP BY IDPaliw;
 
 
 
-UPDATE #tab SET Cena=ROUND((Koszt_zmienny*Zb.Marza),2)
+UPDATE #tab SET Cena = ROUND((Koszt_zmienny*Zb.Marza),2)
 
 FROM #tab
 
 INNER JOIN #zbio AS Zb 
 
-ON Zb.Id=#tab.Id;
+ON Zb.Id = #tab.Id;
 
 
 
-UPDATE Ope.CenyPa SET CenaJedn=#tab.Cena, Koszt_Zakupu=#tab.Koszt_zmienny
+UPDATE Ope.CenyPa SET CenaJedn = #tab.Cena, Koszt_Zakupu = #tab.Koszt_zmienny
 
 FROM Ope.CenyPa
 
 INNER JOIN #tab 
 
-ON Ope.CenyPa.IDPALIW=#tab.Id
+ON Ope.CenyPa.IDPALIW = #tab.Id
 
 DROP TABLE #tab;
 DROP TABLE #zbio;
