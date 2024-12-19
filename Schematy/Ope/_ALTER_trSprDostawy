@@ -9,9 +9,9 @@ ALTER TRIGGER Ope.trSprDostawy ON Ope.Dostawy AFTER INSERT, UPDATE
 AS 
 IF EXISTS(
 
-SELECT*FROM Dostawy
-WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) 
-OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0) )
+  SELECT * FROM Dostawy
+  WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0) )
+
 BEGIN 
 PRINT 'Wstawiono rekord z blednymi kwotami netto, brutto rekord zostal  usuniety z tabeli Dostawy'
 ROLLBACK TRANSACTION;
