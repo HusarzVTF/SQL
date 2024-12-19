@@ -1,0 +1,12 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspWstawFV_Sprzedaz 3, 6, 1, 1100.5, 'automatyczny', null, '2024-12-19', '2024-12-19'
+EXEC Ope.uspWstawFV_Sprzedaz 3, 6, 2, 12000, 'automatyczny', null, '2024-12-19', '2024-12-19'
+EXEC Ope.uspWstawFV_Sprzedaz 7, 6, 1, 10099.1, 'automatyczny', null, '2024-12-19', '2024-12-19'
+EXEC Ope.uspWstawFV_Sprzedaz 7, 6, 2, 5000.1, 'automatyczny', null, '2024-12-19', '2024-12-19'
+EXEC Ope.uspWstawFV_Sprzedaz 8, 7, 3, 17890.1, 'automatyczny', null, '2024-12-19', '2024-12-19'
+EXEC Ope.uspWstawFV_Sprzedaz 9, 7, 1, 25600, 'automatyczny', null, '2024-12-19', '2024-12-19'
+
+/* fv sprzedazy w grudniu 2024 roku*/
