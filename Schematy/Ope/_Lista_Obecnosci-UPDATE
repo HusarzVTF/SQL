@@ -11,7 +11,7 @@ WHERE ID_Prac BETWEEN 1 AND 4 AND DATEPART(DW,Data) BETWEEN 6 AND 7
 
 UPDATE Ope.Lista_Obecnosci 
 SET Obecnosc = 'Weekend', Przepr_H = 0, Przep_Nadgod_Dod_100_Proc = 0, Przep_Nadgod_Dod_50_Proc = 0
-WHERE ID_Prac BETWEEN 5 AND 8 AND DATEPART(DW,Data) BETWEEN 1 AND 2 -- ta czesc jest ok
+WHERE ID_Prac BETWEEN 5 AND 8 AND DATEPART(DW,Data) BETWEEN 1 AND 2 
 /* wolne z grafiku jako odpowiednik weekendu dla pracownikow id 5-8 to DW 1-2 */
 
 
