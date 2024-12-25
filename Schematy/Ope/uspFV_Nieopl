@@ -26,9 +26,18 @@ IF @ob = 'Dostawy'
 
 BEGIN
 
-SELECT NRFV,PozycjaNAFV,D.IdDostawcy, NazwaDostawcy, IDPaliw,RodzajPaliwa,IloscPaliwa,KwotaBrutto,TerminZaplaty,
+SELECT 
 
-DATEDIFF(d, TerminZaplaty,GETDATE()) AS Ile_D_Po_Term,
+NRFV,
+PozycjaNAFV,
+D.IdDostawcy,
+NazwaDostawcy,
+IDPaliw,
+RodzajPaliwa,
+IloscPaliwa,
+KwotaBrutto,
+TerminZaplaty,
+DATEDIFF(d, TerminZaplaty, GETDATE()) AS Ile_D_Po_Term,
 
 'Obj' = 
 
@@ -58,12 +67,21 @@ WHERE DataZaplaty IS NULL
 
 END
 
-IF @ob='Sprzedaz' 
+IF @ob = 'Sprzedaz' 
 
 BEGIN
 
-SELECT NRFV,PozycjaNAFV,S.IdKlienta,NazwaKlienta,S.IDPaliwa,RodzajPaliwa,IloscPaliwa,KwotaBrutto,TerminZaplaty,
+SELECT 
 
+NRFV,
+PozycjaNAFV,
+S.IdKlienta,
+NazwaKlienta,
+S.IDPaliwa,
+RodzajPaliwa,
+IloscPaliwa,
+KwotaBrutto,
+TerminZaplaty,
 DATEDIFF(d, TerminZaplaty,GETDATE()) AS Ile_D_Po_Term,
 
 'Obj' = 
