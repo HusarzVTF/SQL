@@ -16,6 +16,7 @@ CREATE PROC Ope.uspDostRanking_Paliwa
 BEGIN
 
 SELECT
+
 RodzajPaliwa,
 ISNULL(ROUND(SUM(IloscPaliwa),2),0) AS IloscPaliwa,
 Z.JM,
@@ -26,7 +27,7 @@ ISNULL(ROUND(SUM(KwotaNetto)/SUM(IloscPaliwa),2),0) AS Sr_Cena_Zak_nt,
 ISNULL(ROUND(SUM(KwotaBrutto)/SUM(IloscPaliwa),2),0) AS Sr_Cena_Zak_br
 
 FROM Ope.Zbiorniki  AS Z
-LEFT JOIN Ope.Dostawy AS D ON Z.IDPaliwa=D.IDPaliw
+LEFT JOIN Ope.Dostawy AS D ON Z.IDPaliwa = D.IDPaliw
 
 GROUP BY  RodzajPaliwa,Z.RodzajPaliwa,Z.JM ORDER BY IloscPaliwa DESC;
 
