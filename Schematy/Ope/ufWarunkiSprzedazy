@@ -16,7 +16,7 @@ RETURNS varchar (7)
 WITH SCHEMABINDING
 AS
 BEGIN
-DECLARE @War varchar(7)=(SELECT WarunkiPlatnosci FROM Ope.Klienci WHERE IdKlienta=@ID)
+DECLARE @War varchar(7) = (SELECT WarunkiPlatnosci FROM Ope.Klienci WHERE IdKlienta = @ID)
 RETURN @War;
 END;
 
