@@ -8,7 +8,7 @@ DROP TRIGGER Ope.trMaxDst;
 
 GO 
 
-CREATE  TRIGGER Ope.trMaxDst ON Ope.Dostawy AFTER INSERT,UPDATE
+CREATE  TRIGGER Ope.trMaxDst ON Ope.Dostawy AFTER INSERT, UPDATE
 
 AS
 
@@ -16,9 +16,9 @@ IF EXISTS(
 
 SELECT IDFVZak FROM Ope.Dostawy AS D
 
-JOIN Ope.Zbiorniki AS Z ON D.IDPaliw=Z.IDPaliwa 
+JOIN Ope.Zbiorniki AS Z ON D.IDPaliw = Z.IDPaliwa 
 
-WHERE IloscPaliwa>Pojemnosc-StanZbiornika
+WHERE IloscPaliwa > Pojemnosc - StanZbiornika
  )
  
 BEGIN
