@@ -15,15 +15,18 @@ CREATE PROC Ope.uspSez_Sprzedazy (@zm decimal)
  AS
 
 SELECT 
+
 M.Miesiac_Naz,
 Z.RodzajPaliwa,
 ROUND(SUM(IloscPaliwa),2) AS Ilosc
+
 INTO #data
+
 FROM Stacja_Paliw.Ope.Sprzedaz AS S
-LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa=S.IDPaliwa
-LEFT JOIN Czas.Kalendarz AS K ON K.ID=S.ID_Dat 
-LEFT JOIN Czas.Miesiac AS M ON M.ID=K.IDM
-GROUP BY M.Miesiac_Naz,Z.RodzajPaliwa
+LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa = S.IDPaliwa
+LEFT JOIN Czas.Kalendarz AS K ON K.ID = S.ID_Dat 
+LEFT JOIN Czas.Miesiac AS M ON M.ID = K.IDM
+GROUP BY M.Miesiac_Naz, Z.RodzajPaliwa
 
 /*Ilościowa sprzedaz w ujęciu miesięcznym dla każdego rodzaju paliwa*/
 
