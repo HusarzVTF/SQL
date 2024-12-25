@@ -19,7 +19,7 @@ AS
 
 BEGIN
 
-DECLARE @kosztWyplat money= (
+DECLARE @kosztWyplat money = (
 SELECT ROUND(SUM(Do_Wyplaty),2) 
 FROM Ope.Wyplaty 
 WHERE Pierwszy_Dzien_Miesiaca >= @Okres_Pocz AND Ostatni_Dzien_Miesiaca <= @Okres_Koniec)
