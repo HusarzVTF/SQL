@@ -16,7 +16,7 @@ AS
 
 BEGIN
 
-DECLARE @id varchar(7)=(SELECT IDPaliwa FROM Ope.Zbiorniki WHERE RodzajPaliwa =@typ)
+DECLARE @id varchar(7) = (SELECT IDPaliwa FROM Ope.Zbiorniki WHERE RodzajPaliwa = @typ)
 
 RETURN @id;
 
