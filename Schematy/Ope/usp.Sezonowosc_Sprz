@@ -32,10 +32,12 @@ GROUP BY M.Miesiac_Naz, Z.RodzajPaliwa
 
 
 
-SELECT 
-RodzajPaliwa,MIN(Ilosc) AS MINIMUM
+SELECT RodzajPaliwa,MIN(Ilosc) AS MINIMUM
+
 INTO #MIN
+
 FROM #data 
+
 GROUP BY RodzajPaliwa
 
 /*minimalna miesieczna ilosc paliwa, kazdego rodzaju*/
@@ -43,21 +45,23 @@ GROUP BY RodzajPaliwa
 
 
 
-SELECT 
-RodzajPaliwa,
-MAX(Ilosc) AS MAXIMUM
+SELECT RodzajPaliwa, MAX(Ilosc) AS MAXIMUM
+
 INTO #MAX
+
 FROM #data
+
 GROUP BY RodzajPaliwa
 
 /*maksymalna miesieczna ilosc paliwa, kazdego rodzaju*/
 
 
-SELECT 
-RodzajPaliwa,
-ROUND(AVG(Ilosc),2) AS SREDNIA
+SELECT RodzajPaliwa, ROUND(AVG(Ilosc),2) AS SREDNIA
+
 INTO #SRD
+
 FROM #data 
+
 GROUP BY RodzajPaliwa
 
 /*srednia miesieczna ilosc paliwa, kazdgo rodzaju*/
@@ -67,9 +71,10 @@ GROUP BY RodzajPaliwa
 
 IF NOT EXISTS (
 SELECT M.RodzajPaliwa   
+
 FROM #MIN AS M
-LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa=M.RodzajPaliwa
-WHERE MAXIMUM<>MINIMUM)  
+LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
+WHERE MAXIMUM <> MINIMUM)  
 
 /*Jeżeli nie istnieje rodzaj paliwa dla którego max jest różny od min to mamy min=max i nie ma sezonowości*/
 
@@ -80,21 +85,23 @@ PRINT'Jednakowe wyniki w każdym miesiącu. Nie ma sezonowosci'
 END
 
 IF  EXISTS (
-SELECT 
-M.RodzajPaliwa 
+SELECT M.RodzajPaliwa 
+
 FROM #MIN AS M
-LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa=M.RodzajPaliwa
-WHERE MAXIMUM<>MINIMUM) 
+LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
+
+WHERE MAXIMUM <> MINIMUM) 
 
 /*Jeżeli istnieje rodzaj paliwa dla którego min jest rozny od max */
 
 AND  EXISTS  /*I*/
 
-(SELECT 
-M.RodzajPaliwa 
+(SELECT M.RodzajPaliwa 
+ 
 FROM #SRD AS S
-RIGHT JOIN #MAX AS M ON S.RodzajPaliwa=M.RodzajPaliwa
-WHERE SREDNIA*(1+@zm)<=MAXIMUM)
+RIGHT JOIN #MAX AS M ON S.RodzajPaliwa = M.RodzajPaliwa
+
+WHERE SREDNIA*(1+@zm) <= MAXIMUM)
 
 /*I istnieje rodzaj paliwa dla którego srednia powiekszona o współczynnik granicznego odchylenia jest większa lub równa maximum*/
 
@@ -103,14 +110,17 @@ BEGIN
 
 
 SELECT 
+
 Miesiac_Naz,
 D.RodzajPaliwa,
 Ilosc,
 Srednia, 
 ROUND(Ilosc/Srednia,2) AS Odchylenie
-FROM #data AS D LEFT JOIN 
-#srd  AS S ON D.RodzajPaliwa=S.RodzajPaliwa 
-WHERE ROUND(Ilosc/Srednia,2) <> 1
+
+FROM #data AS D 
+LEFT JOIN #srd  AS S ON D.RodzajPaliwa = S.RodzajPaliwa 
+
+WHERE ROUND(Ilosc / Srednia, 2) <> 1
 
 
 /*Jeżeli warunki z instrukcji z piętra wyżej zostaną spełnione to zwroc wynik takiego zapytania*/
