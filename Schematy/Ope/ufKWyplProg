@@ -17,10 +17,10 @@ AS
 
 BEGIN
 
-DECLARE @mxdatWyp date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty >0)
+DECLARE @mxdatWyp date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty > 0)
 
-DECLARE @Wypl money= (
-SELECT ROUND(SUM(Do_Wyplaty),2) 
+DECLARE @Wypl money = (
+SELECT ROUND(SUM(Do_Wyplaty), 2) 
 FROM Ope.Wyplaty 
 WHERE Do_Wyplaty > 0 
 AND  
