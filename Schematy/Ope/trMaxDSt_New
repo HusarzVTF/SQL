@@ -12,7 +12,7 @@ IF EXISTS(
 
 SELECT IDPaliwa FROM Ope.Zbiorniki 
 
-WHERE StanZbiornika>Pojemnosc OR StanZbiornika<0
+WHERE StanZbiornika > Pojemnosc OR StanZbiornika < 0
 
 )
 BEGIN
