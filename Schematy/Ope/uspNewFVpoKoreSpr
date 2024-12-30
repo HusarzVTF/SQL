@@ -13,12 +13,12 @@ DROP PROC Ope.uspNewFVpoKoreSpr;
 CREATE PROC Ope.uspNewFVpoKoreSpr
  
 
-(@fv varchar(100), @poz int, @IdDos int, @pesel bigint, @IDPaliw tinyint, @IdKlienta int,@IloscPaliwa real, @KwotaNetto real,
-@KwotaBrutto real, @TerminZaplaty date, @Podatek real, @TypPlatnosci varchar(7),@DataZaplaty date=NULL)
+(@fv varchar(100), @poz int, @IdDos int, @pesel bigint, @IDPaliw tinyint, @IdKlienta int, @IloscPaliwa real, @KwotaNetto real,
+@KwotaBrutto real, @TerminZaplaty date, @Podatek real, @TypPlatnosci varchar(7), @DataZaplaty date = NULL)
 
 AS 
 
-IF @poz<=0
+IF @poz <= 0
 BEGIN
 THROW 70000,'Pozycja fv dla prawidlowej fv musi byc wieksza od 0',1;
 END
@@ -49,7 +49,7 @@ NRFV,
 PozycjaNAFV,
 Czas.uIdDaty(CAST(GETDATE() AS Date)),
 IdKlienta,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
 @IDPaliw,
 @IloscPaliwa ,
 @KwotaNetto,
@@ -79,7 +79,7 @@ NRFV,
 PozycjaNAFV,
 Czas.uIdDaty(CAST(GETDATE() AS Date)),
 IdKlienta,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL=@pesel),
+(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
 @IDPaliw,
 @IloscPaliwa ,
 @KwotaNetto,
@@ -91,7 +91,7 @@ GETDATE(),
 
 FROM Ope.Sprzedaz 
 
-WHERE NRFV=@fv AND PozycjaNAFV=@poz AND IdKlienta=@IdKlienta;
+WHERE NRFV = @fv AND PozycjaNAFV = @poz AND IdKlienta = @IdKlienta;
 
 END;
 
