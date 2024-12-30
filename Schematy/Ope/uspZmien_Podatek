@@ -14,7 +14,8 @@ CREATE PROC Ope.uspZmien_Podatek (@rdz varchar(7), @stawka decimal(5,4))
 
 AS
 
-UPDATE Ope.StPodat SET stawka=@stawka WHERE ID=Ope.ufID_typ_Paliwa(@rdz)
+UPDATE Ope.StPodat SET stawka = @stawka 
+WHERE ID = Ope.ufID_typ_Paliwa(@rdz)
 
 /*Funkcja aktualizaujca stawke podatkowa na wskazany po nazwie rodzaj paliwa*/
 
