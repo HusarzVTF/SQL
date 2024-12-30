@@ -14,11 +14,12 @@ DROP PROC Ope.uspZmien_Marze;
 
 GO
 
-CREATE PROC Ope.uspZmien_Marze(@rdz varchar(7),@marza decimal(5,4))
+CREATE PROC Ope.uspZmien_Marze(@rdz varchar(7), @marza decimal(5,4))
 
 AS
 
-UPDATE Ope.Zbiorniki SET Marza=@marza WHERE RodzajPaliwa=@rdz
+UPDATE Ope.Zbiorniki SET Marza = @marza 
+WHERE RodzajPaliwa = @rdz
 
 /*procedura na aktualizacje marz w tabeli Zbiorniki*/
 
