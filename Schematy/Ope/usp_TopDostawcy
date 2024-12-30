@@ -29,7 +29,7 @@ BEGIN
   FROM Ope.Dostawy  AS D
   RIGHT JOIN Ope.Dostawcy  AS Dst ON DST.IDDostawcy = D.IdDostawcy LEFT JOIN Ope.Zbiorniki AS Z ON Z.IDPaliwa = D.IDPaliw
 
-GROUP BY  Dst.IdDostawcy, Dst.NazwaDostawcy, Z.RodzajPaliwa, Z.JM ORDER BY Dst.IdDostawcy, Z.RodzajPaliwa ASC;
+  GROUP BY  Dst.IdDostawcy, Dst.NazwaDostawcy, Z.RodzajPaliwa, Z.JM ORDER BY Dst.IdDostawcy, Z.RodzajPaliwa ASC;
 
 END;
 
