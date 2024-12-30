@@ -10,11 +10,16 @@ DROP PROC Ope.uspTrans;
 GO
 CREATE PROC Ope.uspTrans
 
+AS
+  
+ WITH Tra_CTE ( CzasTransakcji,NrTyg,DzienTyg,Nrdok,PozycWdok, Kontrahent,KwNett, KwBrutto,Ilosc,
+ JM,TypPaliwa,TermZapl, DataZaplaty,RdzPlatnosci,ImiePraco, NazwiPrac, RdzTrans)
+ 
  AS
-  WITH Tra_CTE (CzasTransakcji,NrTyg,DzienTyg,Nrdok,PozycWdok, Kontrahent,KwNett, KwBrutto,Ilosc,
-  JM,TypPaliwa,TermZapl, DataZaplaty,RdzPlatnosci,ImiePraco, NazwiPrac, RdzTrans)
-  AS(
- SELECT 
+
+(
+ SELECT
+
  CzasTransakcji,
  DATENAME(ISO_WEEK,CzasTransakcji),
  DATENAME(w,CzasTransakcji),
@@ -33,12 +38,13 @@ CREATE PROC Ope.uspTrans
  'Sprzedaz'   
  
  FROM Ope.Zbiorniki AS Z
- INNER JOIN Ope.Sprzedaz AS S ON Z.IDPaliwa=S.IDPaliwa  INNER JOIN Ope.Pracownicy AS P ON S.IdPracownika=P.IDPracownika
- INNER JOIN Ope.Klienci AS K ON S.IdKlienta=K.IdKlienta
+ INNER JOIN Ope.Sprzedaz AS S ON Z.IDPaliwa = S.IDPaliwa  INNER JOIN Ope.Pracownicy AS P ON S.IdPracownika = P.IDPracownika
+ INNER JOIN Ope.Klienci AS K ON S.IdKlienta = K.IdKlienta
  
- UNION
+ UNION ALL
  
  SELECT 
+
  CzasTransakcji,
  DATENAME(ISO_WEEK,CzasTransakcji),
  DATENAME(w,CzasTransakcji),
@@ -58,10 +64,11 @@ CREATE PROC Ope.uspTrans
  'Kupno'
  
  FROM Ope.Zbiorniki AS Z
- INNER JOIN Ope.Dostawy AS D ON Z.IDPaliwa=D.IDPaliw INNER JOIN Ope.Pracownicy AS P ON D.IdPracownika=P.IDPracownika
- INNER JOIN Ope.Dostawcy AS Dst ON D.IdDostawcy=Dst.IdDostawcy)
+ INNER JOIN Ope.Dostawy AS D ON Z.IDPaliwa = D.IDPaliw INNER JOIN Ope.Pracownicy AS P ON D.IdPracownika = P.IDPracownika
+ INNER JOIN Ope.Dostawcy AS Dst ON D.IdDostawcy = Dst.IdDostawcy
+)
 
- SELECT*FROM Tra_CTE ORDER BY CzasTransakcji;
+ SELECT * FROM Tra_CTE ORDER BY CzasTransakcji;
 
 
 
