@@ -13,7 +13,7 @@ CREATE PROC Ope.uspZwolnij (@idprac tinyint, @datazwolnienia date)
 
 AS
 
-UPDATE Ope.Pracownicy SET data_Zwolnienia = @datazwolnienia, status_pracownika ='zwolniony'
+UPDATE Ope.Pracownicy SET data_Zwolnienia = @datazwolnienia, status_pracownika = 'zwolniony'
 WHERE IDPracownika = @idprac 
 
 /* procedura na zwolnienie pracownika, soft delete zadnego kasowania danych*/
