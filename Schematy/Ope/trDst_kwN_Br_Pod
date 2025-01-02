@@ -13,11 +13,12 @@ CREATE TRIGGER Ope.trDst_KwN_Br_Pod ON Ope.Dostawy AFTER INSERT, UPDATE
 
 AS 
 
-DECLARE @max bigint=(SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+DECLARE @max bigint = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
 
 IF EXISTS(
-SELECT*FROM Dostawy
-WHERE KwotaNetto + Podatek <> KwotaBrutto AND IDFVZak = @max) 
+          SELECT * 
+          FROM Ope.Dostawy
+          WHERE KwotaNetto + Podatek <> KwotaBrutto AND IDFVZak = @max) 
 BEGIN 
 PRINT 'Wstawiono rekord w ktorym kwota netto plus podatek nie rowna sie brutto rekord zostal  usuniety z tabeli Dostawy' 
 ROLLBACK TRANSACTION;
