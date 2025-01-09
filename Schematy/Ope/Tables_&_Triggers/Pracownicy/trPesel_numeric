@@ -1,0 +1,26 @@
+
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trPesel_numeric') IS NOT NULL
+DROP TRIGGER Ope.trPesel_numeric;
+
+
+GO
+
+CREATE TRIGGER trPesel_numeric ON Ope.Pracownicy
+
+AFTER INSERT, UPDATE
+
+AS
+
+IF EXISTS( SELECT Pesel FROM Ope.Pracownicy WHERE ISNUMERIC(Pesel) = 0 )
+BEGIN 
+PRINT 'Proba wstawienia lub zmodyfikowania numeru pesel na zawierajacy litery lub znaki niepisane.'
+ROLLBACK TRANSACTION;
+RETURN
+END
+
+/* trigger blokujacy wstawienie i zmiane numeru pesel na niebedacy numerycznym */
+
