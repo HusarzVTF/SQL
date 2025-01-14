@@ -73,7 +73,7 @@ EXEC Ope.uspWstawFV_Zakup
 		@datakz = NULL
 
 
-		EXEC Ope.uspWstawFV_Zakup
+EXEC Ope.uspWstawFV_Zakup
 		@nrfv = N'FV00002',
 		@pozfv = 1,
 		@id_d = 1279,
@@ -90,7 +90,7 @@ EXEC Ope.uspWstawFV_Zakup
 		@dataz = NULL,
 		@datakz = NULL
 
-		EXEC Ope.uspWstawFV_Zakup
+EXEC Ope.uspWstawFV_Zakup
 		@nrfv = N'107FVA',
 		@pozfv = 1,
 		@id_d = 1279,
