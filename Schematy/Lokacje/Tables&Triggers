@@ -98,9 +98,9 @@ AS
 
 IF EXISTS
 (
-SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy = (SELECT MAX(IdGminy) FROM Gmina)
+SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy = (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
 INTERSECT
-SELECT IdPowiatu,Gmina FROM Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Gmina)
+SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Gmina, operacja została cofnięta.'
@@ -150,9 +150,9 @@ AS
 
 IF EXISTS
 (
-SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej = (SELECT MAX(IDMiej ) FROM Miejscowosc) 
+SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej = (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc) 
 INTERSECT
-SELECT IDGminy,Miejscowosc FROM Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Miejscowosc)
+SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Miejscowosc, operacja została cofnięta.'
