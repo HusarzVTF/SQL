@@ -34,12 +34,12 @@ INSERT INTO @CashFlow (Cash) VALUES('INCOME'), ('OUTCOME'), ('RESULT')
 
 DECLARE @inc money = ( 
                       SELECT ISNULL(SUM(KwotaBrutto), 0) 
-                      FROM Sprzedaz
+                      FROM Ope.Sprzedaz
                       WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NOT NULL)
 
 DECLARE @out money = ( 
                       SELECT ISNULL(SUM(KwotaBrutto), 0) + Ope.ufKsztWyplaty(@od, @do) 
-                      FROM Dostawy 
+                      FROM Ope.Dostawy 
                       WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NOT NULL)  
 
 
