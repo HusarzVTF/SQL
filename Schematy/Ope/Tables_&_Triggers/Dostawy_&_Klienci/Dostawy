@@ -172,9 +172,9 @@ CREATE TRIGGER Ope.trSprDostawy ON Ope.Dostawy
 AFTER INSERT, UPDATE
 AS 
 IF EXISTS(
-SELECT*FROM Dostawy
+SELECT*FROM Ope.Dostawy
 WHERE EXISTS
-(SELECT * FROM Dostawy 
+(SELECT * FROM Ope.Dostawy 
 WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0)))
 BEGIN 
 PRINT 'Wstawiono rekord z  bledna kwota netto wobec kwoty brutto, rekord zostal  usuniety z tabeli Dostawy'
