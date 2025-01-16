@@ -38,7 +38,7 @@ INSERT INTO @CashFlow (Cash) VALUES('Splata_Zobow'), ('Koszty_Plac'), ('Cash_Out
 
 DECLARE @Zobow money = ROUND(( 
                               SELECT ISNULL(SUM(KwotaBrutto),0) 
-                              FROM Dostawy
+                              FROM Ope.Dostawy
                               WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NULL), 2)
 
 
@@ -49,7 +49,7 @@ DECLARE @K_Plac money = ROUND( ISNULL (Ope.ufKWyplProg( DATEDIFF(d, @od, @do) )*
 
 DECLARE @Nalez money = ROUND(( 
                               SELECT ISNULL(SUM(KwotaBrutto),0) 
-                              FROM Sprzedaz
+                              FROM Ope.Sprzedaz
                               WHERE TerminZaplaty BETWEEN @od AND @do AND DataZaplaty IS NULL), 2)
 
 
