@@ -52,12 +52,12 @@ AS
 
 IF EXISTS
 (SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
-FROM Klienci 
-WHERE IdKlienta NOT IN (SELECT MAX(IdKlienta) FROM Klienci)
+FROM Ope.Klienci 
+WHERE IdKlienta NOT IN (SELECT MAX(IdKlienta) FROM Ope.Klienci)
 INTERSECT 
 SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
-FROM Klienci 
-WHERE IdKlienta IN (SELECT MAX(IdKlienta) FROM Klienci))
+FROM Ope.Klienci 
+WHERE IdKlienta IN (SELECT MAX(IdKlienta) FROM Ope.Klienci))
 BEGIN
 PRINT'Próbowano wstawić  klienta z błędnym adresem lub zmienić adres na błędny 
 (pod wprowadzanym adresem jest już wprowadzony inny klient).'
@@ -79,7 +79,7 @@ AS
 DECLARE @Tab table(IdKlienta int)
 INSERT INTO @Tab
 SELECT IdKlienta 
-FROM Klienci 
+FROM Ope.Klienci 
 WHERE (NIP IS NULL OR NazwaKlienta  LIKE '%Paragon%' OR 
 NazwaKlienta LIKE '%Paragon' OR NazwaKlienta LIKE 'Paragon%' OR NazwaKlienta LIKE 'Paragon')
 IF (SELECT COUNT(IdKlienta) FROM @Tab) > 1
@@ -161,12 +161,12 @@ AS
 
 IF EXISTS
 (SELECT KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
-FROM Dostawcy 
-WHERE IdDostawcy NOT IN (SELECT MAX(IdDostawcy) FROM Dostawcy)
+FROM Ope.Dostawcy 
+WHERE IdDostawcy NOT IN (SELECT MAX(IdDostawcy) FROM Ope.Dostawcy)
 INTERSECT 
 SELECT  KODPocztowy,Ulica,NrDomu,NrLokalu,AdresSpecj,IDMiejscowosc 
-FROM Dostawcy 
-WHERE IdDostawcy IN (SELECT MAX(IdDostawcy) FROM Dostawcy))
+FROM Ope.Dostawcy 
+WHERE IdDostawcy IN (SELECT MAX(IdDostawcy) FROM Ope.Dostawcy))
 BEGIN
 PRINT 'Próbowano wstawić dostawcę z błędnym adresem (pod wprowadzanym adresem jest już wprowadzony inny dostawca). 
 Operacja została cofnięta.'
