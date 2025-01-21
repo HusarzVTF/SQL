@@ -9,7 +9,7 @@ ALTER TRIGGER Ope.trSprDostawy ON Ope.Dostawy AFTER INSERT, UPDATE
 AS 
 IF EXISTS(
 
-  SELECT * FROM Dostawy
+  SELECT * FROM Ope.Dostawy
   WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0) )
 
 BEGIN 
