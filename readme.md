@@ -96,7 +96,7 @@ quantity to sell. We can mix it like that:
  
 
 
-* ![Customers segmentation](Schematy/Ope/[Stored Procedures]/uspKlasyfikacja_klientow)
+* ![Customers segmentation]([Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow])
 
  The idea of customer segmentation is to choose correct parameters to describe real value of customers.
  Choosen parameters are (in order from left to right according to below screenshot): 
