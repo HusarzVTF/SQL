@@ -13,7 +13,7 @@
 ### General info
 * Database diagram 
 
-![Database diagram](./Database_Diagram(Stacja_Paliw).JPG) 
+![Database diagram](./Database_Diagram.jpg) 
 
 ### Features
 
