@@ -109,7 +109,7 @@ quantity to sell. We can mix it like that:
 
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
-* ![Transactions](Schematy/Ope/PROC_Transakcje)
+* ![Transactions](<Schematy/Ope/Stored Procedures/usp_Transakcje>)
 * ![Fuel_Sales Rank](Schematy/Ope/uspSprz_Rank_Paliwa)
 
   ![Fuel_Sales Rank](./Schematy/Ope/Sprzedaz_paliw_Rank.JPG)
@@ -147,7 +147,7 @@ It's a mechanism to ensure gross margin (without substracting costs like wages e
 average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3. 
 Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel.
 Desirable margin level is stored in column Marza in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw). 
-It can be updated by ![Zmien_Marze](./Schematy/Ope/uspZmien_Marze). The formula for sales price is:
+It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is:
 average purchase price for fuel multiplied by (1 +margin for this fuel).
 After every supply of fuel which is represented in ![Dostawy](./Schematy/Ope/Dostawy), trigger trOilINZbior (code
 also available in ![Dostawy](./Schematy/Ope/Dostawy)) changes current levels of fuels flow in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw).
