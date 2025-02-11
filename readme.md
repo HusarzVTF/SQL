@@ -110,11 +110,11 @@ quantity to sell. We can mix it like that:
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
 * ![Transactions](<Schematy/Ope/Stored Procedures/usp_Transakcje>)
-* ![Fuel_Sales Rank](Schematy/Ope/uspSprz_Rank_Paliwa)
+* ![Fuel_Sales Rank](<Schematy/Ope/Stored Procedures/uspSprz_Rank_Paliwa>)
 
   ![Fuel_Sales Rank](./Schematy/Ope/Sprzedaz_paliw_Rank.JPG)
 
-* ![Fuel_Supply Rank](Schematy/Ope/uspDst_Rank_Paliwa) 
+* ![Fuel_Supply Rank](<Schematy/Ope/Stored Procedures/uspDst_Rank_Paliwa>) 
 
   ![Fuel_Supply Rank](./Schematy/Ope/Dostawy_Paliw_Rank.JPG)
 
