@@ -96,7 +96,7 @@ quantity to sell. We can mix it like that:
  
 
 
-* ![Customers segmentation](Schematy/Ope/uspKlasfikacja_klientow)
+* ![Customers segmentation](Schematy/Ope/Stored-Procedures/uspKlasyfikacja_klientow)
 
  The idea of customer segmentation is to choose correct parameters to describe real value of customers.
  Choosen parameters are (in order from left to right according to below screenshot): 
@@ -120,23 +120,23 @@ quantity to sell. We can mix it like that:
 
 
 ### Functions
-* ![Function to calculate netto payroll costs](Schematy/Ope/LiczWyn)
+* ![Function to calculate netto payroll costs](Schematy/Ope/Functions/ufKsztWyplaty)
 * ![Function to calculate days in year](Schematy/Czas/uDni_Rok)
-* ![Function to check payments conditions of customers](Schematy/Ope/ufWarunkiSprzedazy)
+* ![Function to check payments conditions of customers](Schematy/Ope/Functions/ufWarunkiSprzedazy)
 * ![Function to calculate gross amount for provided product id and quantity](Schematy/Ope/SpKWBrutto-ALTER)
 
 
 
 ### Views
-* ![Delivery transactions](Schematy/Ope/V_ListaDostaw)
+* ![Delivery transactions](Schematy/Ope/Views/V_ListaDostaw)
 
 ![Delivery transactions](./Schematy/Ope/V_Lista_Dostaw.JPG)
 
-* ![Sales transactions](Schematy/Ope/V_ListaSprzedazy)
+* ![Sales transactions](Schematy/Ope/Views/V_ListaSprzedazy)
 
 ![Sales transactions](./Schematy/Ope/V_Lista_Sprzedazy.JPG)
 
-* ![Differences in payments conditions](Schematy/Ope/V_Rozb_w_TermDostaw)
+* ![Differences in payments conditions](Schematy/Ope/Views/V_Rozb_w_TermDostaw)
 
 ![Differences in payments conditions](./Schematy/Ope/V_War_Rozb.JPG)
 
@@ -161,7 +161,7 @@ When sales invoice is made function ![Ope.WSprz](./Schematy/Ope/Sprzedaz) calcul
 
 
 ### Scripts
-* ![Script to generate kalendar data](Schematy/Czas/Kalendarz-2022)
+* ![Script to generate kalendar data](Schematy/Czas/Kalendarz_2024)
 
 	
 ### Technologies
