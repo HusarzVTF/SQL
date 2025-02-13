@@ -18,18 +18,18 @@
 ### Features
 
 ### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2022
-* ![Summary Report](Schematy/Ope/uspRaport_Zbiorczy)
+* ![Sales & Purchase Report](<Schematy/Ope/Stored Procedures/uspZakupy_Sprzedaz_Raport>)
 
 
   ![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
 
 
-* ![Simplified profit and loss statment](Schematy/Ope/_ALTER_uspZrobWynik)
+* ![Simplified profit and loss statment](<Schematy/Ope/Stored Procedures/_ALTER_uspZrobWynik>)
 
   ![Screenshot example](./Schematy/Ope/Wynik_Operacyjny.JPG)
   
   
-* ![Simplified cash flow statment](Schematy/Ope/uspCash_Flow)
+* ![Simplified cash flow statment](<Schematy/Ope/Stored Procedures/uspCashFlow>)
 
  Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
  If user provide data only from future column 'Realny' will be empty.
@@ -38,18 +38,18 @@
   ![Screenshot example](./Schematy/Ope/Casf_Flow.JPG)
     
 
-* ![Simplified financial analysis based on basic indicators](Schematy/Ope/uspAnaliza_Fin-ALTER)
+* ![Simplified financial analysis based on basic indicators](<Schematy/Ope/Stored Procedures/uspAnaliza_Fin>)
 
   ![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
 
-* ![Aging: receivables, labilities](Schematy/Ope/uspWiekowanie)
+* ![Aging: receivables, labilities](<Schematy/Ope/Stored Procedures/uspWiekowanie>)
 
 
   ![Screenshot example for aging receivables](./Schematy/Ope/Wiekowanie_Naleznosci_total.JPG)
 
   ![Screenshot example for aging labilities](./Schematy/Ope/Wiekowanie_Zobowiazan_total.JPG)
 
-* ![Break even point calculator](Schematy/Ope/BEP_Kalk_krzyz)
+* ![Break even point calculator](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator>)
 
  Break event point gives answer how much a company needs to sell to cover all costs (fixed and variable which refers to the volume of production).
  When production is greater then estimated by BEP company is earning profit.
