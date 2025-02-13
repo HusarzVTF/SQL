@@ -1,0 +1,71 @@
+
+USE Stacja_Paliw 
+
+GO
+
+IF OBJECT_ID('Ope.uspZakupy_Sprzedaz_Raport') IS NOT NULL
+DROP PROC Ope.uspZakupy_Sprzedaz_Raport
+
+--Instukcja sprawdzająca czy istnieje już procedura Ope.uspRaport_Zbiorczy jeśli tak to jest likwidowana. Zakładamy, że jeśli istnieje to przez pomyłkę--
+
+GO
+
+CREATE PROC Ope.uspZakupy_Sprzedaz_Raport AS
+
+ DECLARE @minrok int = (SELECT MIN(YEAR(CzasTransakcji)) FROM Ope.Dostawy)
+ --porwniujemy tylko zamkniete lata stad ogranicznie od poerwszy rok dostawy do poprzedni zamniety
+ DECLARE @maxrok int = Year(GETDATE())-1;
+
+ 
+
+WITH Zakres_CTE (IDPaliwa, RodzajPaliwa, Rok_Num) AS 
+(    
+     SELECT  IDPaliwa, RodzajPaliwa, Rok_Num 
+     
+     FROM Czas.Rok CROSS JOIN Ope.Zbiorniki 
+     
+     WHERE Rok_Num BETWEEN @minrok AND @maxrok
+),
+
+Zakup_CTE (IDPaliwa, Rok, Kupiona_Ilosc, Zakup_N, Sr_Cena_Zakupu) AS 
+ (
+      SELECT 
+            IDPaliw, YEAR(CzasTransakcji), ROUND(SUM(IloscPaliwa),2), ROUND(SUM(KwotaNetto),2),
+            'Sr_Cena_Zakupu'= CASE
+            WHEN ISNULL(SUM(IloscPaliwa),0)=0 THEN 0
+            ELSE ROUND(ISNULL(SUM(KwotaNetto),0) / ISNULL(SUM(IloscPaliwa),0),2) END
+      
+      FROM Ope.Dostawy
+      GROUP BY IDPaliw, YEAR(CzasTransakcji)),
+
+Sprzedaz_CTE (IDPaliwa, Rok, Sprzedana_Ilosc, Sprzedaz_N, Sr_Cena_Sprzedazy) AS
+ (
+      SELECT 
+            IDPaliwa, YEAR(CzasTransakcji), ROUND(SUM(IloscPaliwa),2), ROUND(SUM(KwotaNetto),2) ,
+            'Sr_Cena_Sprzedazy'= CASE
+            WHEN ISNULL(SUM(IloscPaliwa),0)=0 THEN 0
+            ELSE
+            ROUND(ISNULL(SUM(KwotaNetto),0) / ISNULL(SUM(IloscPaliwa),0),2)  
+            END
+
+      FROM Ope.Sprzedaz 
+      GROUP BY IDPaliwa, YEAR(CzasTransakcji))
+
+
+ SELECT 
+        RodzajPaliwa, Rok_Num, ISNULL(S.Sprzedana_Ilosc,0) AS Sprzedana_Ilosc,
+        SUM(ISNULL(S.Sprzedana_Ilosc,0)) OVER (PARTITION BY RodzajPaliwa ORDER BY Rok_Num) AS Sprzedana_ilo_Nar,
+        ISNULL(S.Sprzedaz_N,0) AS Sprzedaz_Netto,ISNULL(S.Sr_Cena_Sprzedazy,0) AS Sr_Cena_Sprzedazy,
+        SUM(ISNULL(Sprzedaz_N,0)) OVER (PARTITION BY RodzajPaliwa ORDER BY Rok_Num) AS Sprzedaz_N_Nar, 
+        ISNULL(Zakup.Kupiona_Ilosc,0) AS Kupiona_Ilosc,
+        SUM(ISNULL(Kupiona_Ilosc,0)) OVER (PARTITION BY RodzajPaliwa ORDER BY Rok_Num) AS Kupiona_ilo_Nar,
+        ISNULL(Zakup.Zakup_N,0) AS Zakup_Netto, ISNULL(Zakup.Sr_Cena_Zakupu,0) AS Sr_Cena_Zakupu, 
+        SUM(ISNULL(Zakup_N,0)) OVER (PARTITION BY RodzajPaliwa ORDER BY Rok_Num) AS Zakup_Netto_Nar
+  
+ FROM Zakres_CTE AS Zakres
+ LEFT JOIN Sprzedaz_CTE AS S ON Zakres.Rok_Num = S.Rok AND Zakres.IDPaliwa = S.IDPaliwa
+ LEFT JOIN Zakup_CTE AS Zakup ON Zakres.Rok_Num = Zakup.Rok AND Zakres.IDPaliwa = Zakup.IDPaliwa
+ ORDER BY RodzajPaliwa, Rok_Num
+ 
+
+/* Raport pokazujacy sprzedaz i zakupy w podziale na typ paliwa i lata */
