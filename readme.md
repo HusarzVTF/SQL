@@ -42,6 +42,8 @@
 
   ![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
 
+* ![Stock analysis](<Schematy/Ope/Stored Procedures/uspAnaliza_Zapasow>)
+
 * ![Aging: receivables, labilities](<Schematy/Ope/Stored Procedures/uspWiekowanie>)
 
 
