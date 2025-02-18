@@ -126,7 +126,7 @@ quantity to sell. We can mix it like that:
 * ![Function to calculate netto payroll costs](Schematy/Ope/Functions/ufKsztWyplaty)
 * ![Function to calculate days in year](Schematy/Czas/uDni_Rok)
 * ![Function to check payments conditions of customers](Schematy/Ope/Functions/ufWarunkiSprzedazy)
-* ![Function to calculate gross amount for provided product id and quantity](Schematy/Ope/SpKWBrutto-ALTER)
+* ![Function to calculate gross amount for provided product id, quantity and customerid](Schematy/Ope/Functions/ufSpKWBrutto)
 
 
 
@@ -149,16 +149,18 @@ quantity to sell. We can mix it like that:
 It's a mechanism to ensure gross margin (without substracting costs like wages etc.) on desirable level. Sales price is caluclated from 
 average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3. 
 Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel.
-Desirable margin level is stored in column Marza in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw). 
+Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). 
 It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is:
 average purchase price for fuel multiplied by (1 +margin for this fuel).
-After every supply of fuel which is represented in ![Dostawy](./Schematy/Ope/Dostawy), trigger trOilINZbior (code
-also available in ![Dostawy](./Schematy/Ope/Dostawy)) changes current levels of fuels flow in table ![Zbiorniki](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw).
-After every DML event (without merge) made on table Zbiorniki trigger ![trMar](./Schematy/Ope/Ope.trMar) updates
-sales prices to current level in table ![CenyPa](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw).
-If new fuel will be added to table Zbiorniki trigger ![trNEWCenPaliwa](./Schematy/Ope/Zbiorniki_&_CenySprzPaliw)
+After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code
+also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table
+![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
+After every DML event (without merge) made on table Zbiorniki trigger ![trMar](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw) updates
+sales prices to current level in table ![CenyPa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
+If new fuel will be added to table Zbiorniki trigger ![trNEWCenPaliwa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw)
 will update table CenyPa with new fuel.
-When sales invoice is made function ![Ope.WSprz](./Schematy/Ope/Sprzedaz) calculates net amount and function ![Ope.SpKWBrutto](./Schematy/Ope/SpKWBrutto-ALTER) calculates gross amount.
+When sales invoice is made function ![uspWstawFV_Sprzedaz](<Schematy/Ope/Stored Procedures/uspWstawFV_Sprzedaz>) calculates net amount and function
+![Ope.ufSpKWBrutto](Schematy/Ope/Functions/ufSpKWBrutto) calculates gross amount.
 
 
 
