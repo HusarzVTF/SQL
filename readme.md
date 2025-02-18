@@ -112,6 +112,7 @@ quantity to sell. We can mix it like that:
   ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
 
 * ![Transactions](<Schematy/Ope/Stored Procedures/usp_Transakcje>)
+  
 * ![Fuel_Sales Rank](<Schematy/Ope/Stored Procedures/uspSprz_Rank_Paliwa>)
 
   ![Fuel_Sales Rank](./Schematy/Ope/Sprzedaz_paliw_Rank.JPG)
