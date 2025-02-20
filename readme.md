@@ -133,15 +133,15 @@ quantity to sell. We can mix it like that:
 ### Views
 * ![Delivery transactions](Schematy/Ope/Views/V_ListaDostaw)
 
-![Delivery transactions](./Schematy/Ope/V_Lista_Dostaw.JPG)
+![Delivery transactions](Schematy/Ope/Views/V_Lista_Dostaw.jpg)
 
 * ![Sales transactions](Schematy/Ope/Views/V_ListaSprzedazy)
 
-![Sales transactions](./Schematy/Ope/V_Lista_Sprzedazy.JPG)
+![Sales transactions](Schematy/Ope/Views/V_Lista_Sprzedazy.jpg)
 
 * ![Differences in payments conditions](Schematy/Ope/Views/V_Rozb_w_TermDostaw)
 
-![Differences in payments conditions](./Schematy/Ope/V_War_Rozb.JPG)
+![Differences in payments conditions](Schematy/Ope/Views/V_War_Rozb.jpg)
 
 
 ### Automated pricing system 
