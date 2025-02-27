@@ -68,16 +68,14 @@
  
  Which are represented by such parameters in BEP_Kalk stored procedure:
  
- 	@od = '2020-01-01',
-	@do = '2022-12-31',
+ 	@od = '2020-03-01',
+	@do = '2024-12-31',
 	@typ = N'Benzyna',
-	@il = 105999,
+	@il = 2000,
+	@ks_pro = NULL,
 	@typ_1 = N'Gaz',
-	@ks_pro = 0.57,
-	@typ_2 = NULL,
-	@il_2 = NULL,
-	@typ_3 = NULL,
-	@ks_pro_1 = NULL
+	@il_1 = NULL,
+	@ks_pro_1 = 0.40
 		
 Which means that we wanted to know how much oil do we need to sell if we sell 105 999 litres of petrol 
 and we will simulate that we want to cover 45% of costs by selling gas. 
