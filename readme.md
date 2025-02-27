@@ -17,16 +17,16 @@
 
 ### Features
 
-### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2022
+### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2024
 * ![Sales & Purchase Report](<Schematy/Ope/Stored Procedures/uspZakupy_Sprzedaz_Raport>)
 
 
-  ![Screenshot example](./Schematy/Ope/Raport_zbiorczy.JPG)
+  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspZakupy_Sprzedaz_Raport.jpg>)
 
 
 * ![Simplified profit and loss statment](<Schematy/Ope/Stored Procedures/_ALTER_uspZrobWynik>)
 
-  ![Screenshot example](./Schematy/Ope/Wynik_Operacyjny.JPG)
+  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspZrobWynik.jpg>)
   
   
 * ![Simplified cash flow statment](<Schematy/Ope/Stored Procedures/uspCashFlow>)
@@ -35,12 +35,15 @@
  If user provide data only from future column 'Realny' will be empty.
  If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
 
-  ![Screenshot example](./Schematy/Ope/Casf_Flow.JPG)
+  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspCashflow.jpg>)
     
 
 * ![Simplified financial analysis based on basic indicators](<Schematy/Ope/Stored Procedures/uspAnaliza_Fin>)
 
-  ![Screenshot example](./Schematy/Ope/Analiza_fin_2020-2022.JPG)
+  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspAnaliza_Fin.jpg>)
+
+ Only short term debt including in measures.
+
 
 * ![Stock analysis](<Schematy/Ope/Stored Procedures/uspAnaliza_Zapasow>)
 
@@ -88,7 +91,7 @@ quantity to sell. We can mix it like that:
  
  The result of such query is shown on below screenshot:
  
- ![Screenshot example](./Schematy/Ope/BEP_calc.JPG)
+ ![Screenshot example](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator.jpg>)
  
  In this case we see that we don't have enough gas in stocks if we want to keep strategy
  with provided parameters. In this case we need to change margin levels to higher
@@ -107,17 +110,17 @@ quantity to sell. We can mix it like that:
  - number of bought fuels
 
 
-  ![Customers segmentation](./Schematy/Ope/Klasyfikacja_klientow.JPG)
+  ![Customers segmentation](<Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow.jpg>)
 
 * ![Transactions](<Schematy/Ope/Stored Procedures/usp_Transakcje>)
   
 * ![Fuel_Sales Rank](<Schematy/Ope/Stored Procedures/uspSprz_Rank_Paliwa>)
 
-  ![Fuel_Sales Rank](./Schematy/Ope/Sprzedaz_paliw_Rank.JPG)
+  ![Fuel_Sales Rank](<Schematy/Ope/Stored Procedures/uspPaliwa_SprzRanking.jpg>)
 
 * ![Fuel_Supply Rank](<Schematy/Ope/Stored Procedures/uspDst_Rank_Paliwa>) 
 
-  ![Fuel_Supply Rank](./Schematy/Ope/Dostawy_Paliw_Rank.JPG)
+  ![Fuel_Supply Rank](<Schematy/Ope/Stored Procedures/uspDostRanking_Paliwa.jpg>)
 
 
 ### Functions
