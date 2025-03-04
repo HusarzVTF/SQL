@@ -8,7 +8,6 @@
 * [Features](#features)
 * [Setup](#setup)
 * [Acknowledgements](#Acknowledgements)
-* [Extras](#Extras)
 
 ### General info
 * Database diagram 
@@ -20,15 +19,12 @@
 ### Stored Procedures -> Time period for analysis presented on screenshots examples: years 2020-2024
 * ![Sales & Purchase Report](<Schematy/Ope/Stored Procedures/uspZakupy_Sprzedaz_Raport>)
 
-
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspZakupy_Sprzedaz_Raport.jpg>)
-
 
 * ![Simplified profit and loss statment](<Schematy/Ope/Stored Procedures/_ALTER_uspZrobWynik>)
 
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspZrobWynik.jpg>)
-  
-  
+    
 * ![Simplified cash flow statment](<Schematy/Ope/Stored Procedures/uspCashFlow>)
 
  Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
@@ -37,22 +33,17 @@
 
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspCashflow.jpg>)
     
-
 * ![Simplified financial analysis based on basic indicators](<Schematy/Ope/Stored Procedures/uspAnaliza_Fin>)
 
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspAnaliza_Fin.jpg>)
 
  Only short term debt including in measures.
 
-
 * ![Stock analysis](<Schematy/Ope/Stored Procedures/uspAnaliza_Zapasow>)
 
+  ![Screenshot example](<Schematy/Ope/Stored Procedures/usp_Analiza_Zapasow.jpg>)
+
 * ![Aging: receivables, labilities](<Schematy/Ope/Stored Procedures/uspWiekowanie>)
-
-
-  ![Screenshot example for aging receivables](./Schematy/Ope/Wiekowanie_Naleznosci_total.JPG)
-
-  ![Screenshot example for aging labilities](./Schematy/Ope/Wiekowanie_Zobowiazan_total.JPG)
 
 * ![Break even point calculator](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator>)
 
@@ -63,7 +54,7 @@
  All calculations are in current margin levels, supply prices and costs.
  BEP calculator is useful tool to answer questions like:
  "How much litres of fuel type one we need to sell in current prices and in provided period of time,
- if we sell one hundred litres of fuel type two and three or if we want to cover half costs by selling fuel two."
+ if we sell one hundred litres of fuel type two and three or if we want to cover half fixed costs by selling fuel two."
  We are able to provide such parameters: 
  - period of time
  - fuel/s
@@ -80,8 +71,8 @@
 	@il_1 = NULL,
 	@ks_pro_1 = 0.40
 		
-Which means that we wanted to know how much oil do we need to sell if we sell 105 999 litres of petrol 
-and we will simulate that we want to cover 45% of costs by selling gas. 
+Which means that we wanted to know how much oil do we need to sell if we sell 2000 litres of petrol 
+and we will simulate that we want to cover 40% of costs by selling gas. 
 We are able to change the question flexible with parameters like costs level to cover and
 quantity to sell. We can mix it like that:
  - we provide quantity for two fuels
@@ -93,12 +84,10 @@ quantity to sell. We can mix it like that:
  
  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator.jpg>)
  
- In this case we see that we don't have enough gas in stocks if we want to keep strategy
+ In this case we see that we don't have enough gas and oil in stocks if we want to keep strategy
  with provided parameters. In this case we need to change margin levels to higher
- or buy more gas or combine all off it.
+ or buy more gas and oil or combine all off it.
  
-
-
 * ![Customers segmentation](<Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow>)
 
  The idea of customer segmentation is to choose correct parameters to describe real value of customers.
@@ -108,7 +97,6 @@ quantity to sell. We can mix it like that:
  - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
  - number of invoices
  - number of bought fuels
-
 
   ![Customers segmentation](<Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow.jpg>)
 
@@ -124,14 +112,11 @@ quantity to sell. We can mix it like that:
 
   ![Fuel_Supply Rank](<Schematy/Ope/Stored Procedures/uspDostRanking_Paliwa.jpg>)
 
-
 ### Functions
 * ![Function to calculate netto payroll costs](Schematy/Ope/Functions/ufKsztWyplaty)
 * ![Function to calculate days in year](Schematy/Czas/uDni_Rok)
 * ![Function to check payments conditions of customers](Schematy/Ope/Functions/ufWarunkiSprzedazy)
 * ![Function to calculate gross amount for provided product id, quantity and customerid](Schematy/Ope/Functions/ufSpKWBrutto)
-
-
 
 ### Views
 * ![Delivery transactions](Schematy/Ope/Views/V_ListaDostaw)
@@ -154,7 +139,7 @@ average fuel purchase price and margin. Every fuel has his own purhcase price wh
 Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel.
 Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). 
 It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is:
-average purchase price for fuel multiplied by (1 +margin for this fuel).
+average purchase price for fuel multiplied by (1 + margin for this fuel).
 After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code
 also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table
 ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
@@ -165,12 +150,8 @@ will update table CenyPa with new fuel.
 When sales invoice is made function ![uspWstawFV_Sprzedaz](<Schematy/Ope/Stored Procedures/uspWstawFV_Sprzedaz>) calculates net amount and function
 ![Ope.ufSpKWBrutto](Schematy/Ope/Functions/ufSpKWBrutto) calculates gross amount.
 
-
-
-
 ### Scripts
 * ![Script to generate kalendar data](Schematy/Czas/Kalendarz_2024)
-
 	
 ### Technologies
 Project created in:
@@ -179,9 +160,3 @@ Project created in:
 ### Acknowledgements
 Inspiration to this project was to join working experiance as financial analyst and  knowledge and also experience  in field of
 SQL databases to show some examples of my skills.
-
-	
-### Setup
-### Extras
-
-
