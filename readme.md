@@ -172,7 +172,7 @@ In every case we are able to provide data for two fules out of three. <br />
 
 It's a mechanism to ensure gross margin (without substracting costs like wages etc.) on desirable level. Sales price is caluclated from 
 average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3.
-Average price is result of dividing all net sum from supply invoices divided by all bought quantinty <br />  in measure units for every fuel. <br />
+Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel. <br />
 Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). 
 It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). <br /> 
 
