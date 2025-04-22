@@ -16,7 +16,9 @@
 * Schemas: <br />
   
   Czas - represents time dimension <br />
+  
   Lokacje - represents geographical dimension <br />
+  
   Ope - represents operational activity of Petrol Station <br />
   
 * Main tables in Czas Schema: <br />
@@ -30,10 +32,15 @@
 * Main tables in Ope Schema: <br />
 
   Ope.Zbiorniki - table with fuels <br />
+  
   Ope.Klienci - table with customers data <br />
+  
   Ope.Dostawcy - table with fuel suppliers data <br />
+  
   Ope.Pracownicy - table with employees data <br />
+  
   Ope.Sprzedaz - table with sales data <br />
+  
   Ope.Dostawy - table with fuel's purchase data <br />
   
 ### Features
@@ -49,9 +56,11 @@
     
 * ![Simplified cash flow statment](<Schematy/Ope/Stored Procedures/uspCashFlow>)
 
- Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty. <br />
+ Cash flow is divided into two periods: past and future (forecast). <br />
+ If user provide data only from the past column 'Prognoza' will be empty. <br />
  If user provide data only from future column 'Realny' will be empty. <br />
- If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  <br />
+ If user provide data which starts in past and ends in future cash flow <br /> 
+ will be divided appropriately into this two columns ('Realny','Prognoza').  <br />
 
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspCashflow.jpg>)
     
@@ -69,7 +78,8 @@
 
 * ![Break even point calculator](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator>)
 
- Break event point gives answer how much a company needs to sell to cover all costs (fixed and variable which refers to the volume of production). <br />
+ Break event point gives answer how much a company needs to sell to cover <br />
+ all costs (fixed and variable which refers to the volume of production). <br />
  When production is greater then estimated by BEP company is earning profit. <br />
  In some cases it is good to have a better precision and more flexible simulation. <br />
  Especially when we have more than one product with different margin levels and supply prices. <br />
