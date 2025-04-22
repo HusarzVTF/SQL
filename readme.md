@@ -14,20 +14,23 @@
 
 ![Database diagram](./Database_Diagram.jpg) 
 * Schemas: Czas, Lokacje, Ope
-* Czas - represents time dimension
-* Lokacje - represents geographical dimension
-* Ope - represents operational activity of Petrol Station
+  Czas - represents time dimension
+  Lokacje - represents geographical dimension
+  Ope - represents operational activity of Petrol Station
+  
 * Main tables in Czas Schema:
-* Czas.Kalendarz - Calendar table with dates and holidays
+  Czas.Kalendarz - Calendar table with dates and holidays
+  
 * Main tables in Lokacje Schema:
-* Lokacje.Miejscowosc - table with Cities
+  Lokacje.Miejscowosc - table with Cities
+  
 * Main tables in Ope Schema:
-* Ope.Zbiorniki - table with fuels
-* Ope.Klienci - table with customers data
-* Ope.Dostawcy - table with fuel suppliers data
-* Ope.Pracownicy - table with employees data
-* Ope.Sprzedaz - table with sales data
-* Ope.Dostawy - table with fuel's purchase data
+  Ope.Zbiorniki - table with fuels
+  Ope.Klienci - table with customers data
+  Ope.Dostawcy - table with fuel suppliers data
+  Ope.Pracownicy - table with employees data
+  Ope.Sprzedaz - table with sales data
+  Ope.Dostawy - table with fuel's purchase data
   
 ### Features
 
