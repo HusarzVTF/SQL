@@ -173,7 +173,7 @@ Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/
 It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is: <br /> 
 average purchase price for fuel multiplied by (1 + margin for this fuel). <br />
 After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code 
-also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table <br />
+also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table 
 ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
 After every DML event (without merge) made on table Zbiorniki trigger ![trMar](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw) updates 
 sales prices to current level in table ![CenyPa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
