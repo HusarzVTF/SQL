@@ -110,7 +110,8 @@ quantity to sell. We can mix it like that: <br />
  - we provide quantity for two fuels <br />
  - we provide quantity for one fuel and costs percentage to cover for second fuel <br />
  - we provide percentage costs to cover for two fuels <br />
- In every case we are able to provide data for two fules out of three. <br />
+
+In every case we are able to provide data for two fules out of three. <br />
  
  The result of such query is shown on below screenshot:
  
