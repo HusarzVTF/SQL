@@ -13,28 +13,28 @@
 * Database diagram 
 
 ![Database diagram](./Database_Diagram.jpg) 
-* Schemas:
+* Schemas: <br />
   
-  Czas - represents time dimension
-  Lokacje - represents geographical dimension
-  Ope - represents operational activity of Petrol Station
+  Czas - represents time dimension <br />
+  Lokacje - represents geographical dimension <br />
+  Ope - represents operational activity of Petrol Station <br />
   
-* Main tables in Czas Schema:
+* Main tables in Czas Schema: <br />
 
-  Czas.Kalendarz - Calendar table with dates and holidays
+  Czas.Kalendarz - Calendar table with dates and holidays <br />
   
-* Main tables in Lokacje Schema:
+* Main tables in Lokacje Schema: <br />
 
-  Lokacje.Miejscowosc - table with Cities
+  Lokacje.Miejscowosc - table with Cities <br />
   
-* Main tables in Ope Schema:
+* Main tables in Ope Schema: <br />
 
-  Ope.Zbiorniki - table with fuels
-  Ope.Klienci - table with customers data
-  Ope.Dostawcy - table with fuel suppliers data
-  Ope.Pracownicy - table with employees data
-  Ope.Sprzedaz - table with sales data
-  Ope.Dostawy - table with fuel's purchase data
+  Ope.Zbiorniki - table with fuels <br />
+  Ope.Klienci - table with customers data <br />
+  Ope.Dostawcy - table with fuel suppliers data <br />
+  Ope.Pracownicy - table with employees data <br />
+  Ope.Sprzedaz - table with sales data <br />
+  Ope.Dostawy - table with fuel's purchase data <br />
   
 ### Features
 
@@ -49,9 +49,9 @@
     
 * ![Simplified cash flow statment](<Schematy/Ope/Stored Procedures/uspCashFlow>)
 
- Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty.
- If user provide data only from future column 'Realny' will be empty.
- If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  
+ Cash flow is divided into two periods: past and future (forecast). If user provide data only from the past column 'Prognoza' will be empty. <br />
+ If user provide data only from future column 'Realny' will be empty. <br />
+ If user provide data which starts in past and ends in future cash flow will be divided appropriately into this two columns ('Realny','Prognoza').  <br />
 
   ![Screenshot example](<Schematy/Ope/Stored Procedures/uspCashflow.jpg>)
     
@@ -69,20 +69,20 @@
 
 * ![Break even point calculator](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator>)
 
- Break event point gives answer how much a company needs to sell to cover all costs (fixed and variable which refers to the volume of production).
- When production is greater then estimated by BEP company is earning profit.
- In some cases it is good to have a better precision and more flexible simulation.
- Especially when we have more than one product with different margin levels and supply prices.
- All calculations are in current margin levels, supply prices and costs.
- BEP calculator is useful tool to answer questions like:
- "How much litres of fuel type one we need to sell in current prices and in provided period of time,
- if we sell one hundred litres of fuel type two and three or if we want to cover half fixed costs by selling fuel two."
- We are able to provide such parameters: 
- - period of time
- - fuel/s
- - quantity for fuels or percentage of costs to cover
+ Break event point gives answer how much a company needs to sell to cover all costs (fixed and variable which refers to the volume of production). <br />
+ When production is greater then estimated by BEP company is earning profit. <br />
+ In some cases it is good to have a better precision and more flexible simulation. <br />
+ Especially when we have more than one product with different margin levels and supply prices. <br />
+ All calculations are in current margin levels, supply prices and costs. <br />
+ BEP calculator is useful tool to answer questions like: <br />
+ "How much litres of fuel type one we need to sell in current prices and in provided period of time, <br />
+ if we sell one hundred litres of fuel type two and three or if we want to cover half fixed costs by selling fuel two." <br />
+ We are able to provide such parameters:  <br />
+ - period of time <br />
+ - fuel/s <br />
+ - quantity for fuels or percentage of costs to cover <br />
  
- Which are represented by such parameters in BEP_Kalk stored procedure:
+ Which are represented by such parameters in BEP_Kalk stored procedure: <br />
  
  	@od = '2020-03-01',
 	@do = '2024-12-31',
@@ -93,32 +93,32 @@
 	@il_1 = NULL,
 	@ks_pro_1 = 0.40
 		
-Which means that we wanted to know how much oil do we need to sell if we sell 2000 litres of petrol 
-and we will simulate that we want to cover 40% of costs by selling gas. 
-We are able to change the question flexible with parameters like costs level to cover and
-quantity to sell. We can mix it like that:
- - we provide quantity for two fuels
- - we provide quantity for one fuel and costs percentage to cover for second fuel
- - we provide percentage costs to cover for two fuels
- In every case we are able to provide data for two fules out of three.
+Which means that we wanted to know how much oil do we need to sell if we sell 2000 litres of petrol  <br />
+and we will simulate that we want to cover 40% of costs by selling gas.  <br />
+We are able to change the question flexible with parameters like costs level to cover and <br />
+quantity to sell. We can mix it like that: <br />
+ - we provide quantity for two fuels <br />
+ - we provide quantity for one fuel and costs percentage to cover for second fuel <br />
+ - we provide percentage costs to cover for two fuels <br />
+ In every case we are able to provide data for two fules out of three. <br />
  
  The result of such query is shown on below screenshot:
  
  ![Screenshot example](<Schematy/Ope/Stored Procedures/uspBEP_Kalkulator.jpg>)
  
- In this case we see that we don't have enough gas and oil in stocks if we want to keep strategy
- with provided parameters. In this case we need to change margin levels to higher
- or buy more gas and oil or combine all off it.
+ In this case we see that we don't have enough gas and oil in stocks if we want to keep strategy <br />
+ with provided parameters. In this case we need to change margin levels to higher <br />
+ or buy more gas and oil or combine all off it. <br />
  
 * ![Customers segmentation](<Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow>)
 
- The idea of customer segmentation is to choose correct parameters to describe real value of customers.
- Choosen parameters are (in order from left to right according to below screenshot): 
- - income from invoices
- - percentage of unpaid income from invoices calculated as unpaid income divided by income
- - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income
- - number of invoices
- - number of bought fuels
+ The idea of customer segmentation is to choose correct parameters to describe real value of customers. <br />
+ Choosen parameters are (in order from left to right according to below screenshot): <br />
+ - income from invoices <br />
+ - percentage of unpaid income from invoices calculated as unpaid income divided by income <br />
+ - percentage of unpaid and overdue income calculated as unpaid and overdue income divided by income <br />
+ - number of invoices <br />
+ - number of bought fuels <br />
 
   ![Customers segmentation](<Schematy/Ope/Stored Procedures/uspKlasyfikacja_klientow.jpg>)
 
@@ -156,20 +156,20 @@ quantity to sell. We can mix it like that:
 
 ### Automated pricing system 
 
-It's a mechanism to ensure gross margin (without substracting costs like wages etc.) on desirable level. Sales price is caluclated from 
-average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3. 
-Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel.
-Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). 
-It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is:
-average purchase price for fuel multiplied by (1 + margin for this fuel).
-After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code
-also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table
-![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
-After every DML event (without merge) made on table Zbiorniki trigger ![trMar](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw) updates
+It's a mechanism to ensure gross margin (without substracting costs like wages etc.) on desirable level. Sales price is caluclated from <br />
+average fuel purchase price and margin. Every fuel has his own purhcase price which is average price for measure unit example litr, m3.  <br />
+Average price is result of dividing all net sum from supply invoices divided by all bought quantinty in measure units for every fuel. <br />
+Desirable margin level is stored in column Marza in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
+It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_Marze>). The formula for sales price is: <br /> 
+average purchase price for fuel multiplied by (1 + margin for this fuel). <br />
+After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code 
+also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table <br />
+![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
+After every DML event (without merge) made on table Zbiorniki trigger ![trMar](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw) updates 
 sales prices to current level in table ![CenyPa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw).
 If new fuel will be added to table Zbiorniki trigger ![trNEWCenPaliwa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw)
-will update table CenyPa with new fuel.
-When sales invoice is made function ![uspWstawFV_Sprzedaz](<Schematy/Ope/Stored Procedures/uspWstawFV_Sprzedaz>) calculates net amount and function
+will update table CenyPa with new fuel. <br />
+When sales invoice is made function ![uspWstawFV_Sprzedaz](<Schematy/Ope/Stored Procedures/uspWstawFV_Sprzedaz>) calculates net amount and function 
 ![Ope.ufSpKWBrutto](Schematy/Ope/Functions/ufSpKWBrutto) calculates gross amount.
 
 ### Scripts
