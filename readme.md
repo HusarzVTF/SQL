@@ -86,6 +86,7 @@
  All calculations are in current margin levels, supply prices and costs. <br />
 
  BEP calculator is useful tool to answer questions like: <br />
+ 
  "How much litres of fuel type one we need to sell in current prices and in provided period of time, <br />
  if we sell one hundred litres of fuel type two and three or if we want to cover half fixed costs by selling fuel two." <br />
 
@@ -177,8 +178,8 @@ It can be updated by ![Zmien_Marze](<./Schematy/Ope/Stored Procedures/uspZmien_M
 
 The formula for sales price is: average purchase price for fuel multiplied by (1 + margin for this fuel). <br />
 After every supply of fuel which is represented in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy), trigger trOilINZbior (code 
-also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) changes current levels of fuels flow in table 
-![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
+also available in ![Dostawy](Schematy/Ope/Tables_%26_Triggers/Dostawy_%26_Klienci/Dostawy)) <br /> 
+changes current levels of fuels flow in table ![Zbiorniki](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
 
 After every DML event (without merge) made on table Zbiorniki trigger ![trMar](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw) updates 
 sales prices to current level in table ![CenyPa](Schematy/Ope/Tables_%26_Triggers/Zbiorniki/Zbiorniki_%26_CenySprzPaliw). <br />
