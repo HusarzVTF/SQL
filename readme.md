@@ -10,6 +10,7 @@
 * [Acknowledgements](#Acknowledgements)
 
 ### General info
+* Info about data - any similarity with real data (such as names, surnames, company names etc) is coincidental
 * Database diagram 
 
 ![Database diagram](./Database_Diagram.jpg) 
