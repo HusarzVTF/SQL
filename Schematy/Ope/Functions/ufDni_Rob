@@ -19,14 +19,15 @@ BEGIN
 
 DECLARE @dnirob int =( 
 
-SELECT COUNT(ID) 
+                      SELECT COUNT(ID) 
 
-FROM Czas.Kalendarz 
+                      FROM Czas.Kalendarz 
 
-WHERE
-Data BETWEEN @dat_od and @dat_do  
-AND DATEPART(DW,Data) NOT IN (1,7) 
-AND Dzien_Swiat IS NULL)
+                      WHERE
+                      Data BETWEEN @dat_od and @dat_do  
+                      AND DATEPART(DW,Data) NOT IN (1,7) 
+                      AND Dzien_Swiat IS NULL
+)
 
 return @dnirob;
 
