@@ -18,11 +18,13 @@ AS
 IF EXISTS(
 
 
-SELECT Rabat_Jedn  FROM Ope.Sprzedaz 
+          SELECT Rabat_Jedn  
+          
+          FROM Ope.Sprzedaz 
 
-WHERE (Rabat_Jedn>0 OR Wartosc_Rabatu>0)
+          WHERE (Rabat_Jedn>0 OR Wartosc_Rabatu>0)
 
-AND Typ_rabatu='brak'
+          AND Typ_rabatu='brak'
  
 
 )
