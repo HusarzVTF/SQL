@@ -7,14 +7,14 @@ GO
 DECLARE	@return_value int
 
 EXEC @return_value = Ope.uspWstawFV_Sprzedaz
-		 @IdKlienta = 2,
-		 @IdPracownika = 1,
-		 @IDPaliwa = 1,
-		 @IloscPaliwa = 1000,
-		 @typrabatu = 'automatyczny',
-		 @rabjedn = NULL,
-		 @DataZaplaty = NULL,
-		 @DataAktuZaplaty = NULL
+		     @IdKlienta = 2,
+		     @IdPracownika = 1,
+		     @IDPaliwa = 1,
+		     @IloscPaliwa = 1000,
+		     @typrabatu = 'automatyczny',
+		     @rabjedn = NULL,
+		     @DataZaplaty = NULL,
+		     @DataAktuZaplaty = NULL
 
 SELECT	'Return Value' = @return_value
 
@@ -24,14 +24,14 @@ GO
 DECLARE	@return_value int 
 
 EXEC @return_value = Ope.uspWstawFV_Sprzedaz
-		 @IdKlienta = 5,
-		 @IdPracownika = 1,
-		 @IDPaliwa = 2,
-		 @IloscPaliwa = 1000.57,
-		 @typrabatu = 'automatyczny',
-		 @rabjedn = NULL,
-		 @DataZaplaty = NULL,
-		 @DataAktuZaplaty = NULL
+		     @IdKlienta = 5,
+		     @IdPracownika = 1,
+		     @IDPaliwa = 2,
+		     @IloscPaliwa = 1000.57,
+		     @typrabatu = 'automatyczny',
+		     @rabjedn = NULL,
+		     @DataZaplaty = NULL,
+		     @DataAktuZaplaty = NULL
 
 SELECT	'Return Value' = @return_value
 
@@ -40,14 +40,14 @@ GO
 DECLARE	@return_value int
 
 EXEC @return_value = Ope.uspWstawFV_Sprzedaz
-		 @IdKlienta = 8,
-		 @IdPracownika = 1,
-		 @IDPaliwa = 3,
-		 @IloscPaliwa = 16780,
-		 @typrabatu = 'automatyczny',
-		 @rabjedn = NULL,
-		 @DataZaplaty = NULL,
-		 @DataAktuZaplaty = NULL
+		     @IdKlienta = 8,
+		     @IdPracownika = 1,
+		     @IDPaliwa = 3,
+		     @IloscPaliwa = 16780,
+		     @typrabatu = 'automatyczny',
+		     @rabjedn = NULL,
+		     @DataZaplaty = NULL,
+		     @DataAktuZaplaty = NULL
 
 SELECT	'Return Value' = @return_value
 
