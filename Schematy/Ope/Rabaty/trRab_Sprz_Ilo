@@ -17,10 +17,7 @@ AS
 IF EXISTS(
 
 
-SELECT  Wartosc_Rabatu FROM Ope.Sprzedaz  WHERE Wartosc_Rabatu <> CAST(ROUND(Rabat_Jedn*IloscPaliwa,2) AS real) 
-
- 
-
+          SELECT  Wartosc_Rabatu FROM Ope.Sprzedaz  WHERE Wartosc_Rabatu <> CAST(ROUND(Rabat_Jedn*IloscPaliwa,2) AS real) 
 )
 BEGIN
 PRINT 'Niepoprawna wartosc rabatu. Wartosc rabatu musi sie rownac ilosci sprzedanego paliwa pomnozonej przez rabat jednostkowy.'
