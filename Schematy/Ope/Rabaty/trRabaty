@@ -15,9 +15,11 @@ AS
 
 IF EXISTS(
 
-SELECT  Poziom_Rabatu FROM Ope.Klienci 
+          SELECT  Poziom_Rabatu 
 
-WHERE Poziom_Rabatu NOT IN (SELECT Poziom_Rab FROM Ope.Rabaty)
+          FROM Ope.Klienci 
+
+          WHERE Poziom_Rabatu NOT IN (SELECT Poziom_Rab FROM Ope.Rabaty)
 
 )
 BEGIN
