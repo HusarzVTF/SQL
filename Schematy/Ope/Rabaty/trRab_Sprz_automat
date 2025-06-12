@@ -18,17 +18,17 @@ AS
 IF EXISTS(
 
 
-SELECT Rabat_Jedn  
+          SELECT Rabat_Jedn  
 
-FROM Ope.Sprzedaz AS S 
+          FROM Ope.Sprzedaz AS S 
 
-JOIN Ope.Klienci  AS K ON S.IdKlienta = K.IdKlienta
+          JOIN Ope.Klienci  AS K ON S.IdKlienta = K.IdKlienta
 
-JOIN Ope.Rabaty AS R ON R.ID_Paliwa = S.IDPaliwa AND K.Poziom_Rabatu = R.Poziom_Rab
+          JOIN Ope.Rabaty AS R ON R.ID_Paliwa = S.IDPaliwa AND K.Poziom_Rabatu = R.Poziom_Rab
 
-WHERE R.Jedn_war_Rab <> S.Rabat_Jedn 
+          WHERE R.Jedn_war_Rab <> S.Rabat_Jedn 
 
-AND Typ_rabatu='automatyczny' 
+          AND Typ_rabatu='automatyczny' 
  
 
 )
