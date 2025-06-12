@@ -20,11 +20,10 @@ BEGIN
 DECLARE @mxdatWyp date = (SELECT MAX(Ostatni_Dzien_Miesiaca) FROM Ope.Wyplaty WHERE Do_Wyplaty > 0)
 
 DECLARE @Wypl money = (
-SELECT ROUND(SUM(Do_Wyplaty), 2) 
-FROM Ope.Wyplaty 
-WHERE Do_Wyplaty > 0 
-AND  
-Ostatni_Dzien_Miesiaca BETWEEN DATEADD(MONTH,-2,@mxdatWyp) AND @mxdatWyp) 
+                        SELECT ROUND(SUM(Do_Wyplaty), 2) 
+                        FROM Ope.Wyplaty 
+                        WHERE Do_Wyplaty > 0 
+                        AND Ostatni_Dzien_Miesiaca BETWEEN DATEADD(MONTH,-2,@mxdatWyp) AND @mxdatWyp) 
 /* 2 M wstecz od mxdatwyp ktora jest zawsze EOMONTH czyli 2M + 1M  */
 
 
