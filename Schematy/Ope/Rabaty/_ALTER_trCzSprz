@@ -10,21 +10,16 @@ AS
 
 
 IF EXISTS(
-SELECT 
+          SELECT TerminZaplaty, CzasTransakcji, DataZaplaty
 
-TerminZaplaty,
-CzasTransakcji,
-DataZaplaty
+          FROM Ope.Sprzedaz AS S
 
-FROM Ope.Sprzedaz AS S
+          JOIN Ope.Klienci AS K ON K.IdKlienta = S.IdKlienta  
 
-JOIN Ope.Klienci AS K
-ON K.IdKlienta = S.IdKlienta  
-
-WHERE (DataZaplaty < CAST(CzasTransakcji AS date) 
-OR TerminZaplaty < CAST(CzasTransakcji AS date)) 
-AND K.DnidoZaplaty > 0
-AND S.PozycjaNaFV > 0
+          WHERE (DataZaplaty < CAST(CzasTransakcji AS date) 
+          OR TerminZaplaty < CAST(CzasTransakcji AS date)) 
+          AND K.DnidoZaplaty > 0
+          AND S.PozycjaNaFV > 0
 
 )
 BEGIN
