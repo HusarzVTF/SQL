@@ -47,9 +47,11 @@ CREATE TRIGGER Lokacje.trPow ON Lokacje.Powiat
 AFTER INSERT, UPDATE 
 AS
 IF EXISTS(
-SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu < (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
-INTERSECT
-SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu = (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+          SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu < (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
+          
+          INTERSECT
+
+          SELECT IdWOJ, Powiat FROM Lokacje.Powiat WHERE IdPowiatu = (SELECT MAX(IdPowiatu) FROM Lokacje.Powiat)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Powiat, operacja została cofnięta.'
@@ -96,11 +98,12 @@ AFTER INSERT, UPDATE
 
 AS 
 
-IF EXISTS
-(
-SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy = (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
-INTERSECT
-SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
+IF EXISTS(
+          SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy = (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
+          
+          INTERSECT
+
+          SELECT IdPowiatu,Gmina FROM Lokacje.Gmina WHERE IdGminy NOT IN (SELECT MAX(IdGminy) FROM Lokacje.Gmina)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Gmina, operacja została cofnięta.'
@@ -148,11 +151,12 @@ AFTER INSERT, UPDATE
 
 AS 
 
-IF EXISTS
-(
-SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej = (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc) 
-INTERSECT
-SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc)
+IF EXISTS(
+          SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej = (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc) 
+
+          INTERSECT
+          
+          SELECT IDGminy,Miejscowosc FROM Lokacje.Miejscowosc WHERE IDMiej NOT IN (SELECT MAX(IDMiej ) FROM Lokacje.Miejscowosc)
 )
 BEGIN
 PRINT 'Próbowano wstawić duplikat do tabeli Miejscowosc, operacja została cofnięta.'
