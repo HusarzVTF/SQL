@@ -16,10 +16,10 @@ AS
 BEGIN
 
 DECLARE @Jedn_war_Rab float = (
-SELECT Jedn_war_Rab
-FROM Ope.Rabaty
-WHERE ID_Paliwa = @idpaliwa AND 
-Poziom_Rab = (SELECT Poziom_Rabatu FROM Ope.Klienci WHERE IdKlienta = @idklienta))
+                                SELECT Jedn_war_Rab
+                                FROM Ope.Rabaty
+                                WHERE ID_Paliwa = @idpaliwa AND Poziom_Rab = (SELECT Poziom_Rabatu FROM Ope.Klienci WHERE IdKlienta = @idklienta)
+)
 
 RETURN @Jedn_war_Rab;
 
