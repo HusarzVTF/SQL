@@ -33,9 +33,9 @@ HAVING YEAR(CzasTransakcji) < @rok
 DECLARE @maxRok int = (SELECT MAX(Rok) FROM @cena) --szukamy ceny z roku najwczesniejszego wzgledem podanego np. jeśli podnay byl 2022 to wczesniejszy jemu jest 2021 przed 2020 
 
 DECLARE @PopCena money = (
-SELECT C.Cena_Sr_Zakupu
-FROM @cena AS C
-WHERE C.Rok = @maxRok
+                          SELECT C.Cena_Sr_Zakupu
+                          FROM @cena AS C
+                          WHERE C.Rok = @maxRok
 )
 
 return @PopCena
