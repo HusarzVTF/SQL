@@ -70,11 +70,12 @@ GROUP BY RodzajPaliwa
 
 
 IF NOT EXISTS (
-SELECT M.RodzajPaliwa   
+               SELECT M.RodzajPaliwa   
 
-FROM #MIN AS M
-LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
-WHERE MAXIMUM <> MINIMUM)  
+               FROM #MIN AS M
+               LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
+               
+               WHERE MAXIMUM <> MINIMUM)  
 
 /*Jeżeli nie istnieje rodzaj paliwa dla którego max jest różny od min to mamy min=max i nie ma sezonowości*/
 
@@ -85,12 +86,12 @@ PRINT'Jednakowe wyniki w każdym miesiącu. Nie ma sezonowosci'
 END
 
 IF  EXISTS (
-SELECT M.RodzajPaliwa 
+            SELECT M.RodzajPaliwa 
 
-FROM #MIN AS M
-LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
+            FROM #MIN AS M
+            LEFT JOIN #MAX AS MX ON MX.RodzajPaliwa = M.RodzajPaliwa
 
-WHERE MAXIMUM <> MINIMUM) 
+            WHERE MAXIMUM <> MINIMUM) 
 
 /*Jeżeli istnieje rodzaj paliwa dla którego min jest rozny od max */
 
