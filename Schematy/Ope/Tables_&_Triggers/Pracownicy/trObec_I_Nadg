@@ -15,10 +15,10 @@ CREATE TRIGGER Ope.trObec_I_Nadg ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
 AS
 
 IF EXISTS(
-SELECT ID 
-FROM Ope.Lista_Obecnosci 
-WHERE (Przepr_H > 0 OR Przep_Nadgod_Dod_100_Proc > 0 OR Przep_Nadgod_Dod_50_Proc > 0)
-AND (Obecnosc IN('Urlop.Bezp','Uspr.Nieob','Nieus.Nieob'))
+          SELECT ID 
+          FROM Ope.Lista_Obecnosci 
+          WHERE (Przepr_H > 0 OR Przep_Nadgod_Dod_100_Proc > 0 OR Przep_Nadgod_Dod_50_Proc > 0)
+          AND (Obecnosc IN('Urlop.Bezp','Uspr.Nieob','Nieus.Nieob'))
 )
 
 
