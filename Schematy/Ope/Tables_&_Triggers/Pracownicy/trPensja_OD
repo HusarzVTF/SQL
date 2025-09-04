@@ -15,21 +15,21 @@ AS
 
 IF EXISTS(
 
-SELECT IDPracownika
+          SELECT IDPracownika
 
-FROM Ope.Pracownicy
+          FROM Ope.Pracownicy
 
-WHERE 
+          WHERE 
 
-Pensja_OD IS NULL
+          Pensja_OD IS NULL
 
-OR
+          OR
 
-Pensja_OD < data_Zatrudnienia OR Pensja_OD > data_Zwolnienia
+          Pensja_OD < data_Zatrudnienia OR Pensja_OD > data_Zwolnienia
 
-OR
+          OR
 
-Pensja_OD NOT IN (SELECT Data FROM Czas.Kalendarz)
+          Pensja_OD NOT IN (SELECT Data FROM Czas.Kalendarz)
 )
 
 BEGIN
