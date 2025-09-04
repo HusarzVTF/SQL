@@ -14,8 +14,8 @@ CREATE  TRIGGER Ope.trCz_kor ON Ope.Dostawy AFTER INSERT, UPDATE
 AS
 
 IF EXISTS(
-SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV < 0 AND 
-(DataZaplaty > CAST(DataAktuDatZap AS date) ))
+          SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV < 0 AND 
+          (DataZaplaty > CAST(DataAktuDatZap AS date) ))
 
 BEGIN
 PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji. Dane nie zostaly wstawione lub zmienione w tabeli'
