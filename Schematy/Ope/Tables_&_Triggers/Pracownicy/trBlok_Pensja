@@ -15,16 +15,16 @@ AS
 
 IF EXISTS(
 
-SELECT  ID_Prac
+            SELECT  ID_Prac
 
-FROM Ope.Lista_Obecnosci AS L
-JOIN Ope.Pracownicy AS P
-ON L.ID_Prac = P.IDPracownika
+            FROM Ope.Lista_Obecnosci AS L
+            JOIN Ope.Pracownicy AS P
+            ON L.ID_Prac = P.IDPracownika
 
-WHERE
-L.Data >= Pensja_OD
-AND
-L.Pensja != P.Pensja
+            WHERE
+            L.Data >= Pensja_OD
+            AND
+            L.Pensja != P.Pensja
 
 )
 BEGIN
