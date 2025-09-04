@@ -12,11 +12,11 @@ CREATE TRIGGER trGodzinyPracy ON Ope.Lista_Obecnosci AFTER UPDATE, INSERT
 
 AS
 IF EXISTS (
-SELECT ID 
+            SELECT ID 
 
-FROM Ope.Lista_Obecnosci 
+            FROM Ope.Lista_Obecnosci 
 
-ISNULL(Przep_Nadgod_Dod_50_Proc,0)  +  ISNULL(Przep_Nadgod_Dod_100_Proc,0) + ISNULL(Przepr_H,0) > 24)
+            ISNULL(Przep_Nadgod_Dod_50_Proc,0)  +  ISNULL(Przep_Nadgod_Dod_100_Proc,0) + ISNULL(Przepr_H,0) > 24)
 
 BEGIN
 PRINT 'Doba ma dwadziescia cztery godziny wiec nie mozna pracowac dluzej.';
