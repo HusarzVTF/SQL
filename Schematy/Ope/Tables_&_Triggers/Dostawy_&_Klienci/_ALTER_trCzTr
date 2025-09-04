@@ -9,8 +9,8 @@ ALTER TRIGGER Ope.trCzTr ON Ope.Dostawy AFTER INSERT, UPDATE
 AS
 
 IF EXISTS(
-SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV > 0 AND 
-(DataZaplaty < CAST(CzasTransakcji AS date) OR DataZaplaty > CAST(DataAktuDatZap AS date) OR TerminZaplaty < CAST(CzasTransakcji AS date) )
+          SELECT NRFV FROM Ope.Dostawy WHERE PozycjaNAFV > 0 AND 
+          (DataZaplaty < CAST(CzasTransakcji AS date) OR DataZaplaty > CAST(DataAktuDatZap AS date) OR TerminZaplaty < CAST(CzasTransakcji AS date) )
 )
 
 BEGIN
