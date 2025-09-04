@@ -14,14 +14,14 @@ AS
 
 
 IF EXISTS(
-SELECT IDPracownika
+          SELECT IDPracownika
 
-FROM Ope.Pracownicy AS P
-JOIN Ope.Lista_Obecnosci AS L
-ON P.IDPracownika = L.ID_Prac
+          FROM Ope.Pracownicy AS P
+          JOIN Ope.Lista_Obecnosci AS L
+          ON P.IDPracownika = L.ID_Prac
 
-WHERE data_Zwolnienia IS NOT NULL
-AND Data > data_Zwolnienia
+          WHERE data_Zwolnienia IS NOT NULL
+          AND Data > data_Zwolnienia
 )
 
 BEGIN 
@@ -31,14 +31,14 @@ RETURN
 END -- to kasuje daty po dacie zwolnienia
 
 IF EXISTS(
-SELECT IDPracownika
+          SELECT IDPracownika
+   
+          FROM Ope.Pracownicy AS P
+          JOIN Ope.Lista_Obecnosci AS L
+          ON P.IDPracownika = L.ID_Prac
 
-FROM Ope.Pracownicy AS P
-JOIN Ope.Lista_Obecnosci AS L
-ON P.IDPracownika = L.ID_Prac
-
-WHERE data_Zwolnienia IS  NULL
-AND Data < data_Zatrudnienia
+          WHERE data_Zwolnienia IS  NULL
+          AND Data < data_Zatrudnienia
 )
 
 BEGIN 
@@ -52,14 +52,14 @@ DECLARE @mxdat_kal date = (SELECT MAX(Data) FROM Czas.Kalendarz)
 
 IF EXISTS(
 
-SELECT P.IDPracownika, K.Data
+          SELECT P.IDPracownika, K.Data
 
-FROM Czas.Kalendarz AS K
-CROSS JOIN Ope.Pracownicy AS P
+          FROM Czas.Kalendarz AS K
+          CROSS JOIN Ope.Pracownicy AS P
 
-WHERE 
+          WHERE 
 
-K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @mxdat_kal)  
+          K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @mxdat_kal)  
  
 
 EXCEPT
