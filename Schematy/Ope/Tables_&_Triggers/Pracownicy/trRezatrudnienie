@@ -15,23 +15,23 @@ AS
 
 IF EXISTS (
 
-SELECT IDPracownika, K.Data 
+            SELECT IDPracownika, K.Data 
 
-FROM Ope.Pracownicy AS P
-CROSS JOIN Czas.Kalendarz AS K
+            FROM Ope.Pracownicy AS P
+            CROSS JOIN Czas.Kalendarz AS K
 
-WHERE
-P.data_Zwolnienia IS NULL
-AND
-Pensja_OD = data_Zatrudnienia
-AND
-K.Data >= data_Zatrudnienia
+            WHERE
+            P.data_Zwolnienia IS NULL
+            AND
+            Pensja_OD = data_Zatrudnienia
+            AND
+            K.Data >= data_Zatrudnienia
 
 
-EXCEPT
+            EXCEPT
 
-SELECT ID_Prac, Data 
-FROM Ope.Lista_Obecnosci
+            SELECT ID_Prac, Data 
+            FROM Ope.Lista_Obecnosci
 
 )
 
@@ -60,24 +60,24 @@ FROM Ope.Lista_Obecnosci
 END
 
 IF EXISTS (
-SELECT IDPracownika, YEAR(Data) , MONTH(Data) 
+            SELECT IDPracownika, YEAR(Data) , MONTH(Data) 
 
-FROM Ope.Pracownicy AS P
-CROSS JOIN Czas.Kalendarz AS K
+            FROM Ope.Pracownicy AS P
+            CROSS JOIN Czas.Kalendarz AS K
 
-WHERE
-P.data_Zwolnienia IS NULL
-AND
-K.Data >= data_Zatrudnienia
-AND
-Pensja_OD = data_Zatrudnienia
+            WHERE
+            P.data_Zwolnienia IS NULL
+            AND
+            K.Data >= data_Zatrudnienia
+            AND
+            Pensja_OD = data_Zatrudnienia
 
-GROUP BY IDPracownika,YEAR(Data), MONTH(Data)
+            GROUP BY IDPracownika,YEAR(Data), MONTH(Data)
 
-EXCEPT
+            EXCEPT
 
-SELECT ID_Prac, Rok, Miesiac
-FROM Ope.Wyplaty
+            SELECT ID_Prac, Rok, Miesiac
+            FROM Ope.Wyplaty
 
 )
 
