@@ -23,9 +23,9 @@ CREATE TRIGGER Ope.trDatZwol ON Stacja_Paliw.Ope.Pracownicy AFTER INSERT, UPDATE
 AS
 
 IF EXISTS(
-SELECT IDPracownika
-FROM Ope.Pracownicy WHERE 
-data_Zwolnienia < data_Zatrudnienia )
+          SELECT IDPracownika
+          FROM Ope.Pracownicy 
+          WHERE data_Zwolnienia < data_Zatrudnienia )
 BEGIN
 PRINT 'Data zwolnienia nie moze byc wczesniejsza niz data zatrudnienia.'
 ROLLBACK TRANSACTION;
@@ -45,11 +45,12 @@ CREATE TRIGGER Ope.trStatPrac ON Stacja_Paliw.Ope.Pracownicy AFTER INSERT, UPDAT
 AS
 
 IF EXISTS(
-SELECT IDPracownika 
-FROM Ope.Pracownicy WHERE 
-status_pracownika = 'zwolniony' AND data_Zwolnienia IS  NULL 
-OR (status_pracownika = 'pracuje' AND data_Zwolnienia IS NOT NULL)
-OR (data_Zatrudnienia IS NULL)
+          SELECT IDPracownika 
+          FROM Ope.Pracownicy 
+          WHERE 
+          status_pracownika = 'zwolniony' AND data_Zwolnienia IS  NULL 
+          OR (status_pracownika = 'pracuje' AND data_Zwolnienia IS NOT NULL)
+          OR (data_Zatrudnienia IS NULL)
 )
 BEGIN
 PRINT'Bledny status pracownika wzgledem dat zatrudnienia lub/i zwolenienia tudziez brak daty zatrudnienia.'
