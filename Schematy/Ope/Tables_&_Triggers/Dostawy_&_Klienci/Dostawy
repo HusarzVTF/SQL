@@ -101,7 +101,8 @@ AS
 
 IF EXISTS(
 SELECT TerminZaplaty, CzasTransakcji, DataZaplaty 
-FROM Ope.Dostawy WHERE DataZaplaty < CAST(CzasTransakcji AS date) 
+FROM Ope.Dostawy 
+WHERE DataZaplaty < CAST(CzasTransakcji AS date) 
 OR TerminZaplaty < CAST(CzasTransakcji AS date)
 )
 BEGIN
@@ -172,10 +173,10 @@ CREATE TRIGGER Ope.trSprDostawy ON Ope.Dostawy
 AFTER INSERT, UPDATE
 AS 
 IF EXISTS(
-SELECT*FROM Ope.Dostawy
-WHERE EXISTS
-(SELECT * FROM Ope.Dostawy 
-WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0)))
+          SELECT*FROM Ope.Dostawy
+          WHERE EXISTS
+                      (SELECT * FROM Ope.Dostawy 
+                       WHERE (KwotaNetto > KwotaBrutto AND KwotaNetto > 0) OR (KwotaNetto < KwotaBrutto AND KwotaNetto < 0)))
 BEGIN 
 PRINT 'Wstawiono rekord z  bledna kwota netto wobec kwoty brutto, rekord zostal  usuniety z tabeli Dostawy'
 ROLLBACK TRANSACTION;
@@ -201,9 +202,9 @@ AS
 IF EXISTS(
 SELECT * FROM Ope.Dostawy 
 WHERE EXISTS( 
-SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
-FROM Ope.Dostawy 
-WHERE  (PozycjaNAFV > 0 AND (IloscPaliwa < 0 OR KwotaNetto < 0 OR KwotaBrutto < 0)) OR (PozycjaNAFV < 0 AND (IloscPaliwa > 0 OR KwotaNetto > 0 OR KwotaBrutto > 0))))
+              SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
+              FROM Ope.Dostawy 
+              WHERE  (PozycjaNAFV > 0 AND (IloscPaliwa < 0 OR KwotaNetto < 0 OR KwotaBrutto < 0)) OR (PozycjaNAFV < 0 AND (IloscPaliwa > 0 OR KwotaNetto > 0 OR KwotaBrutto > 0))))
 BEGIN
 PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -256,13 +257,13 @@ INTO #check
 FROM Ope.Dostawy WHERE PozycjaNAFV < 0 AND NRFV = @FV 
 
 IF  EXISTS(
-SELECT D.NRFV,D.PozycjaNAFV,D.IDPaliw,D.ID_Dat,D.IdDostawcy,D.IloscPaliwa,D.KwotaNetto,D.KwotaBrutto,
-D.TerminZaplaty,D.Podatek,D.TypPlatnosci,D.DataZaplaty,D.DataAktuDatZap
-FROM Ope.Dostawy AS D,#check AS C WHERE C.NRFV = D.NRFV AND C.PozycjaNAFV*-1 = D.PozycjaNAFV 
-EXCEPT 
-SELECT C.NRFV, C.PozycjaNAFV*-1,C.IDPaliw,C.ID_Dat,C.IdDostawcy, C.IloscPaliwa*-1,C.KwotaNetto*-1,
-C.KwotaBrutto*-1,C.TerminZaplaty,C.Podatek*-1,C.TypPlatnosci,C.DataZaplaty,C.DataAktuDatZap 
-FROM #check AS C INNER JOIN Ope.Dostawy AS D ON C.NRFV = D.NRFV AND C.PozycjaNAFV*-1 = D.PozycjaNAFV)
+            SELECT D.NRFV,D.PozycjaNAFV,D.IDPaliw,D.ID_Dat,D.IdDostawcy,D.IloscPaliwa,D.KwotaNetto,D.KwotaBrutto,
+            D.TerminZaplaty,D.Podatek,D.TypPlatnosci,D.DataZaplaty,D.DataAktuDatZap
+            FROM Ope.Dostawy AS D,#check AS C WHERE C.NRFV = D.NRFV AND C.PozycjaNAFV*-1 = D.PozycjaNAFV 
+            EXCEPT 
+            SELECT C.NRFV, C.PozycjaNAFV*-1,C.IDPaliw,C.ID_Dat,C.IdDostawcy, C.IloscPaliwa*-1,C.KwotaNetto*-1,
+            C.KwotaBrutto*-1,C.TerminZaplaty,C.Podatek*-1,C.TypPlatnosci,C.DataZaplaty,C.DataAktuDatZap 
+            FROM #check AS C INNER JOIN Ope.Dostawy AS D ON C.NRFV = D.NRFV AND C.PozycjaNAFV*-1 = D.PozycjaNAFV)
 BEGIN
 PRINT 'Niezgodnosc w danych pomiedzy FV korekta i poprawna. Operacja zostala cofnieta';
 ROLLBACK TRANSACTION;
@@ -430,21 +431,21 @@ IF @licz > 1 AND @Poz > 0
 
 BEGIN
 IF EXISTS (
-SELECT NRFV,ID_Dat, IdDostawcy, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-TypPlatnosci, DataAktuDatZap,CzasTransakcji 
+            SELECT NRFV,ID_Dat, IdDostawcy, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+            TypPlatnosci, DataAktuDatZap,CzasTransakcji 
 
-FROM Ope.Dostawy 
+            FROM Ope.Dostawy 
 
-WHERE IDFVZak < (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
-AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV > 0
+            WHERE IDFVZak < (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+            AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV > 0
 
-EXCEPT
+            EXCEPT
 
-SELECT NRFV,ID_Dat, IdDostawcy, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-TypPlatnosci, DataAktuDatZap,CzasTransakcji 
-FROM Ope.Dostawy 
-WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
-AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV > 0)
+            SELECT NRFV,ID_Dat, IdDostawcy, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+            TypPlatnosci, DataAktuDatZap,CzasTransakcji 
+            FROM Ope.Dostawy 
+            WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+            AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV > 0)
 
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
@@ -458,21 +459,22 @@ END;
 IF @licz > 1 AND @Poz < 0
 BEGIN
 IF EXISTS (
-SELECT NRFV,ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuDatZap,CzasTransakcji 
+            SELECT NRFV,ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+            DataAktuDatZap,CzasTransakcji 
 
-FROM Ope.Dostawy 
+            FROM Ope.Dostawy 
 
-WHERE IDFVZak < (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
-AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV < 0
+            WHERE IDFVZak < (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+            AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV < 0
 
-EXCEPT
+            EXCEPT
 
-SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuDatZap,CzasTransakcji 
+            SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
+            DataAktuDatZap,CzasTransakcji 
 
-FROM Ope.Dostawy WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
-AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV < 0)
+            FROM Ope.Dostawy 
+            WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+            AND IdDostawcy = @iddos AND CzasTransakcji = @czas AND NRFV = @FV AND PozycjaNAFV < 0)
 
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
@@ -494,9 +496,9 @@ AND NRFV = (SELECT NRFV FROM Ope.Dostawy WHERE IDFVZak = (SELECT MAX(IDFVZak) FR
 AND IdDostawcy = (SELECT IdDostawcy FROM Ope.Dostawy WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy))
 
 IF NOT EXISTS (
-SELECT*FROM #CzasChk 
-INTERSECT
-SELECT CzasTransakcji FROM Ope.Dostawy WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
+                SELECT*FROM #CzasChk 
+                INTERSECT
+                SELECT CzasTransakcji FROM Ope.Dostawy WHERE IDFVZak = (SELECT MAX(IDFVZak) FROM Ope.Dostawy)
 )
 BEGIN
 PRINT 'Kolejne pozycje tej samej faktury na tym samym dostawcy musza byc wstawione za jednym razem'
