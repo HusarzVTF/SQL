@@ -15,16 +15,16 @@ CREATE TRIGGER Ope.trWyplaty_Daty ON Ope.Wyplaty AFTER INSERT, UPDATE, DELETE
 AS
 
 IF EXISTS(
-SELECT IDPracownika
+          SELECT IDPracownika
 
-FROM Ope.Pracownicy AS P
-JOIN Ope.Wyplaty AS W
-ON P.IDPracownika = W.ID_Prac
+          FROM Ope.Pracownicy AS P
+          JOIN Ope.Wyplaty AS W
+          ON P.IDPracownika = W.ID_Prac
 
-WHERE 
-data_Zwolnienia IS NOT NULL
-AND 
-Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+          WHERE 
+         data_Zwolnienia IS NOT NULL
+         AND 
+         Pierwszy_Dzien_Miesiaca > data_Zwolnienia
 )
 
 BEGIN 
@@ -34,16 +34,16 @@ RETURN
 END
 
 IF EXISTS(
-SELECT IDPracownika
+          SELECT IDPracownika
 
-FROM Ope.Pracownicy AS P
-JOIN Ope.Wyplaty AS W
-ON P.IDPracownika = W.ID_Prac
+          FROM Ope.Pracownicy AS P
+          JOIN Ope.Wyplaty AS W
+          ON P.IDPracownika = W.ID_Prac
 
-WHERE 
-data_Zwolnienia IS  NULL
-AND 
-Ostatni_Dzien_Miesiaca < data_Zatrudnienia
+          WHERE 
+          data_Zwolnienia IS  NULL
+          AND 
+          Ostatni_Dzien_Miesiaca < data_Zatrudnienia
 )
 
 BEGIN 
@@ -58,21 +58,21 @@ DECLARE @maxdat_kal date = (SELECT MAX(Data) FROM Czas.Kalendarz)
 
 IF EXISTS(
 
-SELECT P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
+          SELECT P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
 
-FROM Czas.Kalendarz AS K
-CROSS JOIN Ope.Pracownicy AS P
+          FROM Czas.Kalendarz AS K
+          CROSS JOIN Ope.Pracownicy AS P
 
-WHERE 
-K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @maxdat_kal)
+          WHERE 
+          K.Data BETWEEN data_Zatrudnienia AND COALESCE(data_Zwolnienia, @maxdat_kal)
 
-GROUP BY   P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
+          GROUP BY   P.IDPracownika, YEAR(K.Data), MONTH(K.Data)
  
 
-EXCEPT
+          EXCEPT
 
-SELECT ID_Prac, Rok, Miesiac
-FROM Ope.Wyplaty
+          SELECT ID_Prac, Rok, Miesiac
+          FROM Ope.Wyplaty
 
 ) 
 BEGIN
