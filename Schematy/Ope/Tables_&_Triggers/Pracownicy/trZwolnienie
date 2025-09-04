@@ -15,13 +15,13 @@ CREATE TRIGGER trZwolnienie ON Ope.Pracownicy AFTER UPDATE
 AS
 
 IF EXISTS(
-SELECT IDPracownika
-FROM Ope.Pracownicy AS P 
-JOIN Ope.Lista_Obecnosci AS L 
-ON P.IDPracownika = L.ID_Prac
-WHERE data_Zwolnienia IS NOT NULL
-AND 
-Data > data_Zwolnienia
+            SELECT IDPracownika
+            FROM Ope.Pracownicy AS P 
+            JOIN Ope.Lista_Obecnosci AS L 
+            ON P.IDPracownika = L.ID_Prac
+            WHERE data_Zwolnienia IS NOT NULL
+            AND 
+            Data > data_Zwolnienia
 ) 
 
 
@@ -51,13 +51,13 @@ END
 
 
 IF EXISTS(
-SELECT IDPracownika
-FROM Ope.Pracownicy AS P 
-JOIN Ope.Wyplaty AS W 
-ON P.IDPracownika = W.ID_Prac
-WHERE data_Zwolnienia IS NOT NULL
-AND 
-Pierwszy_Dzien_Miesiaca > data_Zwolnienia
+          SELECT IDPracownika
+          FROM Ope.Pracownicy AS P 
+          JOIN Ope.Wyplaty AS W 
+          ON P.IDPracownika = W.ID_Prac
+          WHERE data_Zwolnienia IS NOT NULL
+          AND 
+          Pierwszy_Dzien_Miesiaca > data_Zwolnienia
 )
 
 BEGIN
