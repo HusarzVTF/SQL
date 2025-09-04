@@ -17,17 +17,17 @@ AS
 
 IF EXISTS(
 
-SELECT IDPracownika
+          SELECT IDPracownika
 
-FROM Ope.Pracownicy
+          FROM Ope.Pracownicy
 
-WHERE
+          WHERE
 
-Pensja_OD IS NULL
+          Pensja_OD IS NULL
 
-OR
+          OR
 
-Pensja_OD != data_Zatrudnienia 
+          Pensja_OD != data_Zatrudnienia 
 )
 
 BEGIN
