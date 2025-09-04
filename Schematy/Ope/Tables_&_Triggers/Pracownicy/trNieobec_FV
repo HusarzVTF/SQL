@@ -15,25 +15,25 @@ CREATE TRIGGER Ope.trNieobec_FV ON Ope.Lista_Obecnosci AFTER INSERT, UPDATE
 AS
 
 IF EXISTS(
-SELECT ID_Prac, Data
+          SELECT ID_Prac, Data
 
-FROM Ope.Lista_Obecnosci 
+          FROM Ope.Lista_Obecnosci 
 
-WHERE (ISNULL(Przepr_H,0) + ISNULL(Przep_Nadgod_Dod_100_Proc,0) + ISNULL(Przep_Nadgod_Dod_50_Proc,0) = 0)
-OR
-Obecnosc IN ( 'Uspr.Nieob', 'Nieus.Nieob', 'Urlop.Bezp' )
+          WHERE (ISNULL(Przepr_H,0) + ISNULL(Przep_Nadgod_Dod_100_Proc,0) + ISNULL(Przep_Nadgod_Dod_50_Proc,0) = 0)
+          OR
+          Obecnosc IN ( 'Uspr.Nieob', 'Nieus.Nieob', 'Urlop.Bezp' )
 
-INTERSECT
+          INTERSECT
 
-SELECT IdPracownika, CAST( CzasTransakcji AS date)
+          SELECT IdPracownika, CAST( CzasTransakcji AS date)
 
-FROM Ope.Sprzedaz
+          FROM Ope.Sprzedaz
 
-UNION
+          UNION
 
-SELECT IdPracownika, CAST( CzasTransakcji AS date)
+          SELECT IdPracownika, CAST( CzasTransakcji AS date)
 
-FROM Ope.Dostawy
+          FROM Ope.Dostawy
 )
 
 BEGIN 
