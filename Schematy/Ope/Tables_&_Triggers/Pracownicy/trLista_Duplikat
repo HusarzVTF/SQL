@@ -16,10 +16,10 @@ AS
 
 IF EXISTS(
 
-SELECT ID_Prac, Data 
-FROM Ope.Lista_Obecnosci 
-GROUP BY ID_Prac, Data
-HAVING COUNT(ID) > 1
+            SELECT ID_Prac, Data 
+            FROM Ope.Lista_Obecnosci 
+            GROUP BY ID_Prac, Data
+            HAVING COUNT(ID) > 1
 
 )
 
