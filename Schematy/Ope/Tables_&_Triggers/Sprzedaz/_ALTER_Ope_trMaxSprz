@@ -10,9 +10,9 @@ AS
 
 IF EXISTS (
 
-SELECT IDPaliwa FROM Ope.Zbiorniki  
-
-WHERE StanZbiornika < 0
+            SELECT IDPaliwa 
+            FROM Ope.Zbiorniki  
+            WHERE StanZbiornika < 0
 
 )
 BEGIN
