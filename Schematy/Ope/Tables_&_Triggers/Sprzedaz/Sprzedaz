@@ -74,10 +74,10 @@ CREATE TRIGGER Ope.trCzSprz ON Ope.Sprzedaz AFTER INSERT,UPDATE
 AS
 
 IF EXISTS(
-SELECT TerminZaplaty,CzasTransakcji,DataZaplaty 
-FROM Ope.Sprzedaz 
-WHERE DataZaplaty < CAST(CzasTransakcji AS date) 
-OR TerminZaplaty < CAST(CzasTransakcji AS date)
+          SELECT TerminZaplaty,CzasTransakcji,DataZaplaty 
+          FROM Ope.Sprzedaz 
+          WHERE DataZaplaty < CAST(CzasTransakcji AS date) 
+          OR TerminZaplaty < CAST(CzasTransakcji AS date)
 )
 BEGIN
 PRINT'Niepoprawny termin platnosci lub/i data zaplaty wzgledem momentu zawarcia transakcji.
@@ -100,12 +100,13 @@ AFTER INSERT,UPDATE
 AS
 
 IF EXISTS(
-SELECT*FROM Ope.Sprzedaz 
-WHERE
-EXISTS( SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
-FROM Ope.Sprzedaz 
-WHERE  ( PozycjaNAFV > 0 AND IloscPaliwa < 0 )
-OR (PozycjaNAFV < 0 AND IloscPaliwa > 0 )))
+          SELECT*FROM Ope.Sprzedaz 
+          WHERE
+          EXISTS( 
+                 SELECT NRFV, PozycjaNAFV, IloscPaliwa, KwotaNetto, KwotaBrutto
+                 FROM Ope.Sprzedaz 
+                 WHERE  ( PozycjaNAFV > 0 AND IloscPaliwa < 0 )
+                 OR (PozycjaNAFV < 0 AND IloscPaliwa > 0 )))
 BEGIN
 PRINT 'Faktura moze byc albo korekta albo poprawna wystapil blad w polach. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -133,16 +134,17 @@ AND IdKlienta = @idkl AND Czastransakcji = @czasSp)
 DECLARE @sumaSp real = (SELECT SUM(IloscPaliwa) FROM Ope.Sprzedaz WHERE NRFV = @FVSp AND IdKlienta = @idkl)
 
 
-IF @liczSp>1 AND @PozSp>0
+IF @liczSp > 1 AND @PozSp > 0
 BEGIN
-IF EXISTS (SELECT NRFV, ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty, CzasTransakcji FROM Ope.Sprzedaz 
-WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV>0
-EXCEPT
-SELECT NRFV,ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty,CzasTransakcji FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0)
+IF EXISTS (
+           SELECT NRFV, ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,DataAktuZaplaty, CzasTransakcji 
+           FROM Ope.Sprzedaz 
+           WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+           AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0
+           EXCEPT
+           SELECT NRFV,ID_Dat, IdKlienta, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,DataAktuZaplaty,CzasTransakcji 
+           FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+           AND IdKlienta = @idkl AND CzasTransakcji = @czasSp AND NRFV = @FVSp AND PozycjaNAFV > 0)
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -155,19 +157,18 @@ END;
 
 
 
-IF @liczSp>1 AND @PozSp<0
+IF @liczSp > 1 AND @PozSp < 0
 BEGIN
-IF EXISTS (SELECT NRFV, ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty 
-FROM Ope.Sprzedaz 
-WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl  AND NRFV = @FVSp AND PozycjaNAFV<0
-EXCEPT
-SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty,
-DataAktuZaplaty 
-FROM Ope.Sprzedaz 
-WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
-AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV < 0)
+IF EXISTS (
+           SELECT NRFV, ID_Dat, IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty, DataAktuZaplaty 
+           FROM Ope.Sprzedaz 
+           WHERE ID < (SELECT MAX(ID) FROM Ope.Sprzedaz)
+           AND IdKlienta = @idkl  AND NRFV = @FVSp AND PozycjaNAFV<0
+           EXCEPT
+           SELECT NRFV,ID_Dat,  IdPracownika, TerminZaplaty, TypPlatnosci, DataZaplaty, DataAktuZaplaty 
+           FROM Ope.Sprzedaz 
+           WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+           AND IdKlienta = @idkl AND NRFV = @FVSp AND PozycjaNAFV < 0)
 BEGIN
 PRINT 'Blad w danych na Fv wzgledem wczesniejszej pozycji. Operacja zostala cofnieta'
 ROLLBACK TRANSACTION;
@@ -196,9 +197,9 @@ AND IdKlienta = (SELECT IdKlienta FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) F
 
 
 IF NOT EXISTS (
-SELECT*FROM #CzasChkSp 
-INTERSECT
-SELECT CzasTransakcji FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
+               SELECT*FROM #CzasChkSp 
+               INTERSECT
+               SELECT CzasTransakcji FROM Ope.Sprzedaz WHERE ID = (SELECT MAX(ID) FROM Ope.Sprzedaz)
 )
 BEGIN
 PRINT 'Kolejne pozycje tej samej faktury na tym samym dostawcy musza byc wstawione za jednym razem'
@@ -373,7 +374,7 @@ DROP TRIGGER Ope.trChIDPaKorSprz;
 GO
 
 CREATE TRIGGER Ope.trChIDPaKorSprz ON Ope.Sprzedaz
-AFTER INSERT,UPDATE
+AFTER INSERT, UPDATE
 AS
 
 
@@ -592,8 +593,7 @@ BEGIN
 
 
 
-DECLARE @countLowMax smallint = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE   NRFV = @FV   AND IdKlienta = @idkl AND
-CzasTransakcji = @czasTran)
+DECLARE @countLowMax smallint = (SELECT COUNT(NRFV) FROM Ope.Sprzedaz WHERE   NRFV = @FV   AND IdKlienta = @idkl AND CzasTransakcji = @czasTran)
 
 IF @countLowMax IS NULL OR @countLowMax = 0
 
