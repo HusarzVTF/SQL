@@ -15,11 +15,12 @@ AS
 
 IF EXISTS(
 
-SELECT ID FROM Ope.Sprzedaz AS S
+           SELECT ID 
+           
+           FROM Ope.Sprzedaz AS S
+           JOIN Ope.Zbiorniki AS Z ON S.IDPaliwa = Z.IDPaliwa 
 
-JOIN Ope.Zbiorniki AS Z ON S.IDPaliwa = Z.IDPaliwa 
-
-WHERE IloscPaliwa > StanZbiornika
+           WHERE IloscPaliwa > StanZbiornika
  )
 BEGIN
 PRINT'Proba wystawienia fv sprzedazy na wieksza ilosc niz to mozliwe, bo nie ma takiej ilosci paliwa w zbiorniku.'
