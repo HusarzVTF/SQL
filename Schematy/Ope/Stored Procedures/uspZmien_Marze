@@ -18,8 +18,12 @@ CREATE PROC Ope.uspZmien_Marze(@rdz varchar(7), @marza decimal(5,4))
 
 AS
 
-UPDATE Ope.Zbiorniki SET Marza = @marza 
-WHERE RodzajPaliwa = @rdz
+IF LEN(@rdz) > 7 THROW  1000002, 'Wprowadzono za długi rodzaj paliwa.', 1;
+
+IF @rdz NOT IN (SELECT RodzajPaliwa FROM Ope.Zbiorniki) THROW 1000003, 'Wprowadzono paliwo, ktorego nie ma zbiornikach.', 1;
+
+
+UPDATE Stacja_1.Ope.Zbiorniki SET Marza = @marza WHERE RodzajPaliwa = @rdz
 
 /*procedura na aktualizacje marz w tabeli Zbiorniki*/
 
