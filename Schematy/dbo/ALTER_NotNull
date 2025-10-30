@@ -1,0 +1,145 @@
+USE Stacja_Paliw;
+
+GO
+
+CREATE OR ALTER PROCEDURE dbo.ALTER_NotNull 
+    @schema NVARCHAR(MAX), 
+    @table_name NVARCHAR(MAX),
+    @columns NVARCHAR(MAX),
+    @dryRun BIT = 0  /* 1 = tylko symulacja, 0 = wykonaj ALTER */
+
+AS
+
+      BEGIN
+      
+      SET NOCOUNT ON;
+
+  
+	
+	IF LEN(@schema) > 128  THROW  9000011, 'Wprowadzono za długa nazwe schema.', 1;
+
+	IF LEN(@table_name) > 128  THROW  9000012, 'Wprowadzono za długa nazwe tabeli.', 1;
+
+	DECLARE @trim_schema NVARCHAR(128) = RTRIM(LTRIM(@schema))
+	
+	DECLARE @trim_table_name NVARCHAR(128) = RTRIM(LTRIM(@table_name))
+
+  DECLARE @col NVARCHAR(128);
+  DECLARE @nullCount INT;
+  DECLARE @isNullable NVARCHAR(3);
+  DECLARE @dataType NVARCHAR(128);
+  DECLARE @maxLen NVARCHAR(30);
+  DECLARE @checkSql NVARCHAR(MAX);
+  DECLARE @alterSql NVARCHAR(MAX);
+
+    DECLARE col_cursor CURSOR FAST_FORWARD FOR 
+        SELECT LTRIM(RTRIM(value))
+        FROM STRING_SPLIT(@columns, ',');
+
+    OPEN col_cursor;
+    FETCH NEXT FROM col_cursor INTO @col;
+
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        
+        /* 1. Sprawdzenie czy kolumna istnieje */
+        
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = @trim_schema
+              AND TABLE_NAME = @trim_table_name
+              AND COLUMN_NAME = @col
+        )
+        BEGIN
+            PRINT ' Kolumna [' + @col + '] nie istnieje w tabeli [' + @trim_schema + '].[' + @trim_table_name + '].';
+        END
+        ELSE
+        BEGIN
+            
+            /* 2. Pobranie metadanych kolumny */
+            
+            SELECT 
+                @isNullable = IS_NULLABLE,
+                @dataType = DATA_TYPE,
+                @maxLen = 
+                    CASE 
+                        WHEN DATA_TYPE IN ('char','varchar','nchar','nvarchar') THEN 
+                            '(' + CASE WHEN CHARACTER_MAXIMUM_LENGTH = -1 
+                                       THEN 'MAX' 
+                                       ELSE CAST(CHARACTER_MAXIMUM_LENGTH AS NVARCHAR(10)) END + ')'
+                        WHEN DATA_TYPE IN ('decimal','numeric') THEN 
+                            '(' + CAST(NUMERIC_PRECISION AS NVARCHAR(10)) + ',' + 
+                                   CAST(NUMERIC_SCALE AS NVARCHAR(10)) + ')'
+                        WHEN DATA_TYPE LIKE '%time%' THEN 
+                            '(' + CAST(DATETIME_PRECISION AS NVARCHAR(10)) + ')'
+                        ELSE ''
+                    END
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = @trim_schema
+              AND TABLE_NAME = @trim_table_name
+              AND COLUMN_NAME = @col;
+
+            
+            /* 3. Jeśli już NOT NULL – pomijamy */
+            
+            IF @isNullable = 'NO'
+            BEGIN
+                PRINT ' Kolumna [' + @trim_schema + '].[' + @trim_table_name + '].[' + @col + '] już ma NOT NULL — pomijam.';
+            END
+            ELSE
+            BEGIN
+                
+                /* 4. Sprawdzenie czy w kolumnie są wartości NULL */
+                
+                SET @checkSql = N'SELECT @nullCount = COUNT(*) 
+                                  FROM ' + QUOTENAME(@trim_schema) + '.' + QUOTENAME(@trim_table_name) + 
+                                  N' WHERE ' + QUOTENAME(@col) + N' IS NULL';
+
+                EXEC sp_executesql @checkSql, 
+                                   N'@nullCount INT OUTPUT', 
+                                   @nullCount = @nullCount OUTPUT;
+
+                IF @nullCount > 0
+                BEGIN
+                    PRINT ' Kolumna [' + @trim_schema + '].[' + @trim_table_name + '].[' + @col + '] zawiera ' 
+                          + CAST(@nullCount AS NVARCHAR(20)) + ' wartości NULL — nie można ustawić NOT NULL.';
+                END
+                ELSE
+                BEGIN
+                    
+                    /* 5. Brak NULL-i → generujemy lub wykonujemy ALTER */
+                    
+                    SET @alterSql = N'ALTER TABLE ' + QUOTENAME(@trim_schema) + '.' + QUOTENAME(@trim_table_name) +
+                                    N' ALTER COLUMN ' + QUOTENAME(@col) + N' ' +
+                                    @dataType + COALESCE(@maxLen, '') + N' NOT NULL';
+
+                    IF @dryRun = 1
+                    BEGIN
+                        PRINT ' [DRY RUN] Wykonano by: ' + @alterSql;
+                    END
+                    ELSE
+                    BEGIN
+                        EXEC(@alterSql);
+                        PRINT ' Kolumna [' + @trim_schema + '].[' + @trim_table_name + '].[' + @col + '] została zmieniona na NOT NULL.';
+                    END
+                END
+            END
+        END
+
+        FETCH NEXT FROM col_cursor INTO @col;
+    END
+
+    CLOSE col_cursor;
+    DEALLOCATE col_cursor;
+
+    
+    IF @dryRun = 1
+        PRINT ' Tryb DRY RUN: nie dokonano żadnych zmian, pokazano tylko planowane ALTER-y.';
+    ELSE
+        PRINT ' Tryb wykonania: zmiany NOT NULL zostały zastosowane (jeśli możliwe).';
+
+END
+GO
+
+/* Procedura na ustawenienie not null w wskazanej kolumnie, mozna uzywac dla wielu kolumn jednoczesnie */
