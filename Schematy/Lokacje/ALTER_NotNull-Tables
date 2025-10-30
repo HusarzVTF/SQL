@@ -1,0 +1,11 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC dbo.ALTER_NotNull 'Lokacje' , 'Gmina','IdPowiatu',0
+
+EXEC dbo.ALTER_NotNull 'Lokacje' , 'Miejscowosc','IDGminy',0
+
+EXEC dbo.ALTER_NotNull 'Lokacje' , 'Powiat','IdWOJ',0
+
+/* Ustawienie parametru not null dla kolumn w tabelach za pomoca procedury ALTER_NotNUll */
