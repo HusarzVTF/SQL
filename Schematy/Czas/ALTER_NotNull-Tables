@@ -1,0 +1,10 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC dbo.ALTER_NotNull 'Czas' , 'Kalendarz','IDRk,IDM',0
+
+EXEC dbo.ALTER_NotNull 'Czas' , 'Miesiac','ID_Kw',0
+
+/* Ustawienie parametru not null dla kolumn w tabelach za pomoca procedury ALTER_NotNUll */
+
