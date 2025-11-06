@@ -1,29 +1,28 @@
 
-
 USE Stacja_Paliw
 
 GO
 
-
 IF OBJECT_ID('Ope.uspZmien_Marze') IS NOT NULL
 DROP PROC Ope.uspZmien_Marze;
 
-/*instrukcja sprawdzajaca czy istnieje juz procedura Ope.uspZmien_Marze jesli tak to zakladamy, ze istniala przez pomylke i zostanie zlikwidowana a pwostanie nowa */
-
-
+/* instrukcja sprawdzajaca czy istnieje juz procedura Ope.uspZmien_Marze jesli tak to zakladamy, ze istniala przez pomylke 
+i zostanie zlikwidowana a pwostanie nowa */
 
 GO
 
-CREATE PROC Ope.uspZmien_Marze(@rdz varchar(7), @marza decimal(5,4))
+CREATE PROC Ope.uspZmien_Marze(@rdz varchar(max), @marza decimal(5,4))
 
 AS
 
-IF LEN(@rdz) > 7 THROW  1000002, 'Wprowadzono za długi rodzaj paliwa.', 1;
+DECLARE @trim_rdz varchar(max) = LTRIM(RTRIM(@rdz))
 
-IF @rdz NOT IN (SELECT RodzajPaliwa FROM Ope.Zbiorniki) THROW 1000003, 'Wprowadzono paliwo, ktorego nie ma zbiornikach.', 1;
+IF LEN(@trim_rdz) > 7 THROW  1000002, 'Wprowadzono za długi rodzaj paliwa.', 1;
+
+IF @trim_rdz NOT IN (SELECT RodzajPaliwa FROM Ope.Zbiorniki) THROW 1000003, 'Wprowadzono paliwo, ktorego nie ma zbiornikach.', 1;
 
 
-UPDATE Stacja_1.Ope.Zbiorniki SET Marza = @marza WHERE RodzajPaliwa = @rdz
+UPDATE Ope.Zbiorniki SET Marza = @marza WHERE RodzajPaliwa = @trim_rdz
 
 /*procedura na aktualizacje marz w tabeli Zbiorniki*/
 
