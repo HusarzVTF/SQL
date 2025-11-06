@@ -9,16 +9,18 @@ DROP PROC Ope.uspZmien_Podatek;
 
 GO
 
-CREATE PROC Ope.uspZmien_Podatek (@rdz varchar(7), @stawka decimal(5,4))
+CREATE PROC Ope.uspZmien_Podatek (@rdz varchar(max), @stawka decimal(5,4))
 
 AS
 
-IF LEN(@rdz) > 7 THROW  1000004, 'Wprowadzono za długi rodzaj paliwa.', 1;
+DECLARE @trim_rdz varchar(max) = LTRIM(RTRIM(@rdz)) 
 
-IF @rdz NOT IN (SELECT RodzajPaliwa FROM Ope.Zbiorniki) THROW 1000005, 'Wprowadzono paliwo, ktorego nie ma zbiornikach.', 1;
+IF LEN(@trim_rdz) > 7 THROW  1000004, 'Wprowadzono za długi rodzaj paliwa.', 1;
+
+IF @trim_rdz NOT IN (SELECT RodzajPaliwa FROM Ope.Zbiorniki) THROW 1000005, 'Wprowadzono paliwo, ktorego nie ma zbiornikach.', 1;
 
 
-UPDATE Ope.StPodat SET stawka=@stawka WHERE ID=Ope.ufID_typ_Paliwa(@rdz)
+UPDATE Ope.StPodat SET stawka = @stawka WHERE ID = Ope.ufID_typ_Paliwa(@trim_rdz)
 
 /*Funkcja aktualizaujca stawka podatkowa na wskazany po nazwie rodzaj paliwa*/
 
