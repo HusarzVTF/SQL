@@ -1,0 +1,261 @@
+USE Stacja_Paliw
+
+GO
+
+CREATE OR ALTER PROCEDURE dbo.AddForeignKey
+    @ParentSchema NVARCHAR(MAX),
+    @ParentTable NVARCHAR(MAX) ,
+    @ParentColumn NVARCHAR(MAX) ,
+    @RefSchema NVARCHAR(MAX) ,
+    @RefTable NVARCHAR(MAX) ,
+    @RefColumn NVARCHAR(MAX) ,
+	@ConstraintName NVARCHAR(MAX) = null,
+	@DryRun BIT = 1
+
+AS
+
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE 
+        @ParentType NVARCHAR(128),
+        @RefType NVARCHAR(128),
+        @sql NVARCHAR(MAX)
+
+
+
+			 --czyszczenie nazw , bo parametry sa istotne tutaj check czy nie null/puste i dlugosc do 128
+		IF 
+
+		@ParentSchema IS NULL OR LEN(@ParentSchema) > 128 OR  LEN(TRIM(@ParentSchema)) = 0 
+		OR
+		@ParentTable IS NULL OR LEN(@ParentTable) > 128 OR LEN(TRIM(@ParentTable)) = 0 
+		OR 
+		@ParentColumn IS NULL OR LEN(@ParentColumn) > 128 OR LEN(TRIM(@ParentColumn)) = 0 
+		OR 
+		@RefSchema IS NULL OR LEN(@RefSchema) > 128 OR LEN(TRIM(@RefSchema)) = 0 
+		OR  
+		@RefTable IS NULL OR LEN(@RefTable) > 128 OR LEN(TRIM(@RefTable)) = 0 
+		OR 
+		@RefColumn IS NULL  OR LEN(@RefColumn) > 128 OR LEN(TRIM(@RefColumn)) = 0 
+
+		THROW 1702000,'Zaden z parametrow: Schema, Table, Column nie moze byc pusty lub null ani dluzszy niz 128 znakow.',1;
+
+		--czyszczenie nazw 
+
+		DECLARE @ParentSchema_trim SYSNAME = TRIM(@ParentSchema),
+
+		 @ParentTable_trim SYSNAME = TRIM(@ParentTable),
+
+		 @ParentColumn_trim SYSNAME = TRIM(@ParentColumn),
+
+		 @RefSchema_trim SYSNAME = TRIM(@RefSchema),
+
+		 @RefTable_trim SYSNAME = TRIM(@RefTable),
+
+		 @RefColumn_trim SYSNAME = TRIM(@RefColumn)
+
+		  
+		--walidacja Cosntraint Name
+		
+		IF --jesli zostala podana nazwa dla klucza
+
+		@ConstraintName IS NOT NULL AND ( LEN(@ConstraintName) > 128 OR  LEN(TRIM(@ConstraintName)) = 0 )
+
+		THROW 1702001,'Nazwa klucza obcego nie moze byc pusta ani dluzsza niz 128 znakow.',1;
+
+		
+		
+		IF --jesli nie zostala podana nazwa dla klucza 
+		
+		@ConstraintName IS NULL AND LEN( 'FK_' + @ParentSchema_trim + '_' + @ParentTable_trim + '_' + @RefTable_trim) > 128 
+		
+		THROW 1702002,'Domyslna nazwa klucza obcego nie moze byc dluzsza niz 128 znakow. Domyslna nazwa to zlaczenie FK_ z ParentSchema, ParentTable, RefTable.',1;
+
+		
+		
+		
+		IF @ConstraintName IS NOT NULL --zostala podana nazwa dla klucza 
+
+		BEGIN
+
+		DECLARE @ConstraintName_trim SYSNAME = TRIM(@ConstraintName) 
+
+		SET @ConstraintName = @ConstraintName_trim
+
+		END
+		
+
+		
+		IF @ConstraintName IS NULL --nie zostala podana nazwa dla klucza
+
+		BEGIN
+
+		SET @ConstraintName = 'FK_' + @ParentSchema_trim + '_' + @ParentTable_trim + '_' + @RefTable_trim
+
+
+		END
+
+
+        -- sprawdzenie istnienia parent kolumny
+        IF NOT EXISTS (
+            SELECT 1
+            FROM sys.columns c
+            JOIN sys.tables t ON t.object_id = c.object_id
+            JOIN sys.schemas s ON s.schema_id = t.schema_id
+            WHERE s.name = @ParentSchema_trim AND t.name = @ParentTable_trim AND c.name = @ParentColumn_trim
+        )
+        
+        BEGIN 
+		   	DECLARE @msg NVARCHAR(4000) = 'Kolumna [' + @ParentColumn_trim + '] nie istnieje w tabeli [' + @ParentSchema_trim + '].[' + @ParentTable_trim + '].';
+				THROW 1702003,@msg,1;
+           END;
+        
+
+        -- sprawdzenie istnienia referencyjnej kolumny
+        IF NOT EXISTS (
+            SELECT 1
+            FROM sys.columns c
+            JOIN sys.tables t ON t.object_id = c.object_id
+            JOIN sys.schemas s ON s.schema_id = t.schema_id
+            WHERE s.name = @RefSchema_trim AND t.name = @RefTable_trim AND c.name = @RefColumn_trim
+        )
+      BEGIN
+			DECLARE @msg_1 NVARCHAR(4000) = ' Kolumna [' + @RefColumn_trim + '] nie istnieje w tabeli [' + @RefSchema_trim + '].[' + @RefTable_trim + '].';
+			THROW 1702004,@msg_1,1;
+		  END
+
+        -- pobierz typy (uwzgldnia dlugoci dla varchar/nvarchar)
+        SELECT @ParentType = 
+            TYPE_NAME(c.user_type_id) + 
+            CASE WHEN TYPE_NAME(c.user_type_id) IN ('char','nchar','varchar','nvarchar')
+                 THEN '(' + CASE WHEN c.max_length = -1 THEN 'MAX' ELSE CAST(
+                               CASE WHEN TYPE_NAME(c.user_type_id) IN ('nchar','nvarchar') 
+                                    THEN c.max_length/2 ELSE c.max_length END AS VARCHAR(10)) END + ')'
+                 ELSE '' END
+        FROM sys.columns c
+        JOIN sys.tables t ON t.object_id = c.object_id
+        JOIN sys.schemas s ON s.schema_id = t.schema_id
+        WHERE s.name = @ParentSchema_trim AND t.name = @ParentTable_trim AND c.name = @ParentColumn_trim;
+
+        SELECT @RefType = 
+            TYPE_NAME(c.user_type_id) + 
+            CASE WHEN TYPE_NAME(c.user_type_id) IN ('char','nchar','varchar','nvarchar')
+                 THEN '(' + CASE WHEN c.max_length = -1 THEN 'MAX' ELSE CAST(
+                               CASE WHEN TYPE_NAME(c.user_type_id) IN ('nchar','nvarchar') 
+                                    THEN c.max_length/2 ELSE c.max_length END AS VARCHAR(10)) END + ')'
+                 ELSE '' END
+        FROM sys.columns c
+        JOIN sys.tables t ON t.object_id = c.object_id
+        JOIN sys.schemas s ON s.schema_id = t.schema_id
+        WHERE s.name = @RefSchema_trim AND t.name = @RefTable_trim AND c.name = @RefColumn_trim;
+
+        -- walidacja typw (obsuga NULL)
+        IF @ParentType <> @RefType
+        BEGIN
+            DECLARE @msg_2 NVARCHAR(4000) = CONCAT(
+                'Typy danych niezgodne: ',
+                @ParentSchema_trim, '.', @ParentTable_trim, '.', @ParentColumn_trim, ' (', ISNULL(@ParentType,'<NULL>'), ') vs ',
+                @RefSchema_trim, '.', @RefTable_trim, '.', @RefColumn_trim, ' (', ISNULL(@RefType,'<NULL>'), ')'
+            );
+        THROW 1702005, @msg_2, 1;
+        END
+
+		--Sprawdzenie czy na danych kolumnach w wskazanych tabelach jest juz FK.--
+		IF EXISTS (
+					SELECT 1
+					
+					FROM sys.foreign_keys fk
+					
+					JOIN sys.foreign_key_columns fkc
+					ON fk.object_id = fkc.constraint_object_id
+
+					JOIN sys.tables t_parent
+					ON t_parent.object_id = fk.parent_object_id
+					
+					JOIN sys.schemas s_parent
+					ON s_parent.schema_id = t_parent.schema_id
+					
+					JOIN sys.tables t_ref
+					ON t_ref.object_id = fk.referenced_object_id
+					
+					JOIN sys.schemas s_ref
+					ON s_ref.schema_id = t_ref.schema_id
+					
+					JOIN sys.columns c_parent
+					ON c_parent.object_id = t_parent.object_id AND c_parent.column_id  = fkc.parent_column_id
+					
+					JOIN sys.columns c_ref
+					ON c_ref.object_id = t_ref.object_id AND c_ref.column_id  = fkc.referenced_column_id
+					
+					WHERE
+							s_parent.name = @ParentSchema_trim
+							AND t_parent.name =  @ParentTable_trim
+							AND c_parent.name = @ParentColumn_trim
+							AND s_ref.name = @RefSchema_trim
+							AND t_ref.name = @RefTable_trim
+							AND c_ref.name = @RefColumn_trim
+		)
+		BEGIN
+		DECLARE @msg_3 NVARCHAR(4000) = 
+		'Istnieje juz klucz obcy miedzy kolumnami w tabelach: ' + @ParentSchema_trim + '.' + @ParentTable_trim + '[' + @ParentColumn_trim + ']'+ ' i ' + @RefSchema_trim + '.' + @RefTable_trim + '[' + @RefColumn_trim + ']';
+		THROW 1702006, @msg_3, 1;
+		END
+		
+
+		DECLARE @ParentObjectId INT = OBJECT_ID(@ParentSchema_trim + '.' + @ParentTable_trim);
+
+	  -- czy ju istnieje FK o tej nazwie w tej tabeli?
+		--Po co ta 2 walidacja? Dwa rozne warianty raz ktos moze wziac zajeta nazwe na tych tabelach i wtedy dowie sie o tym precyzyjnie.
+		--innym razem sama nazwe powieli i tez dowie sie o tym precyzyjnie
+        
+        IF EXISTS (
+            SELECT 1 
+            FROM sys.foreign_keys fk
+            WHERE fk.name = @ConstraintName
+              AND fk.parent_object_id = @ParentObjectId
+        )
+      
+       BEGIN
+		   DECLARE @msg_4 NVARCHAR(4000) = 'Klucz obcy ' + @ConstraintName + ' juz istnieje w tabeli ' + @ParentSchema_trim + '.' + @ParentTable_trim;
+		   THROW 1702007, @msg_4, 1;
+			 END
+
+		-- czy istnieje juz FK o tej nazwie w bazie?
+		
+		IF EXISTS(
+		        SELECT 1 
+            FROM sys.foreign_keys fk
+            WHERE fk.name = @ConstraintName
+		
+		)
+
+		BEGIN
+		DECLARE  @DatabaseName sysname = DB_NAME()
+		DECLARE @msg_5 NVARCHAR(4000) ='Klucz obcy o nazwie ' + @ConstraintName + ' juz istnieje w bazie danych ' +  @DatabaseName + ' .';
+		THROW 1702008, @msg_5, 1;
+		END
+
+        -- generowanie polecenia
+       SET @sql = 
+				N'ALTER TABLE ' + QUOTENAME(@ParentSchema_trim) + N'.' + QUOTENAME(@ParentTable_trim) + N' ' +
+				N'ADD CONSTRAINT ' + QUOTENAME(@ConstraintName) +
+				N' FOREIGN KEY (' + QUOTENAME(@ParentColumn_trim) + N') ' +
+				N'REFERENCES ' + QUOTENAME(@RefSchema_trim) + N'.' + QUOTENAME(@RefTable_trim) +
+				N' (' + QUOTENAME(@RefColumn_trim) + N');';
+
+
+        IF @DryRun = 1 --Tryb testowy wyswietla kod, ktory by sie wykonal--
+        BEGIN
+            PRINT '-- TRYB DRY RUN --';
+            PRINT @sql;
+        END
+
+        ELSE
+
+		    BEGIN       
+            PRINT 'Wykonywanie: ' + @sql;
+            EXEC sp_executesql @sql;
+       END
+
+END    
