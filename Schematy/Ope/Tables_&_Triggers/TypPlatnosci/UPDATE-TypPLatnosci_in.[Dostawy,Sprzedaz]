@@ -1,0 +1,103 @@
+USE Stacja_Paliw
+
+GO
+
+SELECT 
+
+T.Id, Typ_Platnosci,S.TypPlatnosci AS Sprzedaz_TypPlatnosci, 
+CASE WHEN Typ_Platnosci = S.TypPlatnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_'   
+
+INTO #tmpSprzedaz_TypPlat
+
+FROM Ope.Typ_Platnosci AS T
+RIGHT JOIN Ope.Sprzedaz AS S ON T.Typ_Platnosci = S.TypPlatnosci
+
+GROUP BY T.Id, Typ_Platnosci, S.TypPlatnosci
+
+
+IF EXISTS (SELECT 1 FROM #tmpSprzedaz_TypPlat WHERE Check_ = 'Dane niezgodne')
+
+THROW 77777, 'Dane w tabeli Typ_Platnosci sa inne niz w tabeli Sprzedaz w kolumnie TypPlatnosci.',1;
+
+ELSE
+
+UPDATE Ope.Sprzedaz SET Id_Typ_Platnosci = T.Id 
+FROM Ope.Sprzedaz AS S JOIN Ope.Typ_Platnosci AS T ON  T.Typ_Platnosci = S.TypPlatnosci  
+
+
+
+
+
+
+SELECT 
+
+T.Id, Typ_Platnosci,D.TypPlatnosci AS Dostawy_TypPlatnosci,
+CASE WHEN Typ_Platnosci = D.TypPlatnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_'
+
+INTO #tmpDostawy_TypPlat
+
+FROM Ope.Typ_Platnosci AS T
+RIGHT JOIN Ope.Dostawy AS D ON T.Typ_Platnosci = D.TypPlatnosci
+
+GROUP BY T.Id, Typ_Platnosci,D.TypPlatnosci
+
+IF EXISTS (SELECT 1 FROM #tmpDostawy_TypPlat WHERE Check_ = 'Dane niezgodne')
+THROW 77778, 'Dane w tabeli Typ_Platnosci sa inne niz w tabeli Dostawy w kolumnie TypPlatnosci.',1;
+
+ELSE
+
+UPDATE Ope.Dostawy SET Id_Typ_Platnosci = T.Id 
+FROM Ope.Dostawy AS D JOIN Ope.Typ_Platnosci AS T ON  T.Typ_Platnosci = D.TypPlatnosci  
+
+
+ 
+SELECT 
+
+T.Id, Typ_Platnosci,D.Id_Typ_Platnosci AS Dostawy_Id_Typ_Platnosci,D.TypPlatnosci AS Dostawy_TypPlatnosci,
+CASE WHEN T.Id = D.Id_Typ_Platnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_Id',
+CASE WHEN Typ_Platnosci = D.TypPlatnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_'
+
+
+INTO #D_check 
+FROM Ope.Typ_Platnosci AS T
+RIGHT JOIN Ope.Dostawy AS D ON T.Typ_Platnosci = D.TypPlatnosci
+
+GROUP BY T.Id, Typ_Platnosci, D.TypPlatnosci, D.Id_Typ_Platnosci
+
+IF EXISTS (SELECT 1 FROM #D_check WHERE Check_ = 'Dane niezgodne' OR Check_Id='Dane niezgodne')
+THROW 77779, 'Dane nieprawidlowo zaktualizowane tabeli Dostawy.',1;
+
+ELSE 
+
+PRINT'Dane prawidlowo zaktualizowane w tabeli Dostawy.'
+
+
+
+
+
+SELECT 
+
+T.Id, Typ_Platnosci,S.Id_Typ_Platnosci AS Sprzedaz_Id_Typ_Platnosci,S.TypPlatnosci AS Sprzedaz_TypPlatnosci,
+CASE WHEN T.Id = S.Id_Typ_Platnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_Id',
+CASE WHEN Typ_Platnosci = S.TypPlatnosci THEN 'Dane Zgodne' ELSE 'Dane niezgodne' END AS 'Check_'
+
+INTO #S_check 
+FROM Ope.Typ_Platnosci AS T
+RIGHT JOIN Ope.Sprzedaz AS S ON T.Typ_Platnosci = S.TypPlatnosci
+
+GROUP BY T.Id, Typ_Platnosci,S.TypPlatnosci ,S.Id_Typ_Platnosci 
+
+
+IF EXISTS (SELECT 1 FROM #S_check WHERE Check_ = 'Dane niezgodne' OR Check_Id='Dane niezgodne')
+THROW 77780, 'Dane nieprawidlowo zaktualizowane w tabeli Sprzedaz.',1;
+
+ELSE 
+
+PRINT'Dane prawidlowo zaktualizowane w tabeli Sprzedaz.'
+
+
+DROP TABLE #tmpSprzedaz_TypPlat, #tmpDostawy_TypPlat, #D_check ,#S_check 
+
+
+/* Zakutualizowanie danych w nowych kolumnach z ID_Typ_Platnosci dla tabel Sprzedaz i Dostawy */
+
