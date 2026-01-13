@@ -1,0 +1,23 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC dbo.AddForeignKey 
+@ParentSchema ='Ope',
+@ParentTable ='Sprzedaz',
+@ParentColumn ='Id_Typ_Platnosci',
+@RefSchema ='Ope', 
+@RefTable ='Typ_Platnosci', 
+@RefColumn ='Id',  
+@DryRun = 0 
+
+EXEC dbo.AddForeignKey 
+@ParentSchema ='Ope',
+@ParentTable ='Dostawy',
+@ParentColumn ='Id_Typ_Platnosci',
+@RefSchema ='Ope',
+@RefTable ='Typ_Platnosci',
+@RefColumn ='Id',
+@DryRun = 0
+
+/* skorzystanie z procedury AddForeignKey po to by zalozyc klucze FK na tabelach Sprzedaz i Dostawy do tabeli Typ_Platnosci */
