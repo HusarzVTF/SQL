@@ -1,0 +1,47 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.Typ_Platnosci') IS NOT NULL
+DROP TABLE Ope.Typ_Platnosci
+
+GO
+
+CREATE TABLE Ope.Typ_Platnosci  (
+Id INT NOT NULL IDENTITY PRIMARY KEY,
+Typ_Platnosci VARCHAR(7) NOT NULL
+)
+
+INSERT INTO
+Ope.Typ_Platnosci (Typ_Platnosci)
+VALUES ('Gotowka'), ('Przelew'), ('Karta'), ('Blik')
+
+
+
+SELECT DISTINCT TypPlatnosci
+INTO #TmpTypPlatnosci
+FROM Ope.Dostawy
+UNION
+SELECT DISTINCT TypPlatnosci FROM Ope.Sprzedaz
+
+IF EXISTS (
+
+SELECT TypPlatnosci 
+FROM #TmpTypPlatnosci AS T
+LEFT JOIN  Ope.Typ_Platnosci AS P 
+ON T.TypPlatnosci = P.Typ_Platnosci  
+WHERE P.Typ_Platnosci  IS NULL) 
+
+THROW 57575,'Dziura w danych pomiedzy dotychczasowymi a nowymi',1;
+
+
+ELSE 
+
+PRINT'Prawidlowe dane zostaly wstawione do tabeli Ope.Typ_Platnosci'
+
+DROP TABLE #TmpTypPlatnosci
+
+
+
+/* utworzenie Tabli Typ_Platnosci, ktorej ID bedzie sluzyc jako FK do tabel Sprzedaz i Dostawy zamiast Constraina na kolumnach  */
+
