@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.Sprzedaz ADD Id_Typ_Platnosci INT 
+
+
+/* dodanie kolumny pod klucz FK do tabeli Sprzedaz dla ktorej Fk bedzie kolumna w tabeli Typ_Platnosci */
