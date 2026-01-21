@@ -1,0 +1,23 @@
+USE Stacja_Paliw;
+
+GO
+
+ALTER VIEW Ope.vKorekty_Dst AS
+
+
+SELECT 
+
+D.NRFV, D.PozycjaNAFV, Czas.Kalendarz.Data, D.IdDostawcy, Ope.Dostawcy.NazwaDostawcy, D.IdPracownika, 
+Ope.Pracownicy.Imie, Ope.Pracownicy.Nazwisko, Ope.Zbiorniki.RodzajPaliwa, D.IloscPaliwa, D.KwotaNetto, 
+D.KwotaBrutto, D.CzasTransakcji, D.TerminZaplaty, D.DataZaplaty, Ope.Typ_Platnosci.Typ_Platnosci
+
+FROM  Ope.Dostawy AS D INNER JOIN
+Czas.Kalendarz ON D.ID_Dat = Czas.Kalendarz.ID INNER JOIN
+Ope.Dostawcy ON D.IdDostawcy = Ope.Dostawcy.IdDostawcy INNER JOIN
+Ope.Zbiorniki ON D.IDPaliw = Ope.Zbiorniki.IDPaliwa INNER JOIN
+Ope.Pracownicy ON D.IdPracownika = Ope.Pracownicy.IDPracownika INNER JOIN
+Ope.Typ_Platnosci ON  D.Id_Typ_Platnosci=Ope.Typ_Platnosci.Id
+
+WHERE  (D.PozycjaNAFV < 0)
+
+/* Update widoku zwracajacego korekty dostaw po powstaniu tabeli TypPlatnosci */
