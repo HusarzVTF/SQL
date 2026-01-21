@@ -1,0 +1,21 @@
+USE Stacja_Paliw;
+
+GO
+
+ALTER VIEW Ope.vListaSPRZEDAZY AS 
+
+
+SELECT 
+
+S.NRFV, S.PozycjaNaFV, K.NazwaKlienta, P.Imie AS IMIEPrac, P.Nazwisko AS NazwPrac, 
+Z.RodzajPaliwa, Z.JM, S.IloscPaliwa, S.KwotaNetto, S.KwotaBrutto, Kd.Data, 
+S.TerminZaplaty, S.DataZaplaty, Ope.Typ_Platnosci.Typ_Platnosci
+
+FROM Ope.Sprzedaz AS S INNER JOIN
+Ope.Klienci AS K ON K.IdKlienta = S.IdKlienta INNER JOIN
+Ope.Pracownicy AS P ON P.IDPracownika = S.IdPracownika INNER JOIN
+Ope.Zbiorniki AS Z ON Z.IDPaliwa = S.IDPaliwa INNER JOIN
+Czas.Kalendarz AS Kd ON Kd.ID = S.ID_Dat INNER JOIN
+Ope.Typ_Platnosci ON  S.Id_Typ_Platnosci = Ope.Typ_Platnosci.Id
+
+/* Update widoku zwracajacego liste sprzedazy po powstaniu tabeli TypPlatnosci */
