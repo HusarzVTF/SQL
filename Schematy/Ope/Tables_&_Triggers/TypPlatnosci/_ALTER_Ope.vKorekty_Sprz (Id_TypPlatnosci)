@@ -1,0 +1,24 @@
+USE Stacja_Paliw;
+
+GO
+
+ALTER VIEW Ope.vKorekty_Sprz AS
+
+
+SELECT
+
+S.NRFV, S.PozycjaNaFV, Czas.Kalendarz.Data, S.IdKlienta, Ope.Klienci.NazwaKlienta, S.IdPracownika, Ope.Pracownicy.Imie, 
+Ope.Pracownicy.Nazwisko, Ope.Zbiorniki.RodzajPaliwa, S.IloscPaliwa, S.KwotaNetto, S.KwotaBrutto,  S.CzasTransakcji, 
+S.TerminZaplaty, S.DataZaplaty, Ope.Typ_Platnosci.Typ_Platnosci
+
+FROM Ope.Sprzedaz AS S INNER JOIN
+Czas.Kalendarz ON S.ID_Dat = Czas.Kalendarz.ID INNER JOIN
+Ope.Klienci ON S.IdKlienta = Ope.Klienci.IdKlienta INNER JOIN
+Ope.Zbiorniki ON S.IDPaliwa = Ope.Zbiorniki.IDPaliwa INNER JOIN
+Ope.Pracownicy ON S.IdPracownika = Ope.Pracownicy.IDPracownika INNER JOIN
+Ope.Typ_Platnosci ON  S.Id_Typ_Platnosci = Ope.Typ_Platnosci.Id
+
+WHERE  (S.PozycjaNaFV < 0)
+
+
+/* Update widoku zwracajacego korekty sprzedazy po powstaniu tabeli TypPlatnosci */
