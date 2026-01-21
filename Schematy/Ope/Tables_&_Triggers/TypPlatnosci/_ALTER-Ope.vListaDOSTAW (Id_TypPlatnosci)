@@ -1,0 +1,19 @@
+USE Stacja_Paliw;
+
+GO
+
+ALTER VIEW Ope.vListaDOSTAW AS 
+
+SELECT 
+
+D.NRFV, D.PozycjaNAFV, DS.NazwaDostawcy, P.Imie AS ImiePrac, P.Nazwisko AS NazwPrac, Z.RodzajPaliwa, Z.JM, 
+D.IloscPaliwa, D.KwotaNetto, D.KwotaBrutto, K.Data, D.TerminZaplaty, D.DataZaplaty, Ope.Typ_Platnosci.Typ_Platnosci
+
+FROM Ope.Dostawy AS D INNER JOIN
+Ope.Dostawcy AS DS ON DS.IdDostawcy = D.IdDostawcy INNER JOIN
+Ope.Pracownicy AS P ON P.IDPracownika = D.IdPracownika INNER JOIN
+Ope.Zbiorniki AS Z ON Z.IDPaliwa = D.IDPaliw INNER JOIN
+Czas.Kalendarz AS K ON K.ID = D.ID_Dat INNER JOIN
+Ope.Typ_Platnosci ON  D.Id_Typ_Platnosci = Ope.Typ_Platnosci.Id
+
+/* update widoku zwracajacego liste dostaw po powstaniu tabeli TypPlatnosci */
