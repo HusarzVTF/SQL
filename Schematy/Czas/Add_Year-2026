@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO 
+
+
+EXEC Czas.uspAddYear 2026
+
+/* uzupelnienie tabeli z latami i tabeli kalendarz o dane dla roku 2026 za pomoca procedury AddYear */
