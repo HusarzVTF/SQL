@@ -1,0 +1,30 @@
+USE Stacja_Paliw;
+
+GO
+
+ IF OBJECT_ID('Ope.trKlienciWarPlat') IS NOT NULL
+ DROP TRIGGER Ope.trKlienciWarPlat;
+ 
+
+ GO
+
+CREATE TRIGGER Ope.trKlienciWarPlat ON Ope.Klienci
+AFTER UPDATE,INSERT 
+
+ AS
+
+ IF EXISTS(
+ SELECT DISTINCT WarunkiPlatnosci 
+ FROM Ope.Klienci AS K
+ LEFT JOIN Ope.Typ_Platnosci AS P
+ ON K.WarunkiPlatnosci = P.Typ_Platnosci
+ WHERE P.Typ_Platnosci IS NULL)
+
+ INSERT INTO  Ope.Typ_Platnosci (Typ_Platnosci)
+ SELECT DISTINCT WarunkiPlatnosci 
+ FROM Ope.Klienci AS K
+ LEFT JOIN Ope.Typ_Platnosci AS P
+ ON K.WarunkiPlatnosci = P.Typ_Platnosci
+ WHERE P.Typ_Platnosci IS NULL
+
+/* Trigger aktualizujacy tabele typ platnosci o nowy typ jesli pojawi sie klient z typem platnosci jaki do tej pory nie wystepowal */
