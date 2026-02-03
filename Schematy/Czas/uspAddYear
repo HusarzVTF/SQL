@@ -1,0 +1,66 @@
+USE Stacja_Paliw;
+
+
+GO
+
+
+ IF OBJECT_ID('Czas.uspAddYear') IS NOT NULL
+ DROP PROC Czas.uspAddYear;
+
+
+ GO
+
+CREATE PROC Czas.uspAddYear (@rok int)
+ 
+ AS
+
+
+ DECLARE @mxrok int  = ( SELECT MAX(Rok_Num) FROM Czas.Rok)
+
+ IF @rok < (SELECT MIN(Rok_Num) FROM Czas.Rok)
+
+ THROW 1800000,'Rok nie moze byc wczesniejszy niz rok ropzoczecia dzialalnosci gospodarczej przez firme.',1;
+
+ IF @rok IN (SELECT Rok_Num FROM Czas.Rok)
+
+ THROW 1800001,'Podany rok juz wystepuje w tabeli z latami.',1;
+
+IF @rok -  @mxrok > 1
+BEGIN
+DECLARE @msg NVARCHAR(4000) = 'Podany rok musi byc kolejnym rokiem w tabeli Rok. Ostatni rok w tabeli Rok to ' + CAST(@mxrok as char(4)); 
+THROW 1800002,@msg ,1;
+ END
+
+
+ INSERT INTO Czas.Rok (Rok_Num)
+ VALUES(@rok)
+
+
+DECLARE @last date = TRY_CAST(CONCAT(CAST(@rok+1 AS nvarchar(10)),'-01-01') AS date)
+
+DECLARE @previous date = DATEADD(d,-1,@last)
+
+DECLARE @naj date = (SELECT MAX(data) FROM Czas.Kalendarz) 
+
+
+WHILE  @naj < @last
+
+BEGIN
+
+INSERT INTO Czas.Kalendarz(data,IDRk,IDM)
+
+SELECT DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz)),
+(SELECT ID FROM Czas.Rok WHERE Rok_Num = YEAR(DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz)))),
+(SELECT ID FROM Czas.Miesiac WHERE ID = MONTH(DATEADD(d,1,( SELECT MAX(data) FROM Czas.Kalendarz))))
+  
+IF (SELECT MAX(data) FROM Czas.Kalendarz)=@previous
+
+BREAK
+
+ELSE
+
+CONTINUE
+
+END;
+
+/* procedura dodajaca kolejny rok do tabli Rok i uzupelniajaca tabele Kalendarz datami dla tego roku */
