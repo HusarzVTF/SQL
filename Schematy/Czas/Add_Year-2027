@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO 
+
+EXEC Czas.uspAddYear 2027
+
+/* po zmianie w kodzie procedury AddYear testowo wstawiony rok 2027 */
+
