@@ -1,0 +1,65 @@
+USE Stacja_Paliw
+GO
+
+ALTER PROC Czas.uspAddYear (@rok int)
+ 
+ AS
+
+
+ DECLARE @mxrok int  = ( SELECT MAX(Rok_Num) FROM Czas.Rok)
+
+ IF @rok < (SELECT MIN(Rok_Num) FROM Czas.Rok)
+
+ THROW 1800000,'Rok nie moze byc wczesniejszy niz rok ropzoczecia dzialalnosci gospodarczej przez firme.',1;
+
+ IF @rok IN (SELECT Rok_Num FROM Czas.Rok)
+
+ THROW 1800001,'Podany rok juz wystepuje w tabeli z latami.',1;
+
+IF @rok -  @mxrok > 1
+BEGIN
+DECLARE @msg NVARCHAR(4000) = 'Podany rok musi byc kolejnym rokiem w tabeli Rok. Ostatni rok w tabeli Rok to ' + CAST(@mxrok as char(4)); 
+
+ THROW 1800002,@msg ,1;
+ END
+
+
+
+ INSERT INTO Czas.Rok (Rok_Num)
+ VALUES(@rok)
+
+DECLARE @StartDate date = TRY_CAST(CONCAT(CAST(@rok AS nvarchar(10)),'-01-01') AS date);
+
+DECLARE @EndDate date = TRY_CAST(CONCAT(CAST(@rok AS nvarchar(10)),'-12-31') AS date);
+
+
+WITH DateRange AS (
+      
+    SELECT 
+        @StartDate AS Date, 
+        R.ID AS IDRk, 
+        MONTH(@StartDate) AS IDM
+    FROM Czas.Rok AS R 
+    WHERE R.Rok_Num = YEAR(@StartDate)
+
+    UNION ALL
+
+   
+    SELECT 
+        DATEADD(DAY, 1, D.Date),
+        R_E.ID, 
+        MONTH(DATEADD(DAY, 1, D.Date))
+    FROM DateRange AS D 
+
+    JOIN Czas.Rok AS R_E ON R_E.Rok_Num = YEAR(DATEADD(DAY, 1, D.Date))
+    WHERE DATEADD(DAY, 1, D.Date) <= @EndDate
+) 
+
+INSERT INTO Czas.Kalendarz (Data,IDRk,IDM)
+SELECT Date,IDRk,IDM
+FROM DateRange
+OPTION (MAXRECURSION 0);
+
+/* zmiana kodu dla procedury AddYear na bardziej wydajny zamiast petli wstawiajacej wiersz po wierszu rekurencja z CTE i podejscie set based */
+
+
