@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+GO 
+
+EXEC [Czas].[uspWstaw_Swieto] '2027-03-28' ,'Pierwszy dzień Wielkanocy' 
+EXEC [Czas].[uspWstaw_Swieto] '2027-03-29' ,'Drugi dzień Wielkanocy'
+EXEC [Czas].[uspWstaw_Swieto] '2027-05-27','Boże Ciało'
+
+/* zaktualizowanie ruchomych swiat dla 2027 roku */
