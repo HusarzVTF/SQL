@@ -1,0 +1,144 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('dbo.uspAdd_Constraint_NotNull') IS NOT NULL
+ DROP PROC dbo.uspAdd_Constraint_NotNull;
+GO
+
+CREATE PROC dbo.uspAdd_Constraint_NotNull (@SchemaName NVARCHAR(max), @TableName NVARCHAR(max), @ColumnName NVARCHAR(max) , @DryRun BIT = 0)
+ 
+AS
+
+SET NOCOUNT ON;
+
+IF LEN(@SchemaName) > 128 THROW 1200000, 'Wprowadzono za dluga nazwe schematu.',1;
+
+IF LEN(@TableName) > 128 THROW 1200001, 'Wprowadzono za dluga nazwe tabeli.',1;
+
+IF LEN(@ColumnName) > 128 THROW 1200002, 'Wprowadzono za dluga nazwe kolumny.',1;
+
+DECLARE @trim_SchemaName NVARCHAR(128) = TRIM(@SchemaName)
+
+DECLARE @trim_TableName NVARCHAR(128) = TRIM(@TableName)
+
+DECLARE @trim_ColumnName NVARCHAR(128) = TRIM(@ColumnName)
+
+DECLARE @ConstraintName NVARCHAR(max) = 'CHK_' + @trim_TableName + '_' + @trim_ColumnName + '_NotNull';
+
+-- Pełna nazwa kwalifikowana (np. [dbo].[TwojaTabela])
+DECLARE @FullTableName NVARCHAR(256) = QUOTENAME(@trim_SchemaName) + '.' + QUOTENAME(@trim_TableName);
+
+BEGIN TRY
+    -- 1. Sprawdzenie czy tabela w ogóle istnieje w danym schemacie
+    IF OBJECT_ID(@FullTableName, 'U') IS NULL
+    BEGIN
+		DECLARE @message varchar(4000) = 'BŁĄD: Tabela ' + @FullTableName + ' nie istnieje.' ;
+        THROW 1210000, @message, 1; 
+    END
+
+    
+	-- 2. Sprawdzenie czy kolumna ma już definicję NOT NULL w typie danych
+    IF EXISTS (
+        SELECT 1 FROM sys.columns
+        WHERE object_id = OBJECT_ID(@FullTableName) 
+          AND name = @trim_ColumnName 
+          AND is_nullable = 0
+    )
+    BEGIN
+        DECLARE @message_1 varchar(4000) = 'Informacja: Kolumna ' + QUOTENAME(@trim_ColumnName) + ' jest już zdefiniowana jako NOT NULL. Check jest zbędny.';
+        THROW 1210001, @message_1, 1;
+    END
+	
+	
+  	-- 3. Sprawdzenie, czy na danej kolumnie istnieje już jakikolwiek constraint NOT NULL
+        DECLARE @ExistingConstraintNames NVARCHAR(MAX);
+
+    -- Używamy DISTINCT, aby nazwa każdego ograniczenia wystąpiła tylko raz
+    SELECT @ExistingConstraintNames = COALESCE(@ExistingConstraintNames + ', ', '') + name
+    FROM (
+        SELECT DISTINCT cc.name
+        FROM sys.check_constraints cc
+        JOIN sys.columns c ON cc.parent_object_id = c.object_id AND cc.parent_column_id = c.column_id
+        WHERE cc.parent_object_id = OBJECT_ID(@FullTableName)
+          AND c.name = @trim_ColumnName
+          AND cc.definition LIKE '%IS NOT NULL%'
+    ) AS UniqueConstraints;
+
+    IF @ExistingConstraintNames IS NOT NULL
+    BEGIN
+        DECLARE @message_2 varchar(max) = 'Informacja: Na kolumnie ' + QUOTENAME(@trim_ColumnName) + 
+                                            ' istnieją już ograniczenia NOT NULL: ' + @ExistingConstraintNames + '.';
+        THROW 1210002, @message_2, 1;
+    END
+
+
+
+    -- 3.1 Sprawdzenie czy istnieją triggery mogące walidować NULL na tej kolumnie
+    DECLARE @TriggerNames NVARCHAR(MAX);
+
+    SELECT @TriggerNames = COALESCE(@TriggerNames + ', ', '') + name
+    FROM sys.triggers t
+    JOIN sys.sql_modules m ON t.object_id = m.object_id
+    WHERE t.parent_id = OBJECT_ID(@FullTableName)
+      AND (
+          -- Szukamy konkretnych połączeń nazwy kolumny z logiką NULL
+          -- Usuwamy spacje i tabulatory dla lepszego dopasowania
+          REPLACE(REPLACE(m.definition, ' ', ''), CHAR(9), '') LIKE '%' + @trim_ColumnName + 'ISNULL%'
+          OR REPLACE(REPLACE(m.definition, ' ', ''), CHAR(9), '') LIKE '%' + @trim_ColumnName + 'ISNOTNULL%'
+      )
+      -- Prosta heurystyka omijająca najczęstsze komentarze liniowe
+      AND m.definition NOT LIKE '--%' + @trim_ColumnName + '%IS%NULL%' 
+    
+    -- Dodatkowy filtr: upewniamy się, że nazwa kolumny nie jest częścią innego słowa
+    -- np. by 'Id' nie złapało 'UserId'
+    AND m.definition LIKE '%[^a-zA-Z0-9_]' + @trim_ColumnName + '[^a-zA-Z0-9_]%';
+
+    IF @TriggerNames IS NOT NULL
+    BEGIN
+        DECLARE @message_trig varchar(max) = 'BŁĄD: Znaleziono triggery z logiką NOT NULL dla kolumny ' + QUOTENAME(@trim_ColumnName) + ': ' + @TriggerNames + '.';
+        THROW 1210003, @message_trig, 1;
+    END
+
+
+    ELSE
+    BEGIN
+        -- 4. Sprawdzenie obecności NULLi przed próbą blokady
+        DECLARE @NullCount INT;
+        DECLARE @SqlCheck NVARCHAR(MAX) = N'SELECT @cnt = COUNT(*) FROM ' + @FullTableName + 
+                                          N' WHERE ' + QUOTENAME(@trim_ColumnName) + N' IS NULL';
+        
+        EXEC sp_executesql @SqlCheck, N'@cnt INT OUTPUT', @cnt = @NullCount OUTPUT;
+
+        IF @NullCount > 0
+        BEGIN
+            DECLARE @message_3 varchar(max) = 'BŁĄD: Znaleziono ' + CAST(@NullCount AS VARCHAR) + ' wierszy z NULL w ' + @FullTableName + '. Operacja przerwana.';
+			THROW 1210004, @message_3, 1;
+		END
+        ELSE
+        BEGIN
+            -- 4. Dodanie constrainta
+            DECLARE @SqlAdd NVARCHAR(MAX) = N'ALTER TABLE ' + @FullTableName + 
+                                            N' WITH CHECK ADD CONSTRAINT ' + QUOTENAME(@ConstraintName) + 
+                                            N' CHECK (' + QUOTENAME(@trim_ColumnName) + N' IS NOT NULL)';
+        IF @DryRun = 1
+        BEGIN
+            PRINT '-- [TRYB DRY RUN] --';
+            PRINT 'Poniższe zapytanie ZOSTANIE wykonane, jeśli zmienisz @DryRun = 0:';
+            PRINT @SqlAdd;
+        END
+		ELSE
+		BEGIN
+            EXEC sp_executesql @SqlAdd;
+            PRINT 'SUKCES: Constraint ' + @ConstraintName + ' został dodany do ' + @FullTableName + '.';
+        END
+		END
+    END
+END TRY
+BEGIN CATCH
+    PRINT 'WYSTĄPIŁ BŁĄD: ' + ERROR_MESSAGE();
+END CATCH
+
+
+/* procedura na dodanie Constraina not null na wskazanej kolumnie */
+
