@@ -1,0 +1,33 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'CenyPa','IDPALIW', 0
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'CenyPa','CenaJedn', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull  'Ope' , 'Dostawy','PozycjaNAFV', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Dostawy','ID_Dat', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Dostawy','IdDostawcy', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Dostawy','IDPaliw', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull'Ope' , 'Klienci','Poziom_Rabatu', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Lista_Obecnosci','ID_Prac', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Lista_Obecnosci','Data', 0  
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Pracownicy','Norma_H_Dzn_Prac', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Rabaty','ID_Paliwa', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Sprzedaz','IdKlienta', 0 
+
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Wyplaty','Rok', 0
+
+/* Nalozenie constrainow not null na kolumny na ktorych nie moze byc null-i. 
+Nie mozna zmienic typow tych kolumn na not null ze wzgledu na istniejace ograniczenia schemabinding. 
+Stad roziwazanie przez check-i. */
