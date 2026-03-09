@@ -1,0 +1,47 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC dbo.ALTER_NotNull  'Ope' , 'Dostawy','IdPracownika', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Dostawy','Id_Typ_Platnosci', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Klienci','IDMiejscowosc', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Klienci','KODPOcztowy', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','IDMiejscowosc', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','ID_datyZatr', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','ID_Umowy', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','ID_Wyksztalcenie', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','ID_Stanowisko', 0
+ 
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','status_pracownika', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Pracownicy','data_Zatrudnienia', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','PozycjaNaFV', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','ID_Dat', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','IdPracownika', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','IDPaliwa', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','PozycjaNaFV', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','Typ_rabatu', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','Rabat_Jedn', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','Wartosc_Rabatu', 0
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Sprzedaz','Id_Typ_Platnosci', 0 
+
+EXEC dbo.ALTER_NotNull 'Ope' , 'Wyplaty','ID_Prac', 0
+
+/* zmiana typow kolumn na not null  w tabelach w schemacie Ope za pomoca procedury ALTER_NotNull*/
