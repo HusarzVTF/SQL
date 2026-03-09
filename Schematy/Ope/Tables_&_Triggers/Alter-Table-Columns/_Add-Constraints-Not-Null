@@ -6,6 +6,8 @@ EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'CenyPa','IDPALIW', 0
 
 EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'CenyPa','CenaJedn', 0 
 
+EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'CenyPa','Koszt_Zakupu', 0
+
 EXEC dbo.uspAdd_Constraint_NotNull  'Ope' , 'Dostawy','PozycjaNAFV', 0 
 
 EXEC dbo.uspAdd_Constraint_NotNull 'Ope' , 'Dostawy','ID_Dat', 0 
