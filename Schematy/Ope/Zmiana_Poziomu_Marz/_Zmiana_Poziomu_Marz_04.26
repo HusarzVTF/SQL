@@ -1,0 +1,9 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Ope.uspZmien_Marze 'Gaz', 0.58
+EXEC Ope.uspZmien_Marze 'Ropa', 0.33
+EXEC Ope.uspZmien_Marze 'Benzyna', 0.30
+
+/* zmiana poziomu marz w kwietniu 2026 */
