@@ -1,0 +1,9 @@
+USE Stacja_Paliw
+
+GO
+
+DROP TRIGGER [Ope].[trCena_Netto_check] 
+
+DROP TRIGGER [Ope].[trPodSprz]
+
+/* usuniecie dwoch triggerow, ktore zostana zastpione jednym bardziej wydajnym (set based) -  Ope.trCena_Walidacja_Sprzedazy */
