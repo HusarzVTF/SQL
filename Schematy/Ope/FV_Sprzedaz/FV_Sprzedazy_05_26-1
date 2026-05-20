@@ -1,0 +1,12 @@
+USE Stacja_Paliw
+
+GO
+
+
+EXEC Ope.uspWstawFV_Sprzedaz 7,3,1,100,'automatyczny',null,'2026-05-18','2026-05-18'
+EXEC Ope.uspWstawFV_Sprzedaz 6,3,2,10000.34,'reczny',0.05,'2026-05-18','2026-05-18'
+EXEC Ope.uspWstawFV_Sprzedaz 5,2,3,108.78,'automatyczny',null,'2026-05-18','2026-05-18'
+EXEC Ope.uspWstawFV_Sprzedaz 6,2,2,12500,'reczny',0.05,'2026-05-18','2026-05-18' 
+
+
+/* I czesc FV sprzedazy za maj 2026 */ 
