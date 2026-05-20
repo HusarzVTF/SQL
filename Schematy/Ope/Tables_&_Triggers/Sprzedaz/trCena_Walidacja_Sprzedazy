@@ -1,0 +1,51 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.trCena_Walidacja_Sprzedazy') IS NOT NULL
+DROP TRIGGER Ope.trCena_Walidacja_Sprzedazy;
+GO
+
+CREATE TRIGGER Ope.trCena_Walidacja_Sprzedazy ON Ope.Sprzedaz
+AFTER INSERT
+AS  
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (
+        SELECT 1 
+        FROM inserted i
+        CROSS APPLY (
+            -- Pobieramy bazowe wartości i wyliczamy stawkę VAT dla danego paliwa/klienta
+            SELECT 
+                Ope.CenaSprz(i.IDPaliwa, i.IdKlienta) as CenaNettoJedn,
+                ROUND(i.IloscPaliwa, 2) as Ilosc,
+                ROUND(Ope.ufSpKWBrutto(i.IDPaliwa, ROUND(i.IloscPaliwa, 2), i.IdKlienta) / NULLIF(Ope.CenaSprz(i.IDPaliwa, i.IdKlienta), 0) ,2) as MnoznikVAT
+        ) p
+        CROSS APPLY (
+            SELECT 
+                -- NETTO: (Cena - Rabat) * Ilość
+                CASE 
+                    WHEN i.Typ_rabatu = 'reczny' 
+                        THEN ROUND((p.CenaNettoJedn - i.Rabat_Jedn) * p.Ilosc, 2)
+                    ELSE ROUND(p.CenaNettoJedn * p.Ilosc, 2) 
+                END as WyliczoneNetto,
+
+                -- BRUTTO: (Cena - Rabat) * Ilość * StawkaVAT
+                CASE 
+                    WHEN i.Typ_rabatu = 'reczny' 
+                        THEN ROUND(((p.CenaNettoJedn - i.Rabat_Jedn) * p.Ilosc) * p.MnoznikVAT, 2)
+                    ELSE ROUND(Ope.ufSpKWBrutto(i.IDPaliwa, p.Ilosc, i.IdKlienta), 2)
+                END as WyliczoneBrutto
+        ) calc 
+        WHERE ABS(calc.WyliczoneNetto - i.KwotaNetto) > 0.01 
+           OR ABS(calc.WyliczoneBrutto - i.KwotaBrutto) > 0.01
+    )
+    BEGIN
+        RAISERROR('Błąd: Kwota Netto lub/i Brutto nie zgadza się z wyliczeniem (Cena - Rabat) * Ilość lub kwota netto większa od brutto.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END;
+
+/* trigger walidujacy cene sprzedazy na fv */
