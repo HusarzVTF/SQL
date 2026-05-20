@@ -1,0 +1,17 @@
+USE Stacja_Paliw
+
+GO
+
+
+EXEC Ope.uspWstawFV_Sprzedaz 1,7,2,100,'automatyczny',null,'2026-05-19','2026-05-19'
+EXEC Ope.uspWstawFV_Sprzedaz 2,7,2,1234.67,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 3,7,2,18.98,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 4,7,2,80,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 5,7,2,56.1,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 6,7,2,125,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 7,7,2,1000.34,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 8,7,2,15000,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 9,7,2,1250.11,'automatyczny',null,'2026-05-19','2026-05-19' 
+EXEC Ope.uspWstawFV_Sprzedaz 10,7,2,13400,'automatyczny',null,'2026-05-19','2026-05-19' 
+
+/* 2 czesc FV za maj 2026 */
