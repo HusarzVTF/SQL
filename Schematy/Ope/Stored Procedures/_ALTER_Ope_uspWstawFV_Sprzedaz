@@ -1,5 +1,4 @@
 
-
 USE Stacja_Paliw
 
 GO
@@ -9,59 +8,97 @@ ALTER PROC Ope.uspWstawFV_Sprzedaz (
 @IdPracownika tinyint,
 @IDPaliwa tinyint,
 @IloscPaliwa real,
-@typrabatu varchar(12),
-@rabjedn float,
+@typrabatu varchar(max),
+@rabjedn float = null,
 @DataZaplaty date,
 @DataAktuZaplaty date)
  
  AS 
 
-IF @typrabatu NOT IN ('automatyczny','reczny')
 
-THROW 800000, 'Niepoprawny typ rabatu moze byc albo automatyczny albo reczny.',1;
+IF LEN(TRIM(@typrabatu)) > 12 THROW 800000, 'Wprowadzono za długi parametr typ rabatu.', 1;
+
+
+IF @typrabatu NOT IN ('automatyczny','reczny') THROW 800001, 'Niepoprawny typ rabatu moze byc albo automatyczny albo reczny.',1;
+
+
+IF @typrabatu = 'automatyczny' AND @rabjedn IS NOT NULL 
+
+THROW 800002, 'Rabat automatyczny wyklucza naliczanie rabatu wg wprowadzonej wartosci rabatu jednostowego.',1;
+
+
+
+IF @typrabatu = 'reczny' AND (@rabjedn <= 0 OR @rabjedn > (SELECT Jedn_war_Rab FROM Ope.Rabaty WHERE Poziom_Rab = 2 AND ID_Paliwa = @IDPaliwa) ) 
+
+THROW 800003, 'Wartosc rabatu jednostkowego musi byc wieksza od zera, ale nie moze byc wieksza niz drugi poziom rabatu automatycznego.',1;
+
+
+
+
+DECLARE @id_daty int = (SELECT Czas.uIdDaty(GETDATE())) 
+
+
+IF @id_daty IS NULL THROW 800004, 'Data transakcji spoza zakresu tabeli kalendarz.',1;
+
+
+IF  (SELECT 1 FROM Czas.Kalendarz WHERE Data = @DataZaplaty) IS NULL THROW 800005, 'Data zaplaty spoza zakresu tabeli kalendarz.',1;
+
+IF  (SELECT 1 FROM Czas.Kalendarz WHERE Data = @DataAktuZaplaty) IS NULL THROW 800006, 'Data aktualizacji daty zaplaty spoza zakresu tabeli kalendarz.',1;
+
+
+
+IF 
+
+( (SELECT 1 FROM Ope.Klienci WHERE IdKlienta = @IdKlienta) + (SELECT 1 FROM Ope.Pracownicy WHERE IDPracownika = @IdPracownika) 
++ (SELECT 1 FROM Ope.Zbiorniki WHERE IDPaliwa = @IDPaliwa) ) IS NULL
+
+THROW 800007, 'Co najmniej jedno z nastepujacych ID nie istnieje w tabelach zrodlowych: @IdKlienta, @IDPracownika, @IDPaliwa.',1;
+
+
+
 
 IF @typrabatu = 'automatyczny'
 
 BEGIN
 
 INSERT INTO Ope.Sprzedaz(
-nrfv,
-PozycjaNaFV,
-ID_Dat,
-IdKlienta,
-IdPracownika,
-IDPaliwa,
-IloscPaliwa,
-KwotaNetto,
-KwotaBrutto,
-CzasTransakcji,
-TerminZaplaty,
-DataZaplaty,
-DataAktuZaplaty,
-TypPlatnosci,
+nrfv ,
+PozycjaNaFV  ,
+ID_Dat ,
+IdKlienta ,
+IdPracownika ,
+IDPaliwa ,
+IloscPaliwa ,
+KwotaNetto ,
+KwotaBrutto ,
+CzasTransakcji ,
+TerminZaplaty ,
+DataZaplaty ,
+DataAktuZaplaty ,
+Id_Typ_Platnosci,
 Typ_rabatu,
 Rabat_Jedn,
 Wartosc_Rabatu )
 
 
- VALUES ( 
- Ope.NRFV( @IdKlienta ) ,
- Ope.PozFV( Ope.NRFV( @IdKlienta ), @IdKlienta, GETDATE())  ,
- Czas.uIdDaty(GETDATE()) ,
- @IdKlienta ,
- @IdPracownika ,
- @IDPaliwa ,
+ VALUES
+( Ope.NRFV( @IdKlienta ) ,
+Ope.PozFV( Ope.NRFV( @IdKlienta ), @IdKlienta, GETDATE() )  ,
+@id_daty , 
+@IdKlienta ,
+@IdPracownika ,
+@IDPaliwa ,
 ROUND(@IloscPaliwa,2) ,
 ROUND(Ope.CenaSprz(@IDPaliwa,@IdKlienta)*ROUND(@IloscPaliwa,2),2),
 ROUND(Ope.ufSpKWBrutto(@IDPaliwa, ROUND(@IloscPaliwa,2), @IdKlienta),2) ,
-GETDATE() , 
+GETDATE() ,
 Ope.TerZaKL(@IdKlienta,GETDATE()) ,
 @DataZaplaty ,
 @DataAktuZaplaty ,
-Ope.WarunkiSprzedazy(@IdKlienta),
+Ope.ufWarunkiSprzedazy_ID_TypPlat(@IdKlienta),
 @typrabatu,
-Ope.ufRab_klient(@IdKlienta, @IDPaliwa),
-ROUND( ROUND(@IloscPaliwa,2)*(Ope.ufRab_klient(@IdKlienta,@IDPaliwa)),2))
+Ope.ufRab_klient(@IdKlienta,@IDPaliwa),
+ROUND( ROUND(@IloscPaliwa,2)*(Ope.ufRab_klient(@IdKlienta,@IDPaliwa)),2) )
 
 
 END
@@ -81,36 +118,38 @@ IDPaliwa ,
 IloscPaliwa ,
 KwotaNetto ,
 KwotaBrutto ,
-CzasTransakcji ,
+CzasTransakcji , 
 TerminZaplaty ,
 DataZaplaty ,
 DataAktuZaplaty ,
-TypPlatnosci,
+Id_Typ_Platnosci,
 Typ_rabatu,
 Rabat_Jedn,
 Wartosc_Rabatu )
 
 
  VALUES
- ( Ope.NRFV( @IdKlienta ) ,
- Ope.PozFV( Ope.NRFV( @IdKlienta), @IdKlienta, GETDATE())  ,
- Czas.uIdDaty(GETDATE()) , 
- @IdKlienta ,
- @IdPracownika ,
- @IDPaliwa ,
+( Ope.NRFV( @IdKlienta ) ,
+Ope.PozFV( Ope.NRFV( @IdKlienta), @IdKlienta, GETDATE())  ,
+@id_daty, 
+@IdKlienta ,
+@IdPracownika ,
+@IDPaliwa ,
 ROUND(@IloscPaliwa,2) ,
-ROUND(Ope.CenaSprz(@IDPaliwa,@IdKlienta)*ROUND(@IloscPaliwa,2) - ROUND(ROUND(@rabjedn,2)*ROUND(@IloscPaliwa,2),2),2)  ,
-ROUND((Ope.ufSpKWBrutto(@IDPaliwa, ROUND(@IloscPaliwa,2),@IdKlienta) - ROUND(ROUND(@rabjedn,2)*ROUND(@IloscPaliwa,2),2)),2),
+ROUND(Ope.CenaSprz(@IDPaliwa,@IdKlienta)*ROUND(@IloscPaliwa,2)-ROUND(ROUND(@rabjedn,2)*ROUND(@IloscPaliwa,2),2),2)  ,
+ROUND((Ope.ufSpKWBrutto(@IDPaliwa, ROUND(@IloscPaliwa,2),@IdKlienta)-ROUND(ROUND(@rabjedn,2)*ROUND(@IloscPaliwa,2),2)),2),
 GETDATE() ,
 Ope.TerZaKL(@IdKlienta,GETDATE()) ,
 @DataZaplaty ,
 @DataAktuZaplaty ,
-Ope.WarunkiSprzedazy(@IdKlienta),
+Ope.ufWarunkiSprzedazy_ID_TypPlat(@IdKlienta),
 @typrabatu,
 ROUND(@rabjedn,2),
 ROUND(ROUND(@IloscPaliwa,2)*ROUND(@rabjedn,2),2)
  )
+
  END
+
  
  /*procedura na wystawianie FV sprzedazy z uwzglednieniem mechanizmu rabatowego*/
  
