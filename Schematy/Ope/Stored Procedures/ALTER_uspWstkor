@@ -1,78 +1,90 @@
 
-
 USE Stacja_Paliw
 
 GO
 
-ALTER PROC Ope.uspWstkor (@obiekt varchar(8) , @fv varchar(100), @poz smallint, @pesel char(11), @iddos int = NULL) 
+ALTER PROC Ope.uspWstkor (@obiekt varchar(max) , @fv varchar(max), @poz smallint, @pesel varchar(max), @iddos int = NULL) 
 
 AS
 
-BEGIN
+DECLARE @trim_obiekt varchar(max) = TRIM(@obiekt)
 
-IF @obiekt = 'Dostawy' 
+DECLARE @trim_fv varchar(max) = TRIM(@fv)
 
-BEGIN
+DECLARE @trim_pesel varchar(max) = TRIM(@pesel)
 
-INSERT INTO Ope.Dostawy (NRFV, PozycjaNAFV, ID_Dat, IdDostawcy, IdPracownika, IDPaliw, IloscPaliwa, KwotaNetto,
-KwotaBrutto, TerminZaplaty, Podatek, TypPlatnosci, CzasTransakcji, DataZaplaty, DataAktuDatZap)
+DECLARE @idprac tinyint = (SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @trim_pesel) 
 
-SELECT 
+ IF LEN(@trim_obiekt) > 8 THROW  1000010, 'Wprowadzono za dluga nazwe obiektu.', 1;
 
-NRFV,
-PozycjaNAFV*-1,
-ID_Dat,
-IdDostawcy,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
-IDPaliw,
-IloscPaliwa*-1,
-KwotaNetto*-1,
-KwotaBrutto*-1,
-TerminZaplaty,
-Podatek*-1,
-TypPlatnosci,
-GETDATE(),
-DataZaplaty,
-DataAktuDatZap
+ IF LEN(@trim_fv) > 100 AND @trim_obiekt = 'Dostawy' THROW  1000011, 'Wprowadzono za dlugi numer faktury.', 1;
+ 
+ IF LEN(@trim_pesel) > 11 THROW  1000012, 'Wprowadzono za dlugi numer pesel.', 1;
 
-FROM Ope.Dostawy 
-WHERE NRFV = @fv AND PozycjaNAFV = @poz AND IdDostawcy = @iddos;
+ IF ISNUMERIC(@trim_pesel) = 0 THROW  1000013, 'Wprowadzony numer pesel nie jest liczba.', 1;
 
-END;
+ DECLARE @chPesel int = (SELECT 1 FROM Ope.Pracownicy WHERE PESEL = @trim_pesel)
 
-IF @obiekt = 'Sprzedaz'
+ IF @chPesel IS NULL THROW 1000014, 'Nie istnieje pracownik o podanym numerze pesel.', 1;
+
+
+ IF @trim_obiekt = 'Dostawy' AND @iddos IS NULL THROW  1000015, 'Wybrano dostawy a nie podano numeru dostawcy dla korygowanej fv zakupu.', 1;
+
+ IF @trim_obiekt = 'Sprzedaz' AND @iddos IS NOT NULL THROW 1000016, 
+'Wybrano sprzedaz i podano numer dostawcy. Parametr @iddos dotyczy tylko dostaw dla sprzedazy pozostaje jako null.', 1;
+
+ IF @poz <= 0 THROW 1000017,'Korygowac mozna tylko dodatnie pozycje na fv. Ujemne oznaczaja korekte.',1;
 
 BEGIN
 
-INSERT INTO Ope.Sprzedaz(NRFV, PozycjaNAFV, ID_Dat, IdKlienta, IdPracownika, IDPaliwa, IloscPaliwa, KwotaNetto,
-KwotaBrutto, TerminZaplaty, TypPlatnosci, CzasTransakcji, DataZaplaty, DataAktuZaplaty, Typ_rabatu, Rabat_Jedn, Wartosc_Rabatu)
+IF @trim_obiekt = 'Dostawy' 
+
+BEGIN
+
+
+DECLARE @check_Dost int = (SELECT 1 FROM Ope.Dostawy WHERE NRFV = @trim_fv AND IdDostawcy = @iddos AND PozycjaNAFV = @poz)
+
+IF @check_Dost IS NULL  THROW 1000018, 'Nie istnieje faktura zakupu o podanym numerze i pozycji dla wskazanego dostawcy.', 1; 
+
+
+INSERT INTO Ope.Dostawy (NRFV,PozycjaNAFV,ID_Dat,IdDostawcy,IdPracownika,IDPaliw,IloscPaliwa,KwotaNetto,
+KwotaBrutto,TerminZaplaty,Podatek,Id_Typ_Platnosci,CzasTransakcji,DataZaplaty,DataAktuDatZap)
 
 SELECT  
 
-NRFV,
-PozycjaNAFV*-1,
-Czas.uIdDaty(CAST(GETDATE() AS Date)),
-IdKlienta,
-(SELECT IDPracownika FROM Ope.Pracownicy WHERE PESEL = @pesel),
-IDPaliwa,
-IloscPaliwa*-1,
-KwotaNetto*-1,
-KwotaBrutto*-1,
-TerminZaplaty,
-TypPlatnosci,
-GETDATE(),
-DataZaplaty,
-DataAktuZaplaty,
-Typ_rabatu,
-Rabat_Jedn,
--Wartosc_Rabatu
+NRFV,PozycjaNAFV*-1,ID_Dat,IdDostawcy,@idprac,
+IDPaliw,IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,Podatek*-1,Id_Typ_Platnosci,GETDATE(),DataZaplaty,DataAktuDatZap
 
-FROM Ope.Sprzedaz
-WHERE NRFV = @fv AND PozycjaNAFV = @poz;
+FROM Ope.Dostawy 
+WHERE NRFV = @trim_fv AND PozycjaNAFV = @poz AND IdDostawcy = @iddos;
 
 END;
 
-IF @obiekt NOT IN ('Dostawy' ,'Sprzedaz')
+IF @trim_obiekt = 'Sprzedaz'
+
+BEGIN
+
+DECLARE @fv_bigint bigint = TRY_CAST(@trim_fv AS bigint) 
+
+DECLARE @check_Sprz int = (SELECT 1 FROM Ope.Sprzedaz WHERE NRFV = @fv_bigint  AND PozycjaNAFV = @poz)
+
+IF @check_Sprz IS NULL THROW 1000019, 'Nie istnieje faktura sprzedazy o podanym numerze i pozycji.', 1;
+
+INSERT INTO Ope.Sprzedaz(NRFV,PozycjaNAFV,ID_Dat,IdKlienta,IdPracownika,IDPaliwa,IloscPaliwa,KwotaNetto,
+KwotaBrutto,TerminZaplaty,Id_Typ_Platnosci,CzasTransakcji,DataZaplaty,DataAktuZaplaty,Typ_rabatu,Rabat_Jedn,Wartosc_Rabatu)
+
+SELECT  
+
+NRFV,PozycjaNAFV*-1,Czas.uIdDaty(CAST(GETDATE() AS Date)),IdKlienta,@idprac,
+IDPaliwa, IloscPaliwa*-1,KwotaNetto*-1,KwotaBrutto*-1,TerminZaplaty,Id_Typ_Platnosci,GETDATE(),DataZaplaty,DataAktuZaplaty,Typ_rabatu,
+Rabat_Jedn,-Wartosc_Rabatu
+
+FROM Ope.Sprzedaz 
+WHERE NRFV = @trim_fv AND PozycjaNAFV = @poz;
+
+END;
+
+IF @trim_obiekt NOT IN ('Dostawy' ,'Sprzedaz')
 
 BEGIN
 PRINT 'Wprowadzona nieprawidlowa nazwe, mozna wstawic korekte dla Dostawy lub Sprzedazy'
