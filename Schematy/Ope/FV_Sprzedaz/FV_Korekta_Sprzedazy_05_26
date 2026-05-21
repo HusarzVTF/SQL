@@ -1,0 +1,10 @@
+USE Stacja_Paliw
+
+GO
+
+DECLARE @pesel varchar(max) = (SELECT PESEL FROM Ope.Pracownicy WHERE IDPracownika=7)
+
+EXEC Ope.uspWstkor  'Sprzedaz',143,1,@pesel,null
+
+/* fv korekta sprzedazy w maju 2026*/
+
