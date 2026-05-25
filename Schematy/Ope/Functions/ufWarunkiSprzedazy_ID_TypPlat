@@ -1,0 +1,29 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Ope.ufWarunkiSprzedazy_ID_TypPlat') IS NOT NULL
+DROP FUNCTION Ope.ufWarunkiSprzedazy_ID_TypPlat;
+
+GO
+
+CREATE FUNCTION Ope.ufWarunkiSprzedazy_ID_TypPlat (@ID int)
+
+RETURNS int
+
+WITH SCHEMABINDING  
+
+AS
+
+BEGIN
+
+DECLARE @war varchar(max) = (SELECT WarunkiPlatnosci FROM Ope.Klienci WHERE IdKlienta = @ID)
+
+DECLARE @idt int = (SELECT Id FROM Ope.Typ_Platnosci WHERE Typ_Platnosci = @war)
+
+RETURN @idt;
+
+/* funkcja zwracająca id typu platnosci dla wskazanego klienta, konieczne do wystawienia fv sprzedazy */
+
+
+END
