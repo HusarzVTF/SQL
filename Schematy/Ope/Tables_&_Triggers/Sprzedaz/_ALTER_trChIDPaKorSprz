@@ -1,0 +1,69 @@
+USE Stacja_Paliw
+GO
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER TRIGGER Ope.trChIDPaKorSprz ON Ope.Sprzedaz
+AFTER INSERT, UPDATE
+
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- WALIDACJA 1: Pierwsza pozycja na FV musi być równa 1, jeśli licznik pozycji = 1, 
+    -- pozycja > 0 i nie ma w ramach danej FV żadnej pozycji ujemnej (korekty)
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        CROSS APPLY (
+            SELECT 
+                COUNT(*) AS Licznik,
+                MAX(s.PozycjaNAFV) AS MaxPozSp,
+                SUM(CASE WHEN s.PozycjaNAFV < 0 THEN 1 ELSE 0 END) AS CzyKorekta
+            FROM Ope.Sprzedaz s
+            WHERE s.NRFV = i.NRFV AND s.IdKlienta = i.IdKlienta
+        ) stats
+        WHERE stats.Licznik = 1 
+          AND stats.MaxPozSp > 0 
+          AND stats.MaxPozSp <> 1
+          AND stats.CzyKorekta = 0
+    )
+    BEGIN
+        RAISERROR('Pierwsza pozycja na FV musi byc zawsze jeden jesli nie jest to fv korekta.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    -- WALIDACJA 2: Zachowanie ciągłości numeracji pozycji (PozycjaNAFV = Poprzednia_Max + 1)
+    -- Wywoływana tylko gdy dla danej FV w bazie jest więcej niż 1 wiersz, a wstawiana pozycja > 1
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        CROSS APPLY (
+            SELECT COUNT(*) AS Licznik
+            FROM Ope.Sprzedaz s
+            WHERE s.NRFV = i.NRFV AND s.IdKlienta = i.IdKlienta
+        ) stats
+        CROSS APPLY (
+            SELECT MAX(s.PozycjaNAFV) AS MaxPoprzednia
+            FROM Ope.Sprzedaz s
+            WHERE s.NRFV = i.NRFV 
+              AND s.IdKlienta = i.IdKlienta
+              AND s.ID < i.ID -- Pobiera historię przed aktualnym wierszem
+        ) hist
+        WHERE stats.Licznik > 1 
+          AND i.PozycjaNAFV > 1
+          AND ISNULL(hist.MaxPoprzednia, 0) + 1 <> i.PozycjaNAFV
+    )
+    BEGIN
+        RAISERROR('Nieprawidlowa pozycja na fakturze wzgledem poprzedniej.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+END
+GO
+
+/* nowa bardziej wydajna i lepsza wersja triggera walidujacego poprawnosc pozycji na FV sprzedazy */
