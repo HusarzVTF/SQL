@@ -1,0 +1,15 @@
+USE Stacja_Paliw
+
+GO
+
+UPDATE d
+SET d.ID_Dat = k.ID
+FROM Ope.Dostawy d
+INNER JOIN Czas.Kalendarz k 
+    ON k.Data = CAST(d.CzasTransakcji AS Date)
+WHERE d.NRFV = 'F02' 
+  AND d.IdDostawcy = 9;
+
+/* zmiana danych na fv - poprzednio byl bledny czas transakcji wzgledem id_daty: 
+niemozliwe jest wprowadzenie dnia 11 kwietnia 2022 roku fv do systemu, ktorej
+data wystawienia (ID_Dat) jest z 29 listopada 2022 roku */
