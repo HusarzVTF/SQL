@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Ope.Rabaty
+ADD CONSTRAINT UQ_Rabaty_Poziom_Paliwo UNIQUE (Poziom_Rab, ID_Paliwa);
+
+/* check wymuszajcy unikalnosc na poziomie rabatu i paliwa */
