@@ -1,0 +1,7 @@
+USE Stacja_Paliw
+
+GO
+
+DROP TRIGGER Ope.trRab
+
+/* drop triggera wymuszajacego unikalnosc na poziomie rabatu i paliwa , zostal zastapiony checkiem */
