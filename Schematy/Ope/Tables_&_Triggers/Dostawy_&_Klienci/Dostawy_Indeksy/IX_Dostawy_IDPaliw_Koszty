@@ -1,0 +1,13 @@
+USE Stacja_Pali
+
+GO
+
+CREATE NONCLUSTERED INDEX IX_Dostawy_IDPaliw_Koszty 
+
+ON Ope.Dostawy (IDPaliw)
+
+INCLUDE (KwotaNetto, IloscPaliwa);
+
+GO
+
+-- Tworzenie indeksu na kolumnie filtrującej/grupującej z dołączeniem wartości liczbowych
