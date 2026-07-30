@@ -1,0 +1,8 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER TABLE Lokacje.Gmina
+ADD CONSTRAINT UQ_Gmina_Unikalna UNIQUE (Gmina);
+
+--constraint wymuszajacy unikalnosc gminy
