@@ -1,0 +1,6 @@
+USE Stacja_Paliw;
+
+GO
+
+DROP TRIGGER Lokacje.trPow 
+
