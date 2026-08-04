@@ -1,0 +1,9 @@
+USE Stacja_Paliw;
+
+GO
+
+ALTER TABLE [Lokacje].[Powiat]
+ADD CONSTRAINT UQ_Powiat_Wojewodztwo UNIQUE ([IdWOJ], [Powiat]);
+
+/* check wymuszajacy unikalnosc kombinacji wojewodztwa i powiatu, by zablokowac mozliwosc wstawienia/zmodyfikowania danych tak, 
+ze w tym samym wojewodztwie ten sam powiat wystapi dwa lub wiecej razy */ 
