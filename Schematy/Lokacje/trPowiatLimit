@@ -1,0 +1,63 @@
+USE Stacja_Paliw
+GO
+
+IF OBJECT_ID('Lokacje.trPowiatLimit') IS NOT NULL
+    DROP TRIGGER Lokacje.trPowiatLimit
+GO
+
+CREATE TRIGGER Lokacje.trPowiatLimit
+ON Lokacje.Powiat
+AFTER INSERT, UPDATE 
+AS 
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Tabela zmienna z oficjalnymi, dozwolonymi parami (Powiat + Województwo), ktore moga sie powielac
+    DECLARE @DozwoloneDuble TABLE (
+        Powiat NVARCHAR(100) NOT NULL,
+        NazwaWojewodztwa NVARCHAR(100) NOT NULL,
+        PRIMARY KEY (Powiat, NazwaWojewodztwa)
+    );
+
+    INSERT INTO @DozwoloneDuble (Powiat, NazwaWojewodztwa) VALUES
+    ('Bielski', 'Podlaskie'),    ('Bielski', 'Śląskie'),
+    ('Brzeski', 'Małopolskie'),  ('Brzeski', 'Opolskie'),
+    ('Grodziski', 'Mazowieckie'), ('Grodziski', 'Wielkopolskie'),
+    ('Krośnieński', 'Lubuskie'),  ('Krośnieński', 'Podkarpackie'),
+    ('Nowodworski', 'Mazowieckie'),('Nowodworski', 'Pomorskie'),
+    ('Opolski', 'Lubelskie'),    ('Opolski', 'Opolskie'),
+    ('Ostrowski', 'Mazowieckie'), ('Ostrowski', 'Wielkopolskie'),
+    ('Świdnicki', 'Dolnośląskie'), ('Świdnicki', 'Lubelskie'),
+    ('Tomaszowski', 'Lubelskie'), ('Tomaszowski', 'Łódzkie');
+
+    -- WARUNEK 1: Sprawdzenie "Białej Listy" 
+    -- Drugi LEFT JOIN (d2) sprawdza, czy powiat w ogóle jest na liście oficjalnych dubli.
+    -- Pierwszy LEFT JOIN (d1) sprawdza, czy pasuje dokładna para Powiat + Województwo.
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN Lokacje.Powiat p ON i.Powiat = p.Powiat
+        INNER JOIN Lokacje.Wojewodztwa w ON p.IdWOJ = w.IdWoj
+        LEFT JOIN @DozwoloneDuble d1 ON p.Powiat = d1.Powiat AND w.Wojewodztwo = d1.NazwaWojewodztwa
+        LEFT JOIN @DozwoloneDuble d2 ON p.Powiat = d2.Powiat
+        WHERE d2.Powiat IS NOT NULL  -- Powiat znajduje się na liście oficjalnych dubli...
+          AND d1.Powiat IS NULL      -- ...ale sparowano go z NIEPRAWIDŁOWYM województwem!
+    )
+    -- WARUNEK 2: Sprawdzenie pozostałych powiatów
+    OR EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN Lokacje.Powiat p ON i.Powiat = p.Powiat
+        LEFT JOIN @DozwoloneDuble d ON p.Powiat = d.Powiat
+        WHERE d.Powiat IS NULL -- Wybieramy tylko powiaty, których NIE MA na liście dubli
+        GROUP BY p.Powiat
+        HAVING COUNT(DISTINCT p.IdWOJ) > 1 -- Łącznie (stare + nowe dane) wyszło więcej niż 1 województwo
+    )
+    BEGIN
+        RAISERROR('Błąd: Naruszenie integralności podziału administracyjnego kraju. Próba niedozwolonego powielenia powiatu między województwami.', 16, 1);
+        ROLLBACK TRANSACTION;  
+        RETURN;
+    END;
+END;
+GO
+-- trigger blokujacy wstawianie kombinacji powiatow z wojewodztwami, ktore nie sa zgodne z podzialem administracyjnym RP
