@@ -1,0 +1,14 @@
+USE Stacja_Paliw;
+GO
+
+
+ALTER TABLE Stacja_Paliw.Lokacje.Miejscowosc
+DROP CONSTRAINT IF EXISTS CHK_Miejscowosc_DozwoloneZnaki;
+GO
+
+
+ALTER TABLE Stacja_Paliw.Lokacje.Miejscowosc
+ADD CONSTRAINT CHK_Miejscowosc_DozwoloneZnaki 
+CHECK (Miejscowosc NOT LIKE '%[^a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ -]%');
+
+-- Constraint ograniczajacy dopuszczane znaki do liter, spacji oraz myślnika
