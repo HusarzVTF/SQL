@@ -1,0 +1,6 @@
+USE Stacja_Paliw
+
+GO
+
+DROP TRIGGER [Lokacje].[trMiejCheck]
+--drop triggera trMiejCheck na tabeli [Miejscowosc] , constraint  UQ_Miejscowosc_Unikalna waliduje unikalnosc na poziomie (IDGminy, Miejscowosc) wydajniej
