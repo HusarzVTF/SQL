@@ -1,8 +1,0 @@
-USE Stacja_Paliw
-
-GO
-
-ALTER TABLE Lokacje.Miejscowosc
-ADD CONSTRAINT UQ_Miejscowosc_Unikalna UNIQUE (IDGminy, Miejscowosc);
-
---Constraint zabezpieczajacy przed wstawieniem danych tak by były duplikaty na poziomie IDGminy, Miejscowosc  
