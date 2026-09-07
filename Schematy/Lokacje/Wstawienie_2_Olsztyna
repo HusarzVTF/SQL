@@ -1,0 +1,19 @@
+USE Stacja_Paliw
+
+GO
+
+INSERT INTO Stacja_Paliw.Lokacje.Powiat (IdWOJ, Powiat) 
+
+VALUES (13, 'Częstochowski')
+
+INSERT INTO Stacja_Powiat.Lokacje.Gmina (IdPowiatu, Gmina)
+
+SELECT IdPowiatu, 'Olsztyn'
+FROM Stacja_Paliw.Lokacje.Powiat WHERE Powiat = 'Częstochowski'
+
+INSERT INTO Stacja_Paliw.Lokacje.Miejscowosc (IDGminy, Miejscowosc)
+
+SELECT  IdGminy, 'Olsztyn'
+FROM Stacja_Paliw.Lokacje.Gmina G
+INNER JOIN Stacja_Paliw.Lokacje.Powiat P ON G.IdPowiatu = P.IdPowiatu 
+WHERE P.Powiat = 'Częstochowski' AND G.Gmina = 'Olsztyn'
