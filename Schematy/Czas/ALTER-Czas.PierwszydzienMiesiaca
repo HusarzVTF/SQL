@@ -1,0 +1,14 @@
+USE Stacja_Paliw
+GO
+
+ALTER FUNCTION Czas.PierwszydzienMiesiaca (@data date)
+RETURNS date
+WITH SCHEMABINDING
+AS
+BEGIN
+    RETURN DATEFROMPARTS(YEAR(@data), MONTH(@data), 1);
+END;
+GO
+
+/* modyfikacja funkcji zwracajacej pierwszy dzien miesiaca w sposb bardziej optymalny dla lat >= 1000  */
+
