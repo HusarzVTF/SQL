@@ -1,0 +1,18 @@
+USE Stacja_Paliw
+
+GO
+
+--dropujemy stary bez Wigilii jako swieta ma dziwna nazwe, bo zostal utworzony podczas tworzenia tabeli kalendarz bez zdeklarowania nazwy dla Checka 
+
+ALTER TABLE Czas.Kalendarz DROP CONSTRAINT CK__Kalendarz__Dzien__0781FD65
+
+--dodajemy nowy z Wigilia
+
+ALTER TABLE Czas.Kalendarz ADD CONSTRAINT CHK_Kalendarz_Swieto  
+CHECK (Dzien_Swiat IN
+('Drugi dzień Bożego Narodzenia','Pierwszy dzień Bożego Narodzenia','Święto Niepodległości','Wszystkich Świętych',
+'Wniebowzięcie Najświętszej Maryi Panny','Boże Ciało','Zielone Świątki','Święto Narodowe Trzeciego Maja','Święto Państwowe'
+,'Drugi dzień Wielkanocy','Pierwszy dzień Wielkanocy','Święto Trzech Króli','Nowy Rok','Wigilia') )
+
+/* od 2025 roku wlacznie w Polsce Wigilia zostala uznana za swieto i dzien wolny od pracy stad koniecznosc dodania jej do 
+  listy akceptowanych nazw swiat w tabeli kalendarz */
