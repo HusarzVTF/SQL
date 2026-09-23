@@ -1,0 +1,12 @@
+USE Stacja_Paliw
+
+GO
+
+EXEC Czas.uspWstaw_Swieto '2025-12-24','Wigilia'
+
+EXEC Czas.uspWstaw_Swieto '2026-12-24','Wigilia'
+
+EXEC Czas.uspWstaw_Swieto '2027-12-24','Wigilia'
+
+-- aktualizacja lat od 2025 wzwyz, wystepujacych na ten moment w tabeli Kalendarz o nowe swieto wolne od pracy Wigilię od 2025 roku zaczynajac 
+
