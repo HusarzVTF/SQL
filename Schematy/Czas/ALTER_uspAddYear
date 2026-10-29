@@ -1,0 +1,77 @@
+USE Stacja_Paliw
+
+GO
+
+ALTER PROC Czas.uspAddYear (@rok int )
+ 
+AS
+
+BEGIN
+
+    DECLARE @mxrok int;
+    DECLARE @minrok int;
+
+    SELECT 
+        @mxrok = MAX(Rok_Num),
+        @minrok = MIN(Rok_Num)
+    FROM Czas.Rok;
+
+IF @rok IS NULL THROW 1800000, 'Parametr @rok nie może mieć wartości NULL.',1;
+
+IF @minrok IS NULL --jak minrok null to i maxrok null
+
+THROW 1800001,'Blad w danych tabeli Rok. Brakuje danych w kolumnie Rok_Num.',1; 
+
+ IF @rok < @minrok
+
+ THROW 1800002,'Rok nie moze byc wczesniejszy niz rok ropzoczecia dzialalnosci gospodarczej przez firme.',1;
+
+ IF EXISTS (SELECT 1 FROM Czas.Rok WHERE Rok_Num = @rok)
+
+ THROW 1800003,'Podany rok juz wystepuje w tabeli z latami.',1;
+
+IF @rok -  @mxrok > 1
+BEGIN
+DECLARE @msg NVARCHAR(4000) = 'Podany rok musi byc kolejnym rokiem w tabeli Rok. Ostatni rok w tabeli Rok to ' + CAST(@mxrok as char(4)); 
+
+ THROW 1800004,@msg ,1;
+ END
+
+
+   -- 2. WSTAWIENIE ROKU I POBRANIE JEGO ID
+    DECLARE @InsertedRows TABLE (ID int); --typ danych zogdny z Czas.Rok
+
+    INSERT INTO Czas.Rok (Rok_Num)
+    OUTPUT inserted.ID INTO @InsertedRows 
+    VALUES (@rok);
+
+    DECLARE @NewYearID int = (SELECT TOP 1 ID FROM @InsertedRows);
+
+    -- 3. PRZYGOTOWANIE ZAKRESU DAT
+    DECLARE @StartDate date = DATEFROMPARTS(@rok, 1, 1);
+    DECLARE @DaysInYear int = IIF((@rok % 4 = 0 AND @rok % 100 != 0) OR (@rok % 400 = 0), 366, 365);
+
+    -- 4. SZYBKIE GENEROWANIE I WSTAWIENIE DANYCH (SET-BASED za pomocą Tally Table)
+    WITH Numi(n) AS (
+        SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1
+        FROM sys.all_objects AS a
+        CROSS JOIN sys.all_objects AS b
+    ),
+    DateGenerated AS (
+        SELECT TOP (@DaysInYear)
+            DATEADD(DAY, n, @StartDate) AS GeneratedDate
+        FROM Numi
+    )
+    INSERT INTO Czas.Kalendarz (Data, IDRk, IDM)
+    SELECT 
+        GeneratedDate,
+        @NewYearID,
+        MONTH(GeneratedDate)
+    FROM DateGenerated;
+
+END
+
+--bardziej optymalna wersja procedury AddYear przez Tally table jeszcze szybe niz petla z CTE
+
+
+
