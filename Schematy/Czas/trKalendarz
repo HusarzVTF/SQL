@@ -1,0 +1,145 @@
+USE Stacja_Paliw
+
+GO
+
+IF OBJECT_ID('Czas.trKalendarz') IS NOT NULL
+DROP TRIGGER Czas.trKalendarz;
+
+GO
+
+CREATE TRIGGER Czas.trKalendarz 
+ON Czas.Kalendarz 
+AFTER UPDATE, INSERT 
+
+AS
+
+BEGIN
+    -- 1. Blokada przed zapętleniem triggera przy operacji UPDATE
+    IF TRIGGER_NESTLEVEL() > 1 RETURN;
+
+    SET NOCOUNT ON;
+
+    -- Ustawienie niezależności od języka serwera (wymuszamy poniedziałek jako 1, niedziela jako 7)
+    DECLARE @OldDateFirst INT = @@DATEFIRST;
+    SET DATEFIRST 1; 
+
+
+    -- KROK 1: Automatyczne uzupełnianie świąt stałych
+ 
+	UPDATE k 
+	SET k.Dzien_Swiat = Slownik.NazwaSwieta
+	FROM Czas.Kalendarz k
+	INNER JOIN inserted i ON k.ID = i.ID
+	INNER JOIN (
+    VALUES 
+        (1, 1,   'Nowy Rok'),
+        (1, 6,   'Święto Trzech Króli'),
+        (5, 1,   'Święto Państwowe'),
+        (5, 3,   'Święto Narodowe Trzeciego Maja'),
+        (8, 15,  'Wniebowzięcie Najświętszej Maryi Panny'),
+        (11, 1,  'Wszystkich Świętych'),
+        (11, 11, 'Święto Niepodległości'),
+        (12, 25, 'Pierwszy dzień Bożego Narodzenia'),
+        (12, 26, 'Drugi dzień Bożego Narodzenia')
+	) AS Slownik(Miesiac, Dzien, NazwaSwieta) 
+    ON MONTH(i.Data) = Slownik.Miesiac AND DAY(i.Data) = Slownik.Dzien
+	WHERE k.Dzien_Swiat IS NULL;
+
+
+--KROK 2 Swieta ustanowione jak wolne potem np. Wigilia od 2025 + walidacja, ze przed ta data nie moze nic miec Wigilii wolnej
+
+DECLARE @swieta table  (data_od date, m int, d int, nazwa varchar(500))
+
+INSERT INTO @swieta (data_od,m,d,nazwa)
+
+VALUES ('2025-12-24', Month('2025-12-24'), Day('2025-12-24') , 'Wigilia') --swieto wolna wigilia od 2025 roku
+
+
+UPDATE k SET k.Dzien_Swiat = s.nazwa
+FROM Czas.Kalendarz k
+INNER JOIN inserted i ON k.ID = i.ID
+INNER JOIN @swieta s ON i.Data >= s.data_od
+AND MONTH(i.Data) = s.m 
+AND Day(i.Data) = s.d;
+
+IF EXISTS(
+		SELECT 1 
+        FROM Czas.Kalendarz k
+		INNER JOIN inserted i ON k.ID = i.ID
+		INNER JOIN @swieta s ON i.Data < s.data_od
+		WHERE i.Dzien_Swiat = s.nazwa
+
+)
+BEGIN
+        SET DATEFIRST 7; -- Przywrócenie ustawień przed cofnięciem transakcji
+        RAISERROR('Błąd: Próba wstawienia święta wstecznie, zanim zostało ono ustanowione.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    
+-- KROK 3: Walidacja poprawności dat (Zastępuje trData_Swieto)
+    
+IF EXISTS (
+        SELECT 1 
+        FROM Czas.Kalendarz k
+        INNER JOIN inserted ins ON k.ID = ins.ID
+        WHERE k.Dzien_Swiat IS NOT NULL AND (
+            -- Ruchome: Wielkanoc (Niedziela = 7)
+            (k.Dzien_Swiat = 'Pierwszy dzień Wielkanocy' AND (k.Data NOT BETWEEN DATEFROMPARTS(YEAR(k.Data), 3, 22) AND DATEFROMPARTS(YEAR(k.Data), 4, 25) OR DATEPART(DW, k.Data) <> 7)) OR
+            -- Ruchome: Poniedziałek Wielkanocny (Poniedziałek = 1)
+            (k.Dzien_Swiat = 'Drugi dzień Wielkanocy' AND (k.Data NOT BETWEEN DATEFROMPARTS(YEAR(k.Data), 3, 22) AND DATEFROMPARTS(YEAR(k.Data), 4, 25) OR DATEPART(DW, k.Data) <> 1)) OR
+            -- Ruchome: Zielone Świątki (Zawsze niedziela = 7)
+            (k.Dzien_Swiat = 'Zielone Świątki' AND (DATEPART(DW, k.Data) <> 7 OR MONTH(k.Data) NOT IN (5, 6))) OR
+            -- Ruchome: Boże Ciało (Zawsze czwartek = 4)
+            (k.Dzien_Swiat = 'Boże Ciało' AND (DATEPART(DW, k.Data) <> 4 OR k.Data NOT BETWEEN DATEFROMPARTS(YEAR(k.Data), 5, 21) AND DATEFROMPARTS(YEAR(k.Data), 6, 24)))
+        )
+    )
+    BEGIN
+        SET DATEFIRST 7; -- Przywrócenie ustawień przed cofnięciem transakcji
+        RAISERROR('Błąd: Niepoprawna data dla wskazanego święta ruchomego (błędny zakres lub dzień tygodnia).', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+  
+-- KROK 4: Walidacja relacji Wielkanocy (Zastępuje trDni_Wielkanocy)
+
+    IF EXISTS (
+              SELECT 1
+              FROM Czas.Kalendarz k
+              INNER JOIN Czas.Kalendarz k1 ON k.IDRk = k1.IDRk
+              INNER JOIN inserted ins ON (k.ID = ins.ID OR k1.ID = ins.ID)
+              WHERE k.Dzien_Swiat = 'Pierwszy dzień Wielkanocy' 
+              AND k1.Dzien_Swiat = 'Drugi dzień Wielkanocy'
+              AND DATEDIFF(day, k.Data, k1.Data) <> 1
+    )
+    BEGIN
+        SET DATEFIRST 7; -- Przywrócenie ustawień przed cofnięciem transakcji
+        RAISERROR('Błąd: Drugi dzień Wielkanocy musi następować bezpośrednio po Pierwszym dniu Wielkanocy.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+-- KROK 5: Walidacja duplikatów świąt w roku (Zastępuje trDzienSw)
+    
+   IF EXISTS (
+    	        SELECT 1 
+		          FROM Czas.Kalendarz k
+		          INNER JOIN inserted i ON k.IDRk = i.IDRk AND k.Dzien_Swiat = i.Dzien_Swiat
+		          WHERE k.ID <> i.ID AND i.Dzien_Swiat IS NOT NULL
+)
+
+    BEGIN
+        SET DATEFIRST 7; -- Przywrócenie ustawień przed cofnięciem transakcji
+        RAISERROR('Błąd: Każde święto może występować tylko raz w danym roku.', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    -- Przywrócenie oryginalnych ustawień serwera po sukcesie
+    SET DATEFIRST 7;
+END
+GO
+
+-- trigger trKalendarz zastpaujacy wczesniejsze triggery w sposob bardziej wydajny
