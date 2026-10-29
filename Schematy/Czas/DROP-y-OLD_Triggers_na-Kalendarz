@@ -1,0 +1,10 @@
+USE Stacja_Paliw
+
+GO
+
+DROP TRIGGER Czas.trStale_Swieta_check;
+DROP TRIGGER Czas.trDzienSw;
+DROP TRIGGER Czas.trDni_Wielkanocy;
+DROP TRIGGER Czas.trData_Swieto;
+
+--pozbywamy sie starych triggerow, bo zostana zastapione jednym trKalendarz
