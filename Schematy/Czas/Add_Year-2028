@@ -1,0 +1,7 @@
+USE Stacja_Paliw
+
+GO 
+
+EXEC Czas.uspAddYear 2028
+
+--wstawienie roku 2028 do tabeli z latami oraz wygenerowanie kalendarza na rok 2028 dzieki procedurze uspAddYear
